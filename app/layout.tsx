@@ -14,35 +14,30 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <title>
-          Horizon UI Boilerplate - Launch your startup project 10X in a few
-          moments - The best NextJS Boilerplate (This is an example)
+          Testmanship - Elevate Your Writing with AI-Powered Feedback
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* <!--  Social tags   --> */}
         <meta
           name="keywords"
-          content="Add here your main keywords and separate them with a comma"
+          content="writing practice, AI writing feedback, writing improvement, essay review, writing assistant, AI tutor"
         />
-        <meta name="description" content="Add here your website description" />
+        <meta name="description" content="Testmanship: Your AI-powered writing companion. Practice writing with instant, personalized feedback to improve your skills." />
         {/* <!-- Schema.org markup for Google+ --> */}
-        <meta itemProp="name" content="Add here your website name / title" />
+        <meta itemProp="name" content="Testmanship - AI Writing Practice Platform" />
         <meta
           itemProp="description"
-          content="Add here your website description"
-        />
-        <meta
-          itemProp="image"
-          content="Add here the link for your website SEO image"
+          content="Practice writing with AI-powered feedback. Get instant, personalized suggestions to improve your writing skills."
         />
         {/* <!-- Twitter Card data --> */}
         <meta name="twitter:card" content="product" />
         <meta
           name="twitter:title"
-          content="Add here your website name / title"
+          content="Testmanship - AI Writing Practice Platform"
         />
         <meta
           name="twitter:description"
-          content="Add here your website description"
+          content="Practice writing with AI-powered feedback. Get instant, personalized suggestions to improve your writing skills."
         />
         <meta
           name="twitter:image"
@@ -51,7 +46,7 @@ export default function RootLayout({
         {/* <!-- Open Graph data --> */}
         <meta
           property="og:title"
-          content="Add here your website name / title"
+          content="Testmanship - AI Writing Practice Platform"
         />
         <meta property="og:type" content="product" />
         <meta property="og:url" content="https://your-website.com" />
@@ -61,11 +56,11 @@ export default function RootLayout({
         />
         <meta
           property="og:description"
-          content="Add here your website description"
+          content="Practice writing with AI-powered feedback. Get instant, personalized suggestions to improve your writing skills."
         />
         <meta
           property="og:site_name"
-          content="Add here your website name / title"
+          content="Testmanship - AI Writing Practice Platform"
         />
         <link rel="canonical" href="https://your-website.com" />
         <link rel="icon" href="/img/favicon.ico" />

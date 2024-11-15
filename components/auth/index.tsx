@@ -37,7 +37,7 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
                 <HiBolt className="h-9 w-9" />
               </div>
               <h5 className="text-4xl font-bold leading-5 text-white">
-                Horizon AI
+                Testmanship
               </h5>
             </div>
             <div
@@ -48,7 +48,7 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
                 deliver stunning designs to my clients faster than ever before.”
               </h4>
               <h5 className="text-xl font-medium leading-5 text-zinc-300">
-                Sofia Davis - CTO Horizon AI
+                Sofia Davis - CTO Testmanship
               </h5>
             </div>
           </div>

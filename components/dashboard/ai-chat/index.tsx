@@ -122,8 +122,8 @@ export default function Chat(props: Props) {
     <DashboardLayout
       user={props.user}
       userDetails={props.userDetails}
-      title="AI Generator"
-      description="AI Generator"
+      title="Writing Assistant"
+      description="Get instant feedback on your writing"
     >
       <div className="relative flex w-full flex-col pt-[20px] md:pt-0">
         <img
