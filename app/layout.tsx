@@ -49,7 +49,7 @@ export default function RootLayout({
           content="Testmanship - AI Writing Practice Platform"
         />
         <meta property="og:type" content="product" />
-        <meta property="og:url" content="https://your-website.com" />
+        <meta property="og:url" content="https://testmanship.com" />
         <meta
           property="og:image"
           content="Add here the link for your website SEO image"
@@ -62,7 +62,7 @@ export default function RootLayout({
           property="og:site_name"
           content="Testmanship - AI Writing Practice Platform"
         />
-        <link rel="canonical" href="https://your-website.com" />
+        <link rel="canonical" href="https://testmanship" />
         <link rel="icon" href="/img/favicon.ico" />
       </head>
       <body id={'root'} className="loading bg-white">

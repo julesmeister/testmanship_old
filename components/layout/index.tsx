@@ -12,6 +12,8 @@ import {
   UserDetailsContext
 } from '@/contexts/layout';
 import React from 'react';
+import { useSidebarStore } from '@/stores/sidebar';
+import cn from 'classnames';
 
 interface Props {
   children: React.ReactNode;
@@ -24,6 +26,7 @@ interface Props {
 const DashboardLayout: React.FC<Props> = (props: Props) => {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const { isCollapsed } = useSidebarStore();
 
   return (
     <UserContext.Provider value={props.user}>
@@ -34,12 +37,27 @@ const DashboardLayout: React.FC<Props> = (props: Props) => {
             <Sidebar routes={routes} setOpen={setOpen} />
             <div className="h-full w-full dark:bg-zinc-950">
               <main
-                className={`mx-2.5 flex-none transition-all dark:bg-zinc-950 md:pr-2 xl:ml-[328px]`}
+                className={cn(
+                  "flex-none transition-all dark:bg-zinc-950",
+                  // Base padding/margin for mobile and tablet
+                  "mx-2.5 md:pr-2",
+                  // Mobile/tablet: full width when sidebar is hidden
+                  {
+                    "ml-0": !open,
+                    "ml-0": open && !isCollapsed, // Don't adjust margin on mobile/tablet
+                    "ml-0": open && isCollapsed
+                  },
+                  // Desktop: always show sidebar
+                  {
+                    "xl:ml-[328px]": !isCollapsed,
+                    "xl:ml-[88px]": isCollapsed
+                  }
+                )}
               >
-                <div className="mx-auto min-h-screen p-2 !pt-[90px] md:p-2 md:!pt-[118px]">
+                <Navbar brandText={getActiveRoute(routes, pathname)} />
+                <div className="mx-auto min-h-screen p-2 md:p-2">
                   {props.children}
                 </div>
-                <Navbar brandText={getActiveRoute(routes, pathname)} />
                 <div className="p-3">
                   <Footer />
                 </div>

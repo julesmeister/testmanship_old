@@ -28,7 +28,7 @@ export default function HeaderLinks(props: { [x: string]: any }) {
   const { theme, setTheme } = useTheme();
   const router = getRedirectMethod() === 'client' ? useRouter() : null;
   const onOpen = () => {
-    setOpen(false);
+    setOpen(!open);
   };
 
   const handleSignOut = async (e) => {

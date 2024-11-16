@@ -1,6 +1,6 @@
 import { getUserDetails, getUser } from '@/utils/supabase/queries';
 
-import Chat from '@/components/dashboard/ai-chat';
+import Chat from '@/components/dashboard/test';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 

@@ -1,48 +1,39 @@
 'use client';
 
-/* eslint-disable */
-import AdminNavbarLinks from './NavbarLinksAdmin';
 import NavLink from '@/components/link/NavLink';
+import { Button } from '@/components/ui/button';
+import { PanelLeft } from 'lucide-react';
+import { useSidebarStore } from '@/stores/sidebar';
+import AdminNavbarLinks from './NavbarLinksAdmin';
 
-export default function AdminNavbar(props: {
-  brandText: string;
-  [x: string]: any;
-}) {
-  const { brandText } = props;
+export default function AdminNavbar({ brandText }: { brandText: string }) {
+  const { isCollapsed, setIsCollapsed } = useSidebarStore();
 
   return (
-    <nav
-      className={`fixed right-3 top-3 z-[0] flex w-[calc(100vw_-_6%)] flex-row items-center justify-between rounded-lg bg-white/30 py-2 backdrop-blur-xl transition-all dark:bg-transparent md:right-[30px] md:top-4 md:w-[calc(100vw_-_8%)] md:p-2 lg:w-[calc(100vw_-_6%)] xl:top-[20px] xl:w-[calc(100vw_-_365px)] 2xl:w-[calc(100vw_-_380px)]`}
-    >
-      <div className="ml-[6px]">
-        <div className="h-6 md:mb-2 md:w-[224px] md:pt-1">
-          <a
-            className="hidden text-xs font-normal text-zinc-950 hover:underline dark:text-white dark:hover:text-white md:inline"
-            href=""
+    <nav className="sticky top-0 z-40 flex h-16 w-full items-center border-b border-border/40 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex w-full items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => setIsCollapsed(!isCollapsed)}
           >
-            Pages
-            <span className="mx-1 text-xs text-zinc-950 hover:text-zinc-950 dark:text-white">
-              {' '}
-              /{' '}
-            </span>
-          </a>
-          <NavLink
-            className="text-xs font-normal capitalize text-zinc-950 hover:underline dark:text-white dark:hover:text-white"
-            href="#"
-          >
-            {brandText}
-          </NavLink>
+            <PanelLeft className="h-[1.2rem] w-[1.2rem]" />
+            <span className="sr-only">Toggle sidebar</span>
+          </Button>
+
+          <div className="flex flex-col gap-1">
+            <div className="hidden items-center gap-1 text-sm text-muted-foreground md:flex">
+              <span>Pages</span>
+              <span className="text-muted-foreground/60">/</span>
+              <NavLink href="#" className="text-foreground hover:text-foreground/80">
+                {brandText}
+              </NavLink>
+            </div>
+          </div>
         </div>
-        <p className="text-md shrink capitalize text-zinc-950 dark:text-white md:text-3xl">
-          <NavLink
-            href="#"
-            className="font-bold capitalize hover:text-zinc-950 dark:hover:text-white"
-          >
-            {brandText}
-          </NavLink>
-        </p>
-      </div>
-      <div className="w-[154px] min-w-max md:ml-auto md:w-[unset]">
+
         <AdminNavbarLinks />
       </div>
     </nav>

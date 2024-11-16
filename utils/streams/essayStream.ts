@@ -32,14 +32,16 @@ export async function OpenAIStream (
 
   const system = { role: 'system', content: prompt };
 
-  const res = await fetch(`https://api.openai.com/v1/chat/completions`, {
+  const res = await fetch(`https://openrouter.ai/api/v1/chat/completions`, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${key || process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+      'Authorization': `Bearer ${key || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://testmanship.com',
+      'X-Title': 'Testmanship',
     },
     method: 'POST',
     body: JSON.stringify({
-      model,
+      model: model || 'openai/gpt-3.5-turbo',
       messages: [system],
       temperature: 0,
       stream: true,
@@ -53,7 +55,7 @@ export async function OpenAIStream (
     const statusText = res.statusText;
     const result = await res.body?.getReader().read();
     throw new Error(
-      `OpenAI API returned an error: ${
+      `OpenRouter API returned an error: ${
         decoder.decode(result?.value) || statusText
       }`,
     );
