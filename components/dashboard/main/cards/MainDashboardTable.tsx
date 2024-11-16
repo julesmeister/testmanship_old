@@ -1,5 +1,5 @@
 import CardMenu from '@/components/card/CardMenu';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {

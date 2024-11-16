@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger
 } from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import Bgdark from '@/public/img/dark/test/bg-image.png';
 import Bg from '@/public/img/light/test/bg-image.png';
 import { ChatBody, OpenAIModel } from '@/types/types';
@@ -17,7 +17,7 @@ import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { HiUser, HiSparkles, HiMiniPencilSquare } from 'react-icons/hi2';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Props {

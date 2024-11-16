@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import SidebarImage from '@/public/SidebarBadge.png';
 import { HiChevronLeft } from 'react-icons/hi2';
 import { cn } from '@/lib/utils';

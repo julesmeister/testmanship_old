@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '../ui/button';
+import { Button } from '../ui/Button';
 import Footer from '@/components/footer/FooterAuthDefault';
 import { useTheme } from 'next-themes';
 import { PropsWithChildren } from 'react';
