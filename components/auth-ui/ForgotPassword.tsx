@@ -1,12 +1,12 @@
 'use client';
 
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { requestPasswordUpdate } from '@/utils/auth-helpers/server';
 import { handleRequest } from '@/utils/auth-helpers/client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Input } from '../ui/input';
+import { Input } from '@/components/ui/input';
 
 // Define prop type with allowEmail boolean
 interface ForgotPasswordProps {
