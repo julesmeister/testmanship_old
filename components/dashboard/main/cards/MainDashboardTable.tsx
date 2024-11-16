@@ -110,7 +110,7 @@ function CheckTable(props: { tableData: any }) {
   let defaultData = tableData;
   const [globalFilter, setGlobalFilter] = React.useState('');
   const createPages = (count: number) => {
-    let arrPageCount = [];
+    let arrPageCount: number[] = [];
 
     for (let i = 1; i <= count; i++) {
       arrPageCount.push(i);
@@ -356,7 +356,11 @@ function CheckTable(props: { tableData: any }) {
   );
 }
 
-export default function MainDashboardTable() {
+interface MainDashboardTableProps {
+  tableData: Challenge[];
+}
+
+export default function MainDashboardTable({ tableData }: MainDashboardTableProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -381,7 +385,7 @@ export default function MainDashboardTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {challenges.map((challenge) => (
+            {tableData.map((challenge) => (
               <TableRow key={challenge.id}>
                 <TableCell>
                   <div className="space-y-1">

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { PropsWithChildren, useContext } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
@@ -21,6 +21,7 @@ export interface SidebarProps extends PropsWithChildren {
 
 export default function Sidebar(props: SidebarProps) {
   const router = getRedirectMethod() === 'client' ? useRouter() : null;
+  const pathname = usePathname();
   const { routes } = props;
   const { isCollapsed } = useSidebarStore();
   const { open, setOpen } = useContext(OpenContext);
@@ -30,8 +31,12 @@ export default function Sidebar(props: SidebarProps) {
 
   const handleSignOut = async (e) => {
     e.preventDefault();
-    supabase.auth.signOut();
-    router.push('/dashboard/signin');
+    await supabase.auth.signOut();
+    if (router) {
+      router.push('/dashboard/signin');
+    } else {
+      window.location.href = '/dashboard/signin';
+    }
   };
 
   return (
@@ -81,7 +86,7 @@ export default function Sidebar(props: SidebarProps) {
             {routes.map((route) => (
               <Button
                 key={route.name}
-                variant={route.path === router?.pathname ? "secondary" : "ghost"}
+                variant={route.path === pathname ? "secondary" : "ghost"}
                 className={cn(
                   "w-full justify-start gap-2 dark:hover:text-current",
                   isCollapsed && "justify-center px-2"

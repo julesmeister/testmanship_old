@@ -33,8 +33,12 @@ export default function HeaderLinks(props: { [x: string]: any }) {
 
   const handleSignOut = async (e) => {
     e.preventDefault();
-    supabase.auth.signOut();
-    router.push('/dashboard/signin');
+    await supabase.auth.signOut();
+    if (router) {
+      router.push('/dashboard/signin');
+    } else {
+      window.location.href = '/dashboard/signin';
+    }
   };
 
   return (
@@ -103,9 +107,11 @@ export default function HeaderLinks(props: { [x: string]: any }) {
         <Avatar className="h-9 min-w-9 md:min-h-10 md:min-w-10">
           <AvatarImage src={user?.user_metadata.avatar_url} />
           <AvatarFallback className="font-bold">
-            {user?.user_metadata.full_name
-              ? `${user?.user_metadata.full_name[0]}`
-              : `${user?.email[0].toUpperCase()}`}
+            {user?.user_metadata?.full_name
+              ? `${user.user_metadata.full_name[0]}`
+              : user?.email
+              ? `${user.email[0].toUpperCase()}`
+              : 'U'}
           </AvatarFallback>
         </Avatar>
       </a>

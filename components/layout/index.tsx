@@ -41,12 +41,7 @@ const DashboardLayout: React.FC<Props> = (props: Props) => {
                   "flex-none transition-all dark:bg-zinc-950",
                   // Base padding/margin for mobile and tablet
                   "mx-2.5 md:pr-2",
-                  // Mobile/tablet: full width when sidebar is hidden
-                  {
-                    "ml-0": !open,
-                    "ml-0": open && !isCollapsed, // Don't adjust margin on mobile/tablet
-                    "ml-0": open && isCollapsed
-                  },
+                  "ml-0", // Always apply ml-0 at mobile/tablet sizes
                   // Desktop: always show sidebar
                   {
                     "xl:ml-[328px]": !isCollapsed,

@@ -4,8 +4,9 @@ export const isWindowAvailable = () => typeof window !== 'undefined'
 
 export const findCurrentRoute = (
   routes: IRoute[],
-  pathname: string,
+  pathname: string | null,
 ): IRoute | undefined => {
+  if (!pathname) return undefined
   for (let route of routes) {
     if (route.items) {
       const found = findCurrentRoute(route.items, pathname)
@@ -17,14 +18,15 @@ export const findCurrentRoute = (
   }
 }
 
-export const getActiveRoute = (routes: IRoute[], pathname: string): string => {
+export const getActiveRoute = (routes: IRoute[], pathname: string | null): string => {
+  if (!pathname) return 'Dashboard'
   const route = findCurrentRoute(routes, pathname)
-  return route?.name || 'Default Brand Text'
+  return route?.name || 'Dashboard'
 }
 
 export const getActiveNavbar = (
   routes: IRoute[],
-  pathname: string,
+  pathname: string | null,
 ): boolean => {
   const route = findCurrentRoute(routes, pathname)
   if (route?.secondary) return route?.secondary
@@ -33,7 +35,7 @@ export const getActiveNavbar = (
 
 export const getActiveNavbarText = (
   routes: IRoute[],
-  pathname: string,
+  pathname: string | null,
 ): string | boolean => {
   return getActiveRoute(routes, pathname) || false
 }

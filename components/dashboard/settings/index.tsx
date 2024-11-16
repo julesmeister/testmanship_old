@@ -31,10 +31,16 @@ export default function Settings(props: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitEmail = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
+    
+    if (!props.user) {
+      setIsSubmitting(false);
+      return;
+    }
+
     // Check if the new email is the same as the old email
     if (e.currentTarget.newEmail.value === props.user.email) {
-      e.preventDefault();
       setIsSubmitting(false);
       return;
     }
@@ -47,7 +53,6 @@ export default function Settings(props: Props) {
         `Your email has been updated.`
       )
     );
-    e.preventDefault();
     const { error } = await supabase.auth.updateUser(
       { email: newEmail },
       {
@@ -59,10 +64,16 @@ export default function Settings(props: Props) {
   };
 
   const handleSubmitName = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
+
+    if (!props.user || !props.user.user_metadata) {
+      setIsSubmitting(false);
+      return;
+    }
+
     // Check if the new name is the same as the old name
     if (e.currentTarget.fullName.value === props.user.user_metadata.full_name) {
-      e.preventDefault();
       setIsSubmitting(false);
       return;
     }
@@ -105,16 +116,16 @@ export default function Settings(props: Props) {
             }
           >
             <Avatar className="min-h-[68px] min-w-[68px]">
-              <AvatarImage src={props.user?.user_metadata.avatar_url} />
+              <AvatarImage src={props.user?.user_metadata?.avatar_url} />
               <AvatarFallback className="text-2xl font-bold dark:text-zinc-950">
-                {props.user.user_metadata.full_name
-                  ? `${props.user.user_metadata.full_name[0]}`
-                  : `${props.user?.user_metadata.email[0].toUpperCase()}`}
+                {props.user?.user_metadata?.full_name
+                  ? `${props.user?.user_metadata?.full_name[0]}`
+                  : `${props.user?.user_metadata?.email[0]?.toUpperCase()}`}
               </AvatarFallback>
             </Avatar>
             <div>
               <p className="text-xl font-extrabold text-zinc-950 leading-[100%] dark:text-white pl-4 md:text-3xl">
-                {props.user.user_metadata.full_name}
+                {props.user?.user_metadata?.full_name}
               </p>
               <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 md:mt-2 pl-4 md:text-base">
                 Writing Enthusiast
@@ -190,7 +201,7 @@ export default function Settings(props: Props) {
               >
                 <Input
                   placeholder="Please enter your email"
-                  defaultValue={props.user.email ?? ''}
+                  defaultValue={props.user?.email ?? ''}
                   type="text"
                   name="newEmail"
                   className={`mr-4 flex h-full max-w-full w-full items-center justify-center px-4 py-4 outline-none`}

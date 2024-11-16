@@ -140,3 +140,15 @@ export interface PremiumEssayBody {
   model: OpenAIModel;
   apiKey?: string | undefined;
 }
+
+export interface Challenge {
+  id: string;
+  title: string;
+  difficulty: "Easy" | "Moderate" | "Hard";
+  performance: number;
+  paragraphs: number;
+  completedAt: Date;
+  timeSpent: number;
+  wordCount: number;
+  feedback: string;
+}
