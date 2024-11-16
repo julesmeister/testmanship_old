@@ -3,7 +3,7 @@
 import React, { PropsWithChildren, useContext } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { IRoute } from '@/types/types';
 import { getRedirectMethod } from '@/utils/auth-helpers/settings';
