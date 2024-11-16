@@ -60,15 +60,6 @@ export const routes: IRoute[] = [
     disabled: true
   },
   {
-    name: 'Subscription',
-    path: '/dashboard/subscription',
-    icon: (
-      <HiOutlineCreditCard className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
-    ),
-    collapse: false,
-    disabled: true
-  },
-  {
     name: 'Landing Page',
     path: '/home',
     icon: (
