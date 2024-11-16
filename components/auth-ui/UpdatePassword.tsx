@@ -5,7 +5,7 @@ import { updatePassword } from '@/utils/auth-helpers/server';
 import { handleRequest } from '@/utils/auth-helpers/client';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { Input } from '../ui/input';
+import { Input } from '@/components/ui/input';
 
 interface UpdatePasswordProps {
   redirectMethod: string;
