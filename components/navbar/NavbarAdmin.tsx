@@ -1,7 +1,7 @@
 'use client';
 
-import NavLink from '@/components/link/NavLink';
-import { Button } from '@/components/ui/Button';
+import NavLink from '@/components/link/navlink';
+import { Button } from '@/components/ui/button';
 import { PanelLeft } from 'lucide-react';
 import { useSidebarStore } from '@/stores/sidebar';
 import AdminNavbarLinks from './NavbarLinksAdmin';

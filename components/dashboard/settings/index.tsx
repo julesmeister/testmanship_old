@@ -2,7 +2,7 @@
 'use client';
 
 import DashboardLayout from '@/components/layout';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { User } from '@supabase/supabase-js';
 import { useState } from 'react';
@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createClient } from '@/utils/supabase/client';
 import { getURL, getStatusRedirect } from '@/utils/helpers';
 import Notifications from './components/notification-settings';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/input';
 
 interface Props {
   user: User | null | undefined;
