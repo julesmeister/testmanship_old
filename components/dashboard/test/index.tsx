@@ -190,14 +190,14 @@ export default function Test({ user, userDetails }: Props) {
         <div className="w-1/3 flex flex-col gap-4">
           {/* Challenge Selection */}
           <div className="space-y-4">
-            <Tabs defaultValue="easy" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="a1">A1</TabsTrigger>
-                <TabsTrigger value="a2">A2</TabsTrigger>
-                <TabsTrigger value="b1">B1</TabsTrigger>
-                <TabsTrigger value="b2">B2</TabsTrigger>
-                <TabsTrigger value="c1">C1</TabsTrigger>
-                <TabsTrigger value="c2">C2</TabsTrigger>
+            <Tabs defaultValue="a1" className="w-full">
+              <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-gray-800">
+                <TabsTrigger value="a1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">A1</TabsTrigger>
+                <TabsTrigger value="a2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">A2</TabsTrigger>
+                <TabsTrigger value="b1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">B1</TabsTrigger>
+                <TabsTrigger value="b2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">B2</TabsTrigger>
+                <TabsTrigger value="c1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">C1</TabsTrigger>
+                <TabsTrigger value="c2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">C2</TabsTrigger>
               </TabsList>
             </Tabs>
 

@@ -83,7 +83,7 @@ export default function Sidebar(props: SidebarProps) {
                 key={route.name}
                 variant={route.path === router?.pathname ? "secondary" : "ghost"}
                 className={cn(
-                  "w-full justify-start gap-2",
+                  "w-full justify-start gap-2 dark:hover:text-current",
                   isCollapsed && "justify-center px-2"
                 )}
                 onClick={() => router?.push(route.path)}

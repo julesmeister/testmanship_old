@@ -59,7 +59,7 @@ export function SidebarLinks(props: SidebarLinksProps) {
         return (
           <div key={key}>
             <div
-              className={`flex w-full max-w-full items-center justify-between rounded-lg py-3 pl-8 ${
+              className={`flex w-full max-w-full items-center justify-between rounded-lg py-3 pl-8 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
                 activeRoute(route.path.toLowerCase())
                   ? 'bg-zinc-950 font-semibold text-white dark:bg-white dark:text-zinc-950'
                   : 'font-medium text-zinc-950 dark:text-zinc-400'
@@ -76,7 +76,7 @@ export function SidebarLinks(props: SidebarLinksProps) {
                       className={`text mr-3 mt-1.5 ${
                         activeRoute(route.path.toLowerCase())
                           ? 'font-semibold text-white dark:text-zinc-950'
-                          : 'text-zinc-950 dark:text-white'
+                          : 'text-zinc-950 dark:text-white hover:text-zinc-950 dark:hover:text-white'
                       } `}
                     >
                       {route.icon}
@@ -85,7 +85,7 @@ export function SidebarLinks(props: SidebarLinksProps) {
                       className={`mr-auto text-sm ${
                         activeRoute(route.path.toLowerCase())
                           ? 'font-semibold text-white dark:text-zinc-950'
-                          : 'font-medium text-zinc-950 dark:text-zinc-400'
+                          : 'font-medium text-zinc-950 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                       }`}
                     >
                       {route.name}

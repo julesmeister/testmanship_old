@@ -55,10 +55,10 @@ export default function MainChart() {
             </div>
           </div>
           <Tabs defaultValue="week" value={timeframe} onValueChange={(value) => setTimeframe(value as "week" | "month" | "year")}>
-            <TabsList>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
-              <TabsTrigger value="year">Year</TabsTrigger>
+            <TabsList className="bg-gray-100 dark:bg-gray-800">
+              <TabsTrigger value="week" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">Week</TabsTrigger>
+              <TabsTrigger value="month" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">Month</TabsTrigger>
+              <TabsTrigger value="year" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">Year</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
