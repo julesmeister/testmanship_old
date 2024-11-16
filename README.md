@@ -1,143 +1,72 @@
-&nbsp;
-<p align="center">
-  <a href="https://horizon-ui.com/boilerplate-shadcn" target="_blank">
-    <img src="https://i.ibb.co/DGSsjWL/top-boilerplate-shadcn-readme.png" alt="Horizon AI Boilerplate Admin Dashboard NextJS Shadcn UI" width="300px" max-width="400px">
-  </a>
-</p>
+# Testmanship - CEFR Writing Progress Tracker
 
-<p align="center">
-    <a style="color: #09090B; text-decoration: underline;" target="_blank" href="https://horizon-ui.com/boilerplate-shadcn">Website</a> •
-    <a style="color: #09090B; text-decoration: underline;" target="_blank" href="https://horizon-ui.com/docs-boilerplate/shadcn-components/auth-UI">Documentation</a> •
-    <a style="color: #09090B; text-decoration: underline;" target="_blank" href="https://horizon-ui.com/boilerplate-shadcn">PRO Version</a> •
-    <a style="color: #09090B; text-decoration: underline;" target="_blank" href="https://github.com/horizon-ui/shadcn-nextjs-boilerplate">Free Template</a> •
-    <a style="color: #09090B; text-decoration: underline;" target="_blank" href="https://twitter.com/horizon_ui">Twitter</a>
-<p align="center" style="max-width: 500px; margin: auto;">
-  Launch your SaaS startup within a few days with the first Admin Dashboard Shadcn UI NextJS boilerplate. Get started with Horizon AI Boilerplate today!
+Testmanship is a sophisticated web application designed to help language learners track their writing progress and assess their preparedness across different CEFR (Common European Framework of Reference for Languages) levels. Built with Next.js 13 and enhanced with modern UI components, Testmanship provides an intuitive platform for practicing and evaluating writing skills.
 
-</p>
+## Features
 
-&nbsp;
+- **CEFR Level Assessment**: Practice writing at different proficiency levels (A1 to C2)
+- **Progress Tracking**: Monitor your writing improvement over time
+- **AI-Powered Feedback**: Receive instant feedback on your writing through advanced AI analysis
+- **Responsive Design**: Seamless experience across desktop and mobile devices
+- **Dark/Light Mode**: Comfortable writing experience in any lighting condition
 
-<p align="center" style="width: 100%;">
-<a style="display:flex; justify-content: center; width: 100%;" href="https://horizon-ui.com/boilerplate-shadcn" target="_blank"><img style="border-radius: 10px; width: 100%;" src="https://i.ibb.co/72bXVwG/horizon-free-boilerplate-shadcn-image-readme-2.png" alt="Horizon AI Boilerplate NextJS Shadcn UI" /></a>
-</p>
+## CEFR Levels Explained
 
+- **A1 (Beginner)**: Basic phrases and expressions
+- **A2 (Elementary)**: Simple, everyday topics
+- **B1 (Intermediate)**: Main points on familiar matters
+- **B2 (Upper Intermediate)**: Clear, detailed text on various subjects
+- **C1 (Advanced)**: Complex topics with well-structured text
+- **C2 (Mastery)**: Sophisticated, nuanced writing on any topic
 
-&nbsp;
+## Tech Stack
 
-### Introduction
+- **Framework**: Next.js 13
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Components**: shadcn/ui
+- **State Management**: Zustand
+- **Authentication**: Supabase
+- **AI Integration**: OpenRouter API
 
-Horizon AI Boilerplate is the first open-source Admin Dashboard OpenAI ChatGPT AI Template made for Shadcn UI, NextJS, and Tailwind CSS! Start creating outstanding Chat AI SaaS Apps faster.
+## Getting Started
 
-It comes with over 30+ dark/light frontend individual elements, like buttons, inputs, navbars, nav tabs, cards, or alerts, giving you the freedom of choosing and combining.
-
-### Documentation
-
-Each element is well presented in a very complex documentation. You can read more about the <a href="https://horizon-ui.com/docs-boilerplate/shadcn-components/chat" target="_blank">documentation here.</a>
-
-### Quick Start
-
-Install Horizon ChatGPT AI Template by running either of the following:
-
-- Install NodeJS LTS from [NodeJs Official Page](https://nodejs.org/en/?ref=horizon-documentation) (NOTE: Product only works with LTS version)
-
-<br />
-
-Clone the repository with the following command:
-
+1. Clone the repository:
 ```bash
-git clone https://github.com/horizon-ui/shadcn-nextjs-boilerplate.git
+git clone https://github.com/julesmeister/testmanship.git
 ```
 
-Run in the terminal this command:
-
-```
+2. Install dependencies:
+```bash
+cd testmanship
 npm install
 ```
 
-<br />
-
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
 ```
-npm run init
-```
+Fill in your environment variables in `.env.local`
 
-<br />
-
-Then run this command to start your local server:
-
-```
+4. Run the development server:
+```bash
 npm run dev
 ```
-&nbsp;
 
-### Your API Key is not working?
+Visit `http://localhost:3000` to start using Testmanship.
 
-- Make sure you have an [OpenAI account](https://platform.openai.com/account) and a valid API key to use ChatGPT. We don't sell API keys.
-- Make sure you have your billing info added in [OpenAI Billing page](https://platform.openai.com/account/billing/overview). Without billing info, your API key will not work.
-- The app will connect to the OpenAI API server to check if your API Key is working properly. 
+## Contributing
 
+We welcome contributions! Please feel free to submit a Pull Request.
 
-### Figma Version
+## License
 
-Horizon AI Boilerplate is available in Figma format as well! [Check it out here](https://www.figma.com/community/file/1374394029061088369)! 🎨
+This project is licensed under the MIT License - see the LICENSE file for details.
 
+## Support
 
-### Example Sections
-
-If you want to get inspiration for your startup project or just show something directly to your clients, you can jump-start your development with our pre-built example sections. You will be able to quickly set up the basic structure for your web project.
-
- View <a href="https://horizon-ui.com/boilerplate-shadcn#pages" target="_blank">example sections here</a>
-
- ---
-
-
-# PRO Version
-
-Unlock a huge amount of components and pages with our PRO version - <a href="https://horizon-ui.com/boilerplate-shadcn#pricing" target="_blank">Learn more</a>
-
-<p align="center" style="width: 100%;">
-<a style="display:flex; justify-content: center; width: 100%;" href="https://horizon-ui.com/boilerplate-shadcn#pricing" target="_blank"><img style="border-radius: 10px; width: 100%;" src="https://i.ibb.co/Q8jNqWJ/horizon-boilerplate-shadcn-image-readme-2.png" alt="Horizon AI Boilerplate NextJS Shadcn UI" /></a>
-</p>
-
+For support, please open an issue in the GitHub repository or contact our support team.
 
 ---
 
-# Reporting Issues
-
-We use GitHub Issues as the official bug tracker for the Horizon UI. Here are
-some advice for our users who want to report an issue:
-
-1. Make sure that you are using the latest version of the Horizon UI Boilerplate. Check the CHANGELOG for your dashboard on our [CHANGE LOG File](https://github.com/horizon-ui/shadcn-nextjs-boilerplate/blob/main/CHANGELOG.md).
-<br />
-
-1. Providing us with reproducible steps for the issue will shorten the time it takes for it to be fixed.
-<br />
-
-
-3. Some issues may be browser-specific, so specifying in what browser you encountered the issue might help.
-
----
-
-# Community
-
-Connect with the community! Feel free to ask questions, report issues, and meet new people who already use Horizon UI!
-
-💬 [Join the #HorizonUI Discord Community!](https://discord.gg/f6tEKFBd4m)
-
-
-### Copyright and license
-
-⭐️ [Copyright 2024 Horizon UI](https://www.horizon-ui.com/?ref=readme-horizon)
-
-📄 [Horizon UI License](https://horizon-ui.notion.site/End-User-License-Agreement-8fb09441ea8c4c08b60c37996195a6d5)
-
-
----
-
-# Credits
-
-Special thanks to the open-source resources that helped us create this awesome boilerplate package, including:
-
-- [Shadcn UI Library](https://ui.shadcn.com/)
-- [NextJS Subscription Payments](https://github.com/vercel/nextjs-subscription-payments)
-- [ChatBot UI by mckaywrigley](https://github.com/mckaywrigley/chatbot-ui)
+Built with ❤️ for language learners worldwide
