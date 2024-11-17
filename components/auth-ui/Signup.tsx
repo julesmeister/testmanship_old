@@ -68,6 +68,7 @@ export default function SignUp({ allowEmail, redirectMethod }: SignUpProps) {
             />
           </div>
           <Button
+            variant="emerald"
             type="submit"
             className="mt-2 flex h-[unset] w-full items-center justify-center rounded-lg px-4 py-4 text-sm font-medium"
           >

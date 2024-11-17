@@ -193,11 +193,16 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
+        // Check for rate limit error specifically
+        if (response.status === 429 || data.error?.code === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment before generating more suggestions.');
+        }
         throw new Error('Failed to generate suggestions');
       }
 
-      const data = await response.json();
       if (!data.suggestions?.length) {
         throw new Error('No suggestions received');
       }
@@ -215,9 +220,10 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
       });
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      toast.error('Failed to generate suggestions', {
-        id: 'generating-suggestions',
-      });
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to generate suggestions',
+        { id: 'generating-suggestions' }
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -482,7 +488,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                           variant="secondary"
                           onClick={generateSuggestions}
                           disabled={isGenerating || !form.getValues('difficulty') || !form.getValues('format')}
-                          className="w-full"
+                          className="w-full transition-all duration-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:shadow-sm"
                         >
                           {isGenerating ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -522,34 +528,36 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                       </ul>
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-6">
                     <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <FormField
                           control={form.control}
                           name="title"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-zinc-900 dark:text-white">Title</FormLabel>
+                              <FormLabel className="text-base font-semibold text-zinc-900 dark:text-white">
+                                Challenge Title
+                              </FormLabel>
                               <FormControl>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 relative group">
                                   <Input 
-                                    placeholder="Enter challenge title" 
+                                    placeholder="e.g., Describing Your Dream Vacation" 
                                     {...field}
-                                    className="bg-white dark:bg-zinc-900"
+                                    className="bg-white dark:bg-zinc-900 h-11 text-base transition-shadow duration-200 focus:ring-2 focus:ring-blue-500"
                                     onChange={(e) => {
                                       field.onChange(e);
                                       form.trigger('title');
                                     }}
                                   />
                                   <TooltipProvider delayDuration={0}>
-                                    <Tooltip defaultOpen>
+                                    <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
                                           type="button"
                                           variant="outline"
                                           size="icon"
-                                          className="flex-shrink-0"
+                                          className="flex-shrink-0 h-11 w-11 transition-all duration-200 hover:border-blue-500 hover:text-blue-500 group-hover:border-blue-500"
                                           disabled={!field.value || !form.getValues('format') || isGenerating}
                                           onClick={async () => {
                                             try {
@@ -627,26 +635,28 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                           }}
                                         >
                                           {isGenerating ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <Loader2 className="h-5 w-5 animate-spin" />
                                           ) : (
-                                            <Sparkles className="h-4 w-4" />
+                                            <Sparkles className="h-5 w-5" />
                                           )}
                                         </Button>
                                       </TooltipTrigger>
                                       <TooltipContent 
-                                        side="left"
-                                        className="bg-zinc-900 text-white"
+                                        side="right"
+                                        className="bg-zinc-900 text-white border-zinc-800"
+                                        sideOffset={5}
                                       >
-                                        <p className="text-xs">Generate instructions based on Title</p>
+                                        <p className="text-sm font-medium">Generate Instructions</p>
+                                        <p className="text-xs text-zinc-400 mt-1">AI will create instructions based on your title</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
                                 </div>
                               </FormControl>
-                              <FormDescription>
-                                Give your challenge a descriptive title.
+                              <FormDescription className="text-sm text-zinc-600 dark:text-zinc-400">
+                                A clear, concise title that describes the writing task.
                               </FormDescription>
-                              <FormMessage />
+                              <FormMessage className="text-sm font-medium" />
                             </FormItem>
                           )}
                         />
@@ -654,12 +664,14 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                           control={form.control}
                           name="instructions"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-zinc-900 dark:text-white">Instructions</FormLabel>
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-base font-semibold text-zinc-900 dark:text-white">
+                                Instructions
+                              </FormLabel>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Enter the challenge instructions..."
-                                  className="min-h-[200px] resize-none"
+                                  placeholder="Provide clear instructions for the writing challenge..."
+                                  className="min-h-[200px] resize-none bg-white dark:bg-zinc-900 text-base leading-relaxed transition-shadow duration-200 focus:ring-2 focus:ring-blue-500"
                                   {...field}
                                   onChange={(e) => {
                                     field.onChange(e);
@@ -667,79 +679,101 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                   }}
                                 />
                               </FormControl>
-                              <FormDescription>
-                                Write clear and concise instructions for the challenge.
+                              <FormDescription className="text-sm text-zinc-600 dark:text-zinc-400">
+                                Write detailed instructions that guide the student through the writing task.
                               </FormDescription>
-                              <FormMessage />
+                              <FormMessage className="text-sm font-medium" />
                             </FormItem>
                           )}
                         />
 
                         <div className="space-y-6">
                           {suggestions.length > 0 && (
-                            <div className="space-y-4">
+                            <div className="space-y-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-4 border border-zinc-200 dark:border-zinc-800">
+                              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+                                AI-Generated Suggestions
+                              </h3>
                               {suggestions.map((suggestion, index) => (
-                                <div key={index} className="rounded-lg border p-4">
-                                  <h4 className="mb-2 font-medium text-zinc-900 dark:text-white">
+                                <div 
+                                  key={index} 
+                                  className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 transition-all duration-200 hover:shadow-md hover:border-blue-500/50"
+                                >
+                                  <h4 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-blue-500" />
                                     {suggestion.title}
                                   </h4>
-                                  <p className="mb-3 text-sm text-zinc-900 dark:text-white">
+                                  <p className="text-base text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed">
                                     {suggestion.description}
                                   </p>
-                                  <div className="space-y-1">
-                                    <h5 className="text-sm font-medium text-zinc-900 dark:text-white">
-                                      Key Points:
+                                  <div className="space-y-3">
+                                    <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                                      <List className="h-4 w-4 text-blue-500" />
+                                      Key Learning Points
                                     </h5>
-                                    <ul className="space-y-2 text-sm text-zinc-900 dark:text-white">
+                                    <ul className="space-y-2">
                                       {suggestion.keyPoints.map((point, idx) => (
-                                        <li key={idx} className="flex items-start gap-2">
-                                          <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-                                          <span>{point}</span>
+                                        <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
+                                          <BrainCircuit className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
+                                          <span className="text-sm leading-relaxed">{point}</span>
                                         </li>
                                       ))}
                                     </ul>
                                   </div>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-3"
-                                    onClick={() => {
-                                      const timeAllocation = form.getValues('timeAllocation');
-                                      const formattedInstructions = `${suggestion.description}\n\nKey Points:\n${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}\n• Time Allocation: ${timeAllocation} minutes`;
-                                      form.setValue('title', suggestion.title);
-                                      form.setValue('instructions', formattedInstructions);
-                                      form.trigger('title');
-                                      form.trigger('instructions');
-                                      setSuggestions([]); // Clear suggestions
-                                      toast.success('Challenge updated', {
-                                        description: 'Title and instructions have been added to the form.',
-                                      });
-                                    }}
-                                  >
-                                    <Check className="mr-2 h-4 w-4" />
-                                    Use This Challenge
-                                  </Button>
+                                  <div className="mt-4 flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                      <Clock className="h-4 w-4" />
+                                      <span>{form.getValues('timeAllocation')} minutes</span>
+                                      <Award className="h-4 w-4 ml-2" />
+                                      <span>{form.getValues('difficulty')}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="transition-all duration-200 hover:border-blue-500 hover:text-blue-500"
+                                      onClick={() => {
+                                        const timeAllocation = form.getValues('timeAllocation');
+                                        const formattedInstructions = `${suggestion.description}\n\nKey Points:\n${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}\n• Time Allocation: ${timeAllocation} minutes`;
+                                        form.setValue('title', suggestion.title);
+                                        form.setValue('instructions', formattedInstructions);
+                                        form.trigger('title');
+                                        form.trigger('instructions');
+                                        setSuggestions([]);
+                                        toast.success('Challenge updated', {
+                                          description: 'Title and instructions have been added to the form.',
+                                        });
+                                      }}
+                                    >
+                                      <Check className="mr-2 h-4 w-4" />
+                                      Use This Challenge
+                                    </Button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           )}
                         </div>
 
-                        <Button 
-                          type="submit" 
-                          className="w-full" 
-                          disabled={isSaving}
-                        >
-                          {isSaving ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Saving...
-                            </>
-                          ) : (
-                            'Save Challenge'
-                          )}
-                        </Button>
+                        {/* Reduced space between suggestions and button */}
+                        <div className="mt-4">
+                          <Button 
+                            type="submit" 
+                            className="w-full h-11 text-base font-medium transition-all duration-200 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500" 
+                            disabled={isSaving}
+                          >
+                            {isSaving ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Saving Challenge...
+                              </>
+                            ) : (
+                              <>
+                                <Check className="mr-2 h-5 w-5" />
+                                Save Challenge
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </form>
                     </Form>
                   </CardContent>
