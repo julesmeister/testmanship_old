@@ -80,24 +80,27 @@ export default function EmailSignIn({
         </div>
       </form>
       {allowPassword && (
-        <>
-          <p>
-            <Link
-              href="/dashboard/signin/password_signin"
-              className="font-medium text-sm dark:text-white"
-            >
+        <div className="space-y-2 text-center">
+          <Button
+            variant="link"
+            asChild
+            className="text-sm font-medium text-zinc-950 dark:text-white"
+          >
+            <Link href="/dashboard/signin/password_signin">
               Sign in with email and password
             </Link>
-          </p>
-          <p>
-            <Link
-              href="/dashboard/signin/signup"
-              className="font-medium text-sm dark:text-white"
-            >
+          </Button>
+
+          <Button
+            variant="link"
+            asChild
+            className="text-sm font-medium text-zinc-950 dark:text-white"
+          >
+            <Link href="/dashboard/signin/signup">
               Don't have an account? Sign up
             </Link>
-          </p>
-        </>
+          </Button>
+        </div>
       )}
     </div>
   );

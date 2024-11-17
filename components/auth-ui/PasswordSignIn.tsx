@@ -6,6 +6,7 @@ import { handleRequest } from "@/utils/auth-helpers/client";
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 // Define prop type with allowEmail boolean
 interface PasswordSignInProps {
@@ -21,9 +22,23 @@ export default function PasswordSignIn({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    setIsSubmitting(true); // Disable the button while the request is being handled
-    await handleRequest(e, signInWithPassword, router);
-    setIsSubmitting(false);
+    try {
+      setIsSubmitting(true);
+      toast.loading('Signing in...', {
+        id: 'signin',
+      });
+
+      await handleRequest(e, signInWithPassword, router);
+    } catch (error) {
+      toast.error('Sign in failed', {
+        id: 'signin',
+        description: 'Please check your credentials and try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+      // Dismiss the loading toast if it's still showing
+      toast.dismiss('signin');
+    }
   };
 
   return (
@@ -91,32 +106,39 @@ export default function PasswordSignIn({
           </Button>
         </div>
       </form>
-      <p>
-        <a
-          href="/dashboard/signin/forgot_password"
-          className="font-medium text-zinc-950 dark:text-white text-sm"
+      <div className="space-y-2 text-center">
+        <Button
+          variant="link"
+          asChild
+          className="text-sm font-medium text-zinc-950 dark:text-white"
         >
-          Forgot your password?
-        </a>
-      </p>
-      {allowEmail && (
-        <p>
-          <a
-            href="/dashboard/signin/email_signin"
-            className="font-medium text-zinc-950 dark:text-white text-sm"
-          >
-            Sign in via magic link
+          <a href="/dashboard/signin/forgot_password">
+            Forgot your password?
           </a>
-        </p>
-      )}
-      <p>
-        <a
-          href="/dashboard/signin/signup"
-          className="font-medium text-zinc-950 dark:text-white text-sm"
+        </Button>
+        
+        {allowEmail && (
+          <Button
+            variant="link"
+            asChild
+            className="text-sm font-medium text-zinc-950 dark:text-white"
+          >
+            <a href="/dashboard/signin/email_signin">
+              Sign in via magic link
+            </a>
+          </Button>
+        )}
+        
+        <Button
+          variant="link"
+          asChild
+          className="text-sm font-medium text-zinc-950 dark:text-white"
         >
-          Don't have an account? Sign up
-        </a>
-      </p>
+          <a href="/dashboard/signin/signup">
+            Don't have an account? Sign up
+          </a>
+        </Button>
+      </div>
     </div>
   );
 }

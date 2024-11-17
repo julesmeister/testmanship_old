@@ -20,6 +20,7 @@ import {
   HiOutlineArrowRightOnRectangle
 } from 'react-icons/hi2';
 import { createClient } from '@/utils/supabase/client';
+import { toast } from "sonner";
 
 const supabase = createClient();
 export default function HeaderLinks(props: { [x: string]: any }) {
@@ -33,11 +34,25 @@ export default function HeaderLinks(props: { [x: string]: any }) {
 
   const handleSignOut = async (e) => {
     e.preventDefault();
-    await supabase.auth.signOut();
-    if (router) {
-      router.push('/dashboard/signin');
+    toast.loading('Signing out...', {
+      id: 'signout',
+      duration: 1000,
+    });
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Sign out failed', {
+        id: 'signout',
+        description: 'Please try again.',
+      });
     } else {
-      window.location.href = '/dashboard/signin';
+      toast.success('Signed out successfully', {
+        id: 'signout',
+      });
+      if (router) {
+        router.push('/dashboard/signin');
+      } else {
+        window.location.href = '/dashboard/signin';
+      }
     }
   };
 

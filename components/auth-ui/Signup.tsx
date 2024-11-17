@@ -8,6 +8,7 @@ import { handleRequest } from '@/utils/auth-helpers/client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 // Define prop type with allowEmail boolean
 interface SignUpProps {
@@ -21,6 +22,10 @@ export default function SignUp({ allowEmail, redirectMethod }: SignUpProps) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setIsSubmitting(true); // Disable the button while the request is being handled
+    toast.loading('Creating your account...', {
+      id: 'signup',
+      duration: 2000,
+    });
     await handleRequest(e, signUp, router);
     setIsSubmitting(false);
   };
@@ -90,32 +95,39 @@ export default function SignUp({ allowEmail, redirectMethod }: SignUpProps) {
           </Button>
         </div>
       </form>
-      <p>
-        <Link
-          href="/dashboard/signin/forgot_password"
-          className="font-medium text-zinc-950 dark:text-white text-sm"
+      <div className="space-y-2 text-center">
+        <Button
+          variant="link"
+          asChild
+          className="text-sm font-medium text-zinc-950 dark:text-white"
         >
-          Forgot your password?
-        </Link>
-      </p>
-      <p className="font-medium text-sm dark:text-white">
-        <Link
-          href="/dashboard/signin/password_signin"
-          className="font-medium text-sm dark:text-white"
-        >
-          Already have an account?
-        </Link>
-      </p>
-      {allowEmail && (
-        <p className="font-medium text-sm dark:text-white">
-          <Link
-            href="/dashboard/signin/email_signin"
-            className="font-medium text-sm dark:text-white"
-          >
-            Sign in via magic link
+          <Link href="/dashboard/signin/forgot_password">
+            Forgot your password?
           </Link>
-        </p>
-      )}
+        </Button>
+
+        <Button
+          variant="link"
+          asChild
+          className="text-sm font-medium text-zinc-950 dark:text-white"
+        >
+          <Link href="/dashboard/signin/password_signin">
+            Already have an account?
+          </Link>
+        </Button>
+
+        {allowEmail && (
+          <Button
+            variant="link"
+            asChild
+            className="text-sm font-medium text-zinc-950 dark:text-white"
+          >
+            <Link href="/dashboard/signin/email_signin">
+              Sign in via magic link
+            </Link>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

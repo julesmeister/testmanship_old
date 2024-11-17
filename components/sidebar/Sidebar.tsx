@@ -11,6 +11,7 @@ import { UserContext, UserDetailsContext, OpenContext } from '@/contexts/layout'
 import { createClient } from '@/utils/supabase/client';
 import { HiChevronLeft, HiOutlineArrowRightOnRectangle } from 'react-icons/hi2';
 import { useSidebarStore } from '@/stores/sidebar';
+import { toast } from 'sonner';
 
 const supabase = createClient();
 
@@ -20,7 +21,7 @@ export interface SidebarProps extends PropsWithChildren {
 }
 
 export default function Sidebar(props: SidebarProps) {
-  const router = getRedirectMethod() === 'client' ? useRouter() : null;
+  const router = useRouter();
   const pathname = usePathname();
   const { routes } = props;
   const { isCollapsed } = useSidebarStore();
@@ -31,11 +32,30 @@ export default function Sidebar(props: SidebarProps) {
 
   const handleSignOut = async (e) => {
     e.preventDefault();
-    await supabase.auth.signOut();
-    if (router) {
-      router.push('/dashboard/signin');
+    const redirectMethod = getRedirectMethod();
+    
+    toast.loading('Signing out...', {
+      id: 'signout',
+      duration: 1000,
+    });
+    
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      toast.error('Sign out failed', {
+        id: 'signout',
+        description: 'Please try again.',
+      });
     } else {
-      window.location.href = '/dashboard/signin';
+      toast.success('Signed out successfully', {
+        id: 'signout',
+      });
+      
+      if (redirectMethod === 'client' && router) {
+        router.push('/dashboard/signin');
+      } else {
+        window.location.href = '/dashboard/signin';
+      }
     }
   };
 
