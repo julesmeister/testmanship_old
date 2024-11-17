@@ -58,6 +58,7 @@ create table challenges (
   difficulty_level difficulty_level not null,
   format_id uuid references challenge_formats not null,
   created_by uuid references auth.users not null,
+  time_allocation integer not null default 30,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -65,9 +66,13 @@ alter table challenges enable row level security;
 create policy "Challenges are viewable by everyone." 
   on challenges for select 
   using (true);
-create policy "Users can create challenges." 
+drop policy if exists "Users can create challenges" on challenges;
+create policy "Users can create challenges" 
   on challenges for insert 
-  with check (auth.uid() = created_by);
+  with check (
+    auth.role() = 'authenticated' OR 
+    auth.uid() IS NOT NULL
+  );
 create policy "Users can update their own challenges." 
   on challenges for update 
   using (auth.uid() = created_by);

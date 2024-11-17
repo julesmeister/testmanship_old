@@ -15,8 +15,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, difficulty, format, timeAllocation } = await req.json();
-    console.log('Received request:', { title, difficulty, format, timeAllocation });
+    const { title, difficulty, format, timeAllocation, usedTitles = [] } = await req.json();
+    console.log('Received request:', { title, difficulty, format, timeAllocation, usedTitlesCount: usedTitles.length });
 
     if (!difficulty || !format) {
       console.log('Missing required fields:', { difficulty, format });
@@ -75,7 +75,10 @@ export async function POST(req: Request) {
       - Follow the ${format} format requirements
       - Engaging and creative
       - Clear and well-structured
-      - Focused on practical language use`;
+      - Focused on practical language use
+      ${usedTitles.length > 0 ? `\n\nIMPORTANT: Do NOT use any of these previously used titles:\n${usedTitles.join('\n')}\n` : ''}
+      
+      Return ONLY the JSON object, no additional text or explanation.`;
     }
 
     const response = await fetch(API_URL, {
@@ -119,7 +122,11 @@ export async function POST(req: Request) {
 
       let parsedContent;
       try {
-        parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
+        // Remove markdown code blocks if present
+        const cleanContent = content.replace(/^```(?:json)?\n|\n```$/g, '').trim();
+        console.log('Cleaned content:', cleanContent);
+        
+        parsedContent = JSON.parse(cleanContent);
       } catch (error) {
         console.error('Error parsing content as JSON:', error);
         console.log('Content that failed to parse:', content);

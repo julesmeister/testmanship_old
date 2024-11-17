@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabase } from '@/app/supabase-provider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -40,6 +40,9 @@ import DashboardLayout from '@/components/layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Database } from '@/types/types_db';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
 const difficultyLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 
@@ -56,8 +59,9 @@ const formSchema = z.object({
 interface ChallengeFormat {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   difficulty_level: typeof difficultyLevels[number];
+  created_at: string;
 }
 
 interface Suggestion {
@@ -77,7 +81,30 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const supabase = createClientComponentClient();
+  const [usedTitles, setUsedTitles] = useState<Set<string>>(new Set());
+  const { supabase } = useSupabase();
+  const router = useRouter();
+
+  // Type the supabase client correctly
+  const typedSupabase = supabase as SupabaseClient<Database>;
+
+  // Log authentication state when component mounts
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Current auth session:', session);
+        console.log('User prop:', user);
+        console.log('User details:', userDetails);
+        if (error) {
+          console.error('Auth check error:', error);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      }
+    };
+    checkAuth();
+  }, [user, userDetails, supabase]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,7 +123,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
       const difficultyIndex = difficultyLevels.indexOf(difficulty as any);
       const applicableLevels = difficultyLevels.slice(0, difficultyIndex + 1);
       
-      const { data: formatsData, error } = await supabase
+      const { data: formatsData, error } = await typedSupabase
         .from('challenge_formats')
         .select('*')
         .in('difficulty_level', applicableLevels)
@@ -149,9 +176,8 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
       const format = formats.find(f => f.id === form.getValues('format'));
       const timeAllocation = form.getValues('timeAllocation');
 
-      if (!difficulty || !format) {
-        toast.error('Please select both difficulty level and format');
-        return;
+      if (!format) {
+        throw new Error('Please select a format');
       }
 
       const response = await fetch('/api/challenge-suggestions', {
@@ -159,79 +185,115 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ difficulty, format: format.name, timeAllocation }),
+        body: JSON.stringify({ 
+          difficulty, 
+          format: format.name, 
+          timeAllocation,
+          usedTitles: Array.from(usedTitles)
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate suggestions');
+      if (!response.ok) {
+        throw new Error('Failed to generate suggestions');
+      }
 
       const data = await response.json();
-      if (!data.suggestions || !data.suggestions.length) {
+      if (!data.suggestions?.length) {
         throw new Error('No suggestions received');
       }
 
+      // Add new titles to usedTitles
+      const newTitles = new Set(usedTitles);
+      data.suggestions.forEach((suggestion: Suggestion) => {
+        newTitles.add(suggestion.title);
+      });
+      setUsedTitles(newTitles);
+
       setSuggestions(data.suggestions);
-      toast.success('Generated new challenge suggestions!', {
+      toast.success('Suggestions generated', {
         id: 'generating-suggestions',
-        description: 'Click "Use This Challenge" on any suggestion to apply it.',
       });
     } catch (error) {
       console.error('Error generating suggestions:', error);
       toast.error('Failed to generate suggestions', {
         id: 'generating-suggestions',
-        description: 'Please try again later.',
       });
     } finally {
       setIsGenerating(false);
     }
   };
 
+  // Reset used titles when difficulty or format changes
+  useEffect(() => {
+    setUsedTitles(new Set());
+  }, [form.watch('difficulty'), form.watch('format')]);
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    console.log('Starting save process...');
     try {
       setIsSaving(true);
       toast.loading('Saving challenge...', {
         id: 'saving-challenge',
       });
 
-      if (!user) {
-        toast.error('You must be logged in to create challenges');
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        toast.error('Please sign in to save challenges', {
+          id: 'saving-challenge',
+        });
+        router.push('/signin');
         return;
       }
 
-      const { error } = await supabase
+      // Validate required fields
+      console.log('Validating form data:', data);
+      if (!data.title || !data.instructions || !data.difficulty || !data.format) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      const challengeData: Database['public']['Tables']['challenges']['Insert'] = {
+        title: data.title,
+        instructions: data.instructions,
+        difficulty_level: data.difficulty,
+        format_id: data.format,
+        created_by: session.user.id, // Use session user ID
+        time_allocation: data.timeAllocation
+      };
+
+      // Log the data being saved
+      console.log('Attempting to save challenge to Supabase:', challengeData);
+
+      const { data: savedData, error } = await supabase
         .from('challenges')
-        .insert({
-          title: data.title,
-          instructions: data.instructions,
-          difficulty_level: data.difficulty,
-          format_id: data.format,
-          created_by: user.id,
-          time_allocation: data.timeAllocation
-        });
+        .insert(challengeData)
+        .select()
+        .single();
+
+      console.log('Supabase response:', { savedData, error });
 
       if (error) {
         console.error('Error saving challenge:', error);
-        throw error;
+        throw new Error(`Failed to save challenge: ${error.message}`);
       }
-      
+
+      if (!savedData) {
+        throw new Error('No data returned from save operation');
+      }
+
       toast.success('Challenge saved successfully!', {
         id: 'saving-challenge',
-        description: 'Your new writing challenge has been created.',
       });
 
-      // Reset form and clear suggestions
-      form.reset({
-        title: '',
-        instructions: '',
-        difficulty: 'A1',
-        format: '',
-        timeAllocation: 30
-      });
+      // Reset form
+      form.reset();
       setSuggestions([]);
     } catch (error) {
-      console.error('Error saving challenge:', error);
+      console.error('Save process error:', error);
       toast.error('Failed to save challenge', {
         id: 'saving-challenge',
-        description: 'Please try again later.',
+        description: error instanceof Error ? error.message : 'Please try again later.',
       });
     } finally {
       setIsSaving(false);
@@ -488,7 +550,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                           variant="outline"
                                           size="icon"
                                           className="flex-shrink-0"
-                                          disabled={!field.value || isGenerating}
+                                          disabled={!field.value || !form.getValues('format') || isGenerating}
                                           onClick={async () => {
                                             try {
                                               setIsGenerating(true);
@@ -572,10 +634,10 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                         </Button>
                                       </TooltipTrigger>
                                       <TooltipContent 
-                                        side="bottom"
+                                        side="left"
                                         className="bg-zinc-900 text-white"
                                       >
-                                        <p className="text-xs">Generate AI instructions based on title</p>
+                                        <p className="text-xs">Generate instructions based on Title</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>

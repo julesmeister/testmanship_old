@@ -9,6 +9,79 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      challenges: {
+        Row: {
+          id: string;
+          title: string;
+          instructions: string;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          format_id: string;
+          created_by: string;
+          time_allocation: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          instructions: string;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          format_id: string;
+          created_by: string;
+          time_allocation?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          instructions?: string;
+          difficulty_level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          format_id?: string;
+          created_by?: string;
+          time_allocation?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'challenges_created_by_fkey';
+            columns: ['created_by'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'challenges_format_id_fkey';
+            columns: ['format_id'];
+            referencedRelation: 'challenge_formats';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      challenge_formats: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          difficulty_level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       customers: {
         Row: {
           id: string;
@@ -238,6 +311,79 @@ export interface Database {
 export interface DatabaseTTS {
   public: {
     Tables: {
+      challenges: {
+        Row: {
+          id: string;
+          title: string;
+          instructions: string;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          format_id: string;
+          created_by: string;
+          time_allocation: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          instructions: string;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          format_id: string;
+          created_by: string;
+          time_allocation?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          instructions?: string;
+          difficulty_level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          format_id?: string;
+          created_by?: string;
+          time_allocation?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'challenges_created_by_fkey';
+            columns: ['created_by'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'challenges_format_id_fkey';
+            columns: ['format_id'];
+            referencedRelation: 'challenge_formats';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      challenge_formats: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          difficulty_level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          difficulty_level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       customers: {
         Row: {
           id: string;
