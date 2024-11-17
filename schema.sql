@@ -2,18 +2,49 @@
 * USERS
 * Note: This table contains user data. Users should only be able to view and update their own data.
 */
-create table users (
-  -- UUID from auth.users
-  id uuid references auth.users not null primary key,
-  full_name text,
-  avatar_url text,
-  credits bigint DEFAULT 0,
-  trial_credits bigint DEFAULT 3,
-  -- The customer's billing address, stored in JSON format.
-  billing_address jsonb,
-  -- Stores your customer's payment instruments.
-  payment_method jsonb
+-- Now create the users table if it doesn't exist
+CREATE TABLE IF NOT EXISTS public.users (
+    id uuid references auth.users not null primary key,
+    full_name text,
+    avatar_url text,
+    credits bigint DEFAULT 0,
+    trial_credits bigint DEFAULT 3,
+    billing_address jsonb,
+    payment_method jsonb,
+    target_language_id uuid REFERENCES supported_languages,
+    native_language_id uuid REFERENCES supported_languages
 );
+
+-- If the users table already exists, add the language columns
+DO $$ 
+BEGIN 
+    BEGIN
+        ALTER TABLE public.users
+        ADD COLUMN target_language_id uuid REFERENCES supported_languages,
+        ADD COLUMN native_language_id uuid REFERENCES supported_languages;
+    EXCEPTION
+        WHEN duplicate_column THEN 
+            RAISE NOTICE 'columns already exist';
+    END;
+END $$;
+
+-- Add RLS policies if they don't exist
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Can view own user data.'
+    ) THEN
+        CREATE POLICY "Can view own user data." ON users FOR SELECT USING (auth.uid() = id);
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Can update own user data.'
+    ) THEN
+        CREATE POLICY "Can update own user data." ON users FOR UPDATE USING (auth.uid() = id);
+    END IF;
+END $$;
 alter table users enable row level security;
 create policy "Can view own user data." on users for select using (auth.uid() = id);
 create policy "Can update own user data." on users for update using (auth.uid() = id);
@@ -21,17 +52,17 @@ create policy "Can update own user data." on users for update using (auth.uid() 
 /**
 * This trigger automatically creates a user entry when a new user signs up via Supabase Auth.
 */ 
-create function handle_new_user() 
+create function public.handle_new_user() 
 returns trigger as $$
 begin
-  insert into users (id, full_name, avatar_url)
+  insert into public.users (id, full_name, avatar_url)
   values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
   return new;
 end;
 $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
-  for each row execute procedure handle_new_user();
+  for each row execute procedure public.handle_new_user();
 
 
 -- Create enum for difficulty levels
@@ -252,77 +283,17 @@ create policy "Users can view their own writing errors."
   on writing_errors for select 
   using (auth.uid() = user_id);
 
--- Grant necessary permissions to the authenticated role
-GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL ROUTINES IN SCHEMA public TO authenticated;
-
--- Step 1: Create the view
-CREATE OR REPLACE VIEW weekly_performance_trends AS
-WITH weekly_metrics AS (
-  SELECT 
-    user_id,
-    date_trunc('week', completed_at) as week,
-    AVG(performance_score) as avg_score,
-    AVG(word_count) as avg_words,
-    AVG(time_spent) as avg_time,
-    COUNT(*) as challenges_completed
-  FROM challenge_attempts
-  WHERE auth.uid() = user_id
-  GROUP BY user_id, date_trunc('week', completed_at)
-)
-SELECT 
+-- View for user performance trends
+create view user_performance_trends as
+select 
   user_id,
-  week::timestamp with time zone,
-  ROUND(avg_score::numeric, 1) as avg_score,
-  ROUND(avg_words::numeric, 0) as avg_words,
-  ROUND(avg_time::numeric, 0) as avg_time,
-  challenges_completed
-FROM weekly_metrics
-ORDER BY week DESC;
-
--- Step 2: Create the function
-CREATE OR REPLACE FUNCTION get_recent_weekly_trends(
-  p_user_id uuid,
-  p_weeks_limit int DEFAULT 8
-)
-RETURNS TABLE (
-  week timestamp with time zone,
-  avg_score numeric,
-  avg_words numeric,
-  avg_time numeric,
-  challenges_completed bigint
-) 
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-  IF auth.uid() != p_user_id THEN
-    RAISE EXCEPTION 'Access denied';
-  END IF;
-
-  RETURN QUERY
-  SELECT 
-    wpt.week,
-    wpt.avg_score,
-    wpt.avg_words,
-    wpt.avg_time,
-    wpt.challenges_completed
-  FROM weekly_performance_trends wpt
-  WHERE wpt.user_id = p_user_id
-  ORDER BY wpt.week DESC
-  LIMIT p_weeks_limit;
-END;
-$$;
-
--- Step 3: Grant permissions
-GRANT SELECT ON weekly_performance_trends TO authenticated;
-GRANT EXECUTE ON FUNCTION get_recent_weekly_trends TO authenticated;
-
--- Add comments
-COMMENT ON VIEW weekly_performance_trends IS 'Aggregated weekly performance metrics for users';
-COMMENT ON FUNCTION get_recent_weekly_trends IS 'Returns recent weekly performance trends for a specific user';
+  date_trunc('week', completed_at) as week,
+  avg(performance_score) as avg_score,
+  avg(word_count) as avg_words,
+  avg(time_spent) as avg_time,
+  count(*) as challenges_completed
+from challenge_attempts
+group by user_id, date_trunc('week', completed_at);
 
 -- Add comments for documentation
 COMMENT ON TABLE challenge_attempts IS 'Stores individual challenge attempts by users';
@@ -330,3 +301,35 @@ COMMENT ON TABLE skill_metrics IS 'Tracks user proficiency in specific writing s
 COMMENT ON TABLE performance_metrics IS 'Detailed performance metrics for each challenge attempt';
 COMMENT ON TABLE user_progress IS 'Aggregated user progress and statistics';
 COMMENT ON TABLE writing_errors IS 'Tracks common writing errors for personalized feedback';
+
+CREATE TABLE supported_languages (
+  id uuid default gen_random_uuid() primary key,
+  code text not null unique,
+  name text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Add some default supported languages
+INSERT INTO supported_languages (code, name) VALUES
+('en', 'English'),
+('es', 'Spanish'),
+('fr', 'French'),
+('de', 'German'),
+('it', 'Italian'),
+('pt', 'Portuguese'),
+('nl', 'Dutch'),
+('ru', 'Russian'),
+('zh', 'Chinese'),
+('ja', 'Japanese'),
+('ko', 'Korean');
+
+CREATE VIEW weekly_performance_trends AS
+SELECT 
+    date_trunc('week', completed_at) as week,
+    AVG(performance_score) as avg_score,
+    AVG(word_count) as avg_words,
+    AVG(time_spent) as avg_time,
+    COUNT(*) as challenges_completed
+FROM challenge_attempts
+GROUP BY date_trunc('week', completed_at)
+ORDER BY week DESC;

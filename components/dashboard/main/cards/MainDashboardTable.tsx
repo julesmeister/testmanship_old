@@ -362,16 +362,18 @@ interface MainDashboardTableProps {
 
 export default function MainDashboardTable({ tableData }: MainDashboardTableProps) {
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">
+        <h2 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white">
           Recent Writing Challenges
         </h2>
         <Badge variant="outline" className="text-xs">
           Last 30 days
         </Badge>
       </div>
-      <div className="rounded-md border">
+      
+      {/* Desktop View */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -432,6 +434,65 @@ export default function MainDashboardTable({ tableData }: MainDashboardTableProp
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden space-y-4">
+        {tableData.map((challenge) => (
+          <div key={challenge.id} className="rounded-lg border p-4 space-y-3">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-zinc-900 dark:text-white">
+                  {challenge.title}
+                </p>
+                <Badge
+                  variant="secondary"
+                  className={getDifficultyColor(challenge.difficulty)}
+                >
+                  {challenge.difficulty}
+                </Badge>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {challenge.feedback}
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="space-y-2">
+                <div>
+                  <span className="text-zinc-500 dark:text-zinc-400">Performance:</span>{" "}
+                  <span className={`font-medium ${getPerformanceColor(challenge.performance)}`}>
+                    {challenge.performance.toFixed(1)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-500 dark:text-zinc-400">Paragraphs:</span>{" "}
+                  <span className="font-medium text-zinc-900 dark:text-white">
+                    {challenge.paragraphs}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <span className="text-zinc-500 dark:text-zinc-400">Words:</span>{" "}
+                  <span className="font-medium text-zinc-900 dark:text-white">
+                    {challenge.wordCount}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-500 dark:text-zinc-400">Time:</span>{" "}
+                  <span className="font-medium text-zinc-900 dark:text-white">
+                    {challenge.timeSpent} min
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-xs text-zinc-500 dark:text-zinc-400">
+              {format(challenge.completedAt, "MMM d, h:mm a")}
+            </div>
+          </div>
+        ))}
       </div>
     </Card>
   );
