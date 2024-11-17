@@ -30,22 +30,43 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
         </a>
         {children}
         <div className="absolute right-0 hidden h-full min-h-[100vh] xl:block xl:w-[50vw] 2xl:w-[44vw]">
-          <div className="absolute flex h-full w-full flex-col items-end justify-start bg-zinc-950 dark:bg-zinc-900 overflow-y-auto snap-y snap-mandatory">
-            <div className="min-h-screen w-full flex flex-col items-center justify-center snap-start shrink-0">
+          <div className="absolute flex h-full w-full flex-col items-end justify-start overflow-y-auto snap-y snap-mandatory">
+            {/* Background with gradient and overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-600 to-indigo-900 dark:from-blue-600 dark:via-blue-800 dark:to-indigo-950">
+              {/* Decorative shapes */}
+              <div className="absolute inset-0 overflow-hidden">
+                {/* Large circle */}
+                <div className="absolute -top-[30%] -right-[10%] h-[600px] w-[600px] rounded-full bg-blue-500/20 blur-3xl" />
+                {/* Small circle */}
+                <div className="absolute top-[60%] -left-[10%] h-[400px] w-[400px] rounded-full bg-indigo-500/20 blur-3xl" />
+                {/* Additional shapes */}
+                <div className="absolute top-[20%] right-[20%] h-32 w-32 rotate-45 transform bg-white/5 backdrop-blur-lg" />
+                <div className="absolute bottom-[30%] left-[10%] h-24 w-24 rotate-12 transform bg-white/5 backdrop-blur-lg rounded-lg" />
+                {/* Floating dots */}
+                <div className="absolute top-[15%] left-[25%] h-2 w-2 rounded-full bg-white/40" />
+                <div className="absolute top-[45%] right-[15%] h-3 w-3 rounded-full bg-white/30" />
+                <div className="absolute bottom-[25%] right-[35%] h-2 w-2 rounded-full bg-white/40" />
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="relative min-h-screen w-full flex flex-col items-center justify-center snap-start shrink-0">
               <div className="flex flex-col items-center justify-center">
-                <div className="mb-12 flex items-center justify-center">
-                  <div className="me-2 flex h-[76px] w-[76px] items-center justify-center rounded-md bg-white text-zinc-950 dark:text-zinc-900">
-                    <HiBolt className="h-9 w-9" />
+                <div className="mb-12 flex items-center justify-center relative">
+                  {/* Logo container with glass effect */}
+                  <div className="me-2 flex h-[76px] w-[76px] items-center justify-center rounded-md bg-white/10 backdrop-blur-md border border-white/20">
+                    <HiBolt className="h-9 w-9 text-white" />
                   </div>
                   <h5 className="text-4xl font-bold leading-5 text-white">
                     Testmanship
                   </h5>
                 </div>
                 <div className="flex flex-col items-center justify-center text-2xl font-bold text-white">
-                  <h4 className="mb-5 flex w-[600px] items-center justify-center rounded-md text-center text-2xl font-bold">
+                  {/* Message container with glass effect */}
+                  <h4 className="mb-5 flex w-[600px] items-center justify-center rounded-xl bg-white/5 backdrop-blur-sm p-6 text-center text-2xl font-bold border border-white/10">
                     "Master language exams like IELTS, TELC, OSD, and HSK with Testmanship. Practice with real exam-style questions, get instant feedback, and track your progress to achieve your target score."
                   </h4>
-                  <h5 className="text-xl font-medium leading-5 text-zinc-300">
+                  <h5 className="text-xl font-medium leading-5 text-white/80">
                     Your path to exam success starts here!
                   </h5>
                 </div>
