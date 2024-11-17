@@ -20,6 +20,7 @@ import { HiUser, HiSparkles, HiMiniPencilSquare } from 'react-icons/hi2';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import RightColumn from './RightColumn';
 
 interface Props {
   user: User | null | undefined;
@@ -92,6 +93,38 @@ export default function Test({ user, userDetails }: Props) {
     if (!hasStartedWriting && text.length > 0) {
       setHasStartedWriting(true);
     }
+  };
+
+  const handleStartChallenge = (challenge: any) => {
+    setSelectedChallenge(challenge);
+    // Reset timer and counts
+    setElapsedTime(0);
+    setWordCount(0);
+    setParagraphCount(0);
+    setCharCount(0);
+    setInputMessage('');
+    setOutputCode('');
+    
+    // Start the timer
+    setIsWriting(true);
+    startTimeRef.current = Date.now();
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    timerRef.current = setInterval(() => {
+      const now = Date.now();
+      const start = startTimeRef.current || now;
+      setElapsedTime(Math.floor((now - start) / 1000));
+    }, 1000);
+  };
+
+  const handleStopChallenge = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsWriting(false);
+    startTimeRef.current = null;
   };
 
   // API Key
@@ -227,82 +260,13 @@ export default function Test({ user, userDetails }: Props) {
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="w-1/3 flex flex-col gap-4">
-          {/* Challenge Selection */}
-          <div className="space-y-4">
-            <Tabs defaultValue="a1" className="w-full">
-              <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-gray-800">
-                <TabsTrigger value="a1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">A1</TabsTrigger>
-                <TabsTrigger value="a2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">A2</TabsTrigger>
-                <TabsTrigger value="b1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">B1</TabsTrigger>
-                <TabsTrigger value="b2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">B2</TabsTrigger>
-                <TabsTrigger value="c1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">C1</TabsTrigger>
-                <TabsTrigger value="c2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">C2</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <div className="bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
-              <div className="flex gap-2">
-                <Input
-                  type="search"
-                  placeholder="Search writing challenges..."
-                  className="flex-1"
-                />
-                <Button variant="outline">Search</Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Instructions & Criteria */}
-          {selectedChallenge && (
-            <Accordion type="single" collapsible className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
-              <AccordionItem value="instructions">
-                <AccordionTrigger className="px-4">Writing Instructions & Criteria</AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold mb-2">Topic</h3>
-                      <p className="text-zinc-600 dark:text-zinc-400">
-                        Discuss the impact of artificial intelligence on modern education.
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-2">Requirements</h3>
-                      <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
-                        <li>Minimum 500 words</li>
-                        <li>Include at least 3 specific examples</li>
-                        <li>Address both benefits and challenges</li>
-                        <li>Conclude with your personal perspective</li>
-                      </ul>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
-
-          {/* AI Feedback */}
-          {selectedChallenge && hasStartedWriting && (
-            <div className="flex-1 bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 overflow-y-auto">
-              <h2 className="font-semibold mb-4 flex items-center gap-2">
-                <HiSparkles className="w-5 h-5" />
-                AI Feedback
-              </h2>
-              <div className="space-y-4">
-                {outputCode ? (
-                  <div className="text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap">
-                    {outputCode}
-                  </div>
-                ) : (
-                  <div className="text-zinc-500 dark:text-zinc-400 italic">
-                    Start writing to receive real-time feedback on your essay.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        <RightColumn 
+          selectedChallenge={selectedChallenge}
+          hasStartedWriting={hasStartedWriting}
+          outputCode={outputCode}
+          onStartChallenge={handleStartChallenge}
+          onStopChallenge={handleStopChallenge}
+        />
       </div>
     </DashboardLayout>
   );
