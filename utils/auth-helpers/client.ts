@@ -98,61 +98,125 @@ export async function signInWithOAuth(
         description: error.message || 'Failed to connect with provider.',
         duration: 2000
       });
-    } else {
-      // Create user record after successful OAuth
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        console.log('Current user:', user);
+      return;
+    }
 
-        if (user) {
-          // Check if user record exists
-          const { data: existingUser, error: fetchError } = await supabase
+    // Create/update user record after successful OAuth
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
+
+      if (!user) {
+        console.error('No user data available after OAuth');
+        return;
+      }
+
+      // Wait for the database trigger with exponential backoff
+      let attempts = 0;
+      const maxAttempts = 3;
+      let userRecord = null;
+
+      while (attempts < maxAttempts) {
+        const delay = Math.pow(2, attempts) * 1000; // 1s, 2s, 4s
+        console.log(`Waiting ${delay}ms before checking user record (attempt ${attempts + 1}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        const { data: existingUser, error: fetchError } = await supabase
+          .from('users')
+          .select('id, full_name, avatar_url, credits, trial_credits')
+          .eq('id', user.id)
+          .single();
+
+        console.log(`Attempt ${attempts + 1} - User record check:`, { existingUser, fetchError });
+
+        if (existingUser) {
+          userRecord = existingUser;
+          break;
+        }
+
+        attempts++;
+      }
+
+      // If no user record exists after waiting, create one
+      if (!userRecord) {
+        console.log('Creating new user record after waiting period');
+        
+        const { data: newUser, error: insertError } = await supabase
+          .from('users')
+          .insert([
+            { 
+              id: user.id,
+              full_name: user.user_metadata?.full_name || 
+                        user.user_metadata?.name ||
+                        (user.user_metadata?.given_name && user.user_metadata?.family_name 
+                          ? `${user.user_metadata.given_name} ${user.user_metadata.family_name}`
+                          : 'Anonymous User'),
+              avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+              credits: 0,
+              trial_credits: 3
+            }
+          ])
+          .select()
+          .single();
+
+        if (insertError) {
+          // If insert fails, try one more time to get the user record
+          // (in case the trigger created it just now)
+          const { data: finalCheck } = await supabase
             .from('users')
             .select('id')
             .eq('id', user.id)
             .single();
 
-          console.log('Existing user check:', { existingUser, fetchError });
-
-          if (!existingUser || fetchError?.code === 'PGRST116') {
-            console.log('Creating new user record for:', user.id);
-            
-            // User record doesn't exist, create it
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert([
-                { 
-                  id: user.id,
-                  full_name: user.user_metadata?.full_name || user.user_metadata?.name,
-                  avatar_url: user.user_metadata?.avatar_url,
-                  credits: 0,
-                  trial_credits: 3
-                }
-              ])
-              .select()
-              .single();
-
-            if (insertError) {
-              console.error('Error creating user record:', insertError);
-              toast.error('Failed to initialize user profile', {
-                description: 'Please try refreshing the page.',
-                duration: 2000
-              });
-            } else {
-              console.log('User record created successfully');
-              toast.success('Account created successfully!', {
-                duration: 2000
-              });
-            }
-          } else {
-            console.log('User record already exists');
+          if (!finalCheck) {
+            console.error('Failed to create or find user record:', insertError);
+            toast.error('Profile initialization failed', {
+              description: 'Please try refreshing the page or contact support.',
+              duration: 3000
+            });
+            return;
           }
         } else {
-          console.error('No user data available after OAuth');
+          console.log('User record created successfully:', newUser);
+          toast.success('Account created successfully!', {
+            duration: 2000
+          });
         }
-      } catch (userError) {
-        console.error('Error handling user record:', userError);
+      } else {
+        // If user exists but profile data is incomplete, update it from OAuth
+        const updates: { [key: string]: any } = {};
+        
+        if (!userRecord.full_name) {
+          updates.full_name = user.user_metadata?.full_name || 
+                            user.user_metadata?.name ||
+                            (user.user_metadata?.given_name && user.user_metadata?.family_name 
+                              ? `${user.user_metadata.given_name} ${user.user_metadata.family_name}`
+                              : null);
+        }
+        
+        if (!userRecord.avatar_url) {
+          updates.avatar_url = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          const { error: updateError } = await supabase
+            .from('users')
+            .update(updates)
+            .eq('id', user.id);
+            
+          if (updateError) {
+            console.error('Error updating user profile:', updateError);
+          } else {
+            console.log('User profile updated with OAuth data:', updates);
+          }
+        }
       }
+    } catch (userError) {
+      console.error('Error handling user record:', userError);
+      toast.error('Profile initialization error', {
+        description: 'Your account was created but profile setup failed. Please try refreshing.',
+        duration: 3000
+      });
     }
   } catch (error) {
     console.error('OAuth error:', error);

@@ -26,20 +26,22 @@ export default function PasswordSignIn({
       setIsSubmitting(true);
       toast.loading('Signing in...', {
         id: 'signin',
-        duration: 2000
       });
 
       await handleRequest(e, signInWithPassword, router);
+      
+      // Only dismiss the loading toast on success
+      toast.dismiss('signin');
     } catch (error) {
+      // Dismiss the loading toast before showing the error
+      toast.dismiss('signin');
       toast.error('Sign in failed', {
-        id: 'signin',
+        id: 'signin-error',
         description: 'Please check your credentials and try again.',
         duration: 2000
       });
     } finally {
       setIsSubmitting(false);
-      // Dismiss the loading toast if it's still showing
-      toast.dismiss('signin');
     }
   };
 

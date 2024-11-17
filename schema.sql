@@ -28,6 +28,17 @@ BEGIN
     END;
 END $$;
 
+-- Add updated_at column if it doesn't exist
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name = 'updated_at'
+    ) THEN
+        ALTER TABLE users ADD COLUMN updated_at timestamptz DEFAULT now();
+    END IF;
+END $$;
+
 -- Add RLS policies if they don't exist
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
@@ -44,26 +55,72 @@ BEGIN
     ) THEN
         CREATE POLICY "Can update own user data." ON users FOR UPDATE USING (auth.uid() = id);
     END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Can insert own user data.'
+    ) THEN
+        CREATE POLICY "Can insert own user data." ON users FOR INSERT WITH CHECK (auth.uid() = id);
+    END IF;
 END $$;
-alter table users enable row level security;
-create policy "Can view own user data." on users for select using (auth.uid() = id);
-create policy "Can update own user data." on users for update using (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Can view own user data." ON users;
+DROP POLICY IF EXISTS "Can update own user data." ON users;
+DROP POLICY IF EXISTS "Can insert own user data." ON users;
+
+CREATE POLICY "Can view own user data." ON users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Can update own user data." ON users FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Can insert own user data." ON users FOR INSERT WITH CHECK (auth.uid() = id);
 
 /**
 * This trigger automatically creates a user entry when a new user signs up via Supabase Auth.
 */ 
-create function public.handle_new_user() 
-returns trigger as $$
-begin
-  insert into public.users (id, full_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
-  return new;
-end;
-$$ language plpgsql security definer;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS trigger 
+SECURITY DEFINER 
+SET search_path = public 
+AS $$
+DECLARE
+  name_from_metadata text;
+  avatar_from_metadata text;
+BEGIN
+  -- Try different metadata fields for name
+  name_from_metadata := coalesce(
+    new.raw_user_meta_data->>'full_name',
+    new.raw_user_meta_data->>'name',
+    new.raw_user_meta_data->>'given_name' || ' ' || new.raw_user_meta_data->>'family_name',
+    'Anonymous User'
+  );
+  
+  -- Try different metadata fields for avatar
+  avatar_from_metadata := coalesce(
+    new.raw_user_meta_data->>'avatar_url',
+    new.raw_user_meta_data->>'picture'
+  );
 
+  -- Insert or update the user record
+  INSERT INTO public.users (id, full_name, avatar_url, credits, trial_credits)
+  VALUES (
+    new.id,
+    name_from_metadata,
+    avatar_from_metadata,
+    0,
+    3
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET 
+    full_name = EXCLUDED.full_name,
+    avatar_url = EXCLUDED.avatar_url
+  WHERE users.full_name IS NULL OR users.avatar_url IS NULL;
+
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Create enum for difficulty levels
 create type difficulty_level as enum ('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
@@ -333,3 +390,62 @@ SELECT
 FROM challenge_attempts
 GROUP BY date_trunc('week', completed_at)
 ORDER BY week DESC;
+
+-- Function to update user language with proper permissions
+CREATE OR REPLACE FUNCTION public.update_user_language(user_id UUID, language_id UUID)
+RETURNS jsonb
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    result jsonb;
+BEGIN
+    -- Verify the user has permission to update this record
+    IF auth.uid() <> user_id THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Not authorized'
+        );
+    END IF;
+
+    -- Verify the language exists
+    IF NOT EXISTS (SELECT 1 FROM supported_languages WHERE id = language_id) THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Invalid language ID'
+        );
+    END IF;
+
+    -- Update the user's language preference
+    UPDATE users
+    SET target_language_id = language_id
+    WHERE id = user_id
+    RETURNING jsonb_build_object(
+        'id', id,
+        'target_language_id', target_language_id
+    ) INTO result;
+
+    IF result IS NULL THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'User not found'
+        );
+    END IF;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'data', result
+    );
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE LOG 'Error in update_user_language: %', SQLERRM;
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', SQLERRM
+        );
+END;
+$$;
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION public.update_user_language TO authenticated;

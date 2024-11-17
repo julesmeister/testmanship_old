@@ -50,33 +50,18 @@ export default function LanguageSelector({ userId, className }: Props) {
           setLanguages(languagesData);
         }
 
-        // If user is logged in, check/create user record and fetch language preference
+        // If user is logged in, fetch language preference
         if (userId) {
-          // First check if user record exists
           const { data: userData, error: fetchError } = await supabase
             .from('users')
-            .select('target_language_id')
+            .select('target_language_id, full_name')
             .eq('id', userId)
             .single();
 
-          if (fetchError && fetchError.code === 'PGRST116') {
-            // User record doesn't exist, create it
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert([
-                { 
-                  id: userId,
-                  credits: 0,
-                  trial_credits: 3
-                }
-              ]);
-
-            if (insertError) {
-              console.error('Error creating user record:', insertError);
-              toast.error("Failed to initialize user profile");
-            } else {
-              console.log('Created new user record');
-            }
+          if (fetchError) {
+            console.error('Error fetching user language:', fetchError);
+            // Don't try to create user here, just show dialog
+            setShowDialog(true);
           } else if (userData?.target_language_id) {
             setSelectedLanguage(userData.target_language_id);
           } else {
@@ -95,58 +80,60 @@ export default function LanguageSelector({ userId, className }: Props) {
   }, [userId, supabase]);
 
   const handleLanguageChange = async (value: string) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('No userId available for language update');
+      return;
+    }
 
-    setSelectedLanguage(value);
-    setShowDialog(false);
+    console.log('Attempting to update language to:', value, 'for user:', userId);
 
     try {
-      // First ensure user record exists
-      const { data: userData, error: fetchError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', userId)
+      // First verify the language exists
+      const { data: langCheck, error: langError } = await supabase
+        .from('supported_languages')
+        .select('id, name')
+        .eq('id', value)
         .single();
 
-      if (fetchError && fetchError.code === 'PGRST116') {
-        // User record doesn't exist, create it with the selected language
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert([
-            { 
-              id: userId,
-              target_language_id: value,
-              credits: 0,
-              trial_credits: 3
-            }
-          ]);
-
-        if (insertError) throw insertError;
-      } else {
-        // User exists, update language preference
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ target_language_id: value })
-          .eq('id', userId);
-
-        if (updateError) throw updateError;
+      if (langError || !langCheck) {
+        console.error('Invalid language ID:', value, 'Error:', langError);
+        toast.error("Invalid language selection");
+        return;
       }
 
-      toast.success("Language preference saved successfully!");
+      console.log('Language verified:', langCheck);
+
+      // Update the user's language preference with RLS bypass
+      const { data: response, error: rpcError } = await supabase.rpc(
+        'update_user_language',
+        { 
+          user_id: userId,
+          language_id: value
+        }
+      );
+
+      console.log('Update response:', { response, error: rpcError });
+
+      if (rpcError) {
+        console.error('RPC error updating language:', rpcError);
+        toast.error("Failed to save language preference");
+        return;
+      }
+
+      if (!response?.success) {
+        console.error('Update failed:', response?.error || 'Unknown error');
+        toast.error(response?.error || "Failed to save language preference");
+        return;
+      }
+
+      setSelectedLanguage(value);
+      setShowDialog(false);
+      toast.success(`Language set to ${langCheck.name}!`);
+      
+      console.log('Language preference successfully updated:', response.data);
     } catch (error) {
-      console.error('Error updating language preference:', error);
-      toast.error("Failed to save language preference. Please try again.");
-      
-      // Revert the selection if save failed
-      const { data: userData } = await supabase
-        .from('users')
-        .select('target_language_id')
-        .eq('id', userId)
-        .single();
-      
-      if (userData?.target_language_id) {
-        setSelectedLanguage(userData.target_language_id);
-      }
+      console.error('Error saving language:', error);
+      toast.error("Failed to save language preference");
     }
   };
 
