@@ -35,11 +35,13 @@ export default function PasswordSignIn({
     } catch (error) {
       // Dismiss the loading toast before showing the error
       toast.dismiss('signin');
-      toast.error('Sign in failed', {
-        id: 'signin-error',
-        description: 'Please check your credentials and try again.',
-        duration: 2000
-      });
+      if (error instanceof Error) {
+        toast.error('Invalid login credentials', {
+          id: 'signin-error',
+          description: 'Please check your email and password and try again.',
+          duration: 4000
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
