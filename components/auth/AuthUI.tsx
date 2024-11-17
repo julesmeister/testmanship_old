@@ -26,7 +26,7 @@ export default function AuthUI(props: any) {
   };
 
   return (
-    <div className="mx-auto my-auto mb-auto mt-8 flex w-full flex-col items-center justify-center md:mt-[70px] md:max-w-full lg:mt-[130px] lg:max-w-[420px]">
+    <div className="mx-auto my-auto mb-auto mt-8 flex w-full flex-col items-center justify-center md:mt-[70px] md:max-w-full lg:max-w-[420px]">
       {getIcon()}
       <p className="text-[32px] font-bold text-zinc-950 dark:text-white">
         {props.viewProp === 'signup'

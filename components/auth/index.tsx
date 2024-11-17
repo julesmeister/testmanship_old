@@ -31,10 +31,10 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 px-4 lg:px-8">
+          <div className="flex flex-1 flex-col justify-center px-4 lg:px-8">
             {children}
           </div>
-          <div className="flex w-full justify-center">
+          <div className="flex w-full justify-center mt-8 md:mt-12">
             <Footer />
           </div>
 
