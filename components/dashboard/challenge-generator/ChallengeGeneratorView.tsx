@@ -557,7 +557,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                           type="button"
                                           variant="outline"
                                           size="icon"
-                                          className="flex-shrink-0 h-11 w-11 transition-all duration-200 hover:border-blue-500 hover:text-blue-500 group-hover:border-blue-500"
+                                          className="flex-shrink-0 h-11 w-11 transition-all duration-200 enabled:hover:border-blue-500 enabled:hover:text-blue-500 enabled:group-hover:border-blue-500"
                                           disabled={!field.value || !form.getValues('format') || isGenerating}
                                           onClick={async () => {
                                             try {
@@ -758,7 +758,8 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                         <div className="mt-4">
                           <Button 
                             type="submit" 
-                            className="w-full h-11 text-base font-medium transition-all duration-200 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500" 
+                            variant="emerald"
+                            className="w-full h-11 text-base font-medium" 
                             disabled={isSaving}
                           >
                             {isSaving ? (
