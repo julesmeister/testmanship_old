@@ -30,15 +30,18 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
   const typedSupabase = supabase as SupabaseClient;
   const router = useRouter();
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
       instructions: '',
-      difficulty: 'A1' as const,
       format: '',
-      timeAllocation: 15,
-    },
+      difficulty: '',
+      timeAllocation: 30,
+      wordCount: 150,
+      grammarFocus: [],
+      vocabularyThemes: []
+    }
   });
 
   // Use custom hooks
@@ -93,13 +96,16 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
     }
   };
 
-  const onSubmit = async (data: FormValues) => {
+  const handleSubmit = async (values: FormValues) => {
     const success = await submitChallenge({
-      title: data.title,
-      instructions: data.instructions,
-      difficulty: data.difficulty,
-      formatId: data.format,
-      timeAllocation: data.timeAllocation
+      title: values.title,
+      instructions: values.instructions,
+      difficulty: values.difficulty,
+      formatId: values.format,
+      timeAllocation: values.timeAllocation,
+      wordCount: values.wordCount,
+      grammarFocus: values.grammarFocus,
+      vocabularyThemes: values.vocabularyThemes
     });
 
     if (success) {
@@ -157,7 +163,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                   form={form}
                   isGeneratingInstructions={isGeneratingInstructions}
                   isSaving={isSaving}
-                  onSubmit={onSubmit}
+                  onSubmit={handleSubmit}
                   handleGenerateInstructions={handleGenerateInstructions}
                 />
 

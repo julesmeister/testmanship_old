@@ -20,19 +20,37 @@ export function GuideContent() {
               {
                 level: 'A1/A2',
                 title: 'Basic Level',
-                description: 'Everyday topics with simple vocabulary',
+                description: 'A1: Basic present tense, simple questions, and everyday phrases. A2: Simple past tense, basic future expressions, and common connectors (and, but, because).',
+                keyPoints: [
+                  'Can introduce themselves and others',
+                  'Can describe daily routines and immediate environment',
+                  'Uses basic sentence patterns and memorized phrases',
+                  'Limited vocabulary focused on concrete needs'
+                ],
                 icon: '🌱'
               },
               {
                 level: 'B1/B2',
                 title: 'Intermediate Level',
-                description: 'Complex structures and varied topics',
+                description: 'B1: Present perfect, conditionals (1st & 2nd), passive voice. B2: Past perfect, reported speech, and more complex conditionals.',
+                keyPoints: [
+                  'Can discuss abstract topics and express opinions',
+                  'Uses a range of linking words and cohesive devices',
+                  'Handles different verb tenses with good control',
+                  'Growing vocabulary for both concrete and abstract topics'
+                ],
                 icon: '🌿'
               },
               {
                 level: 'C1/C2',
                 title: 'Advanced Level',
-                description: 'Sophisticated language and nuanced expression',
+                description: 'C1: All tenses, complex passives, advanced modals. C2: Sophisticated rhetoric, nuanced expressions, and native-like command of idioms.',
+                keyPoints: [
+                  'Masters complex grammatical structures',
+                  'Uses precise vocabulary and idiomatic expressions',
+                  'Produces clear, well-structured, detailed text',
+                  'Handles abstract and specialized topics effectively'
+                ],
                 icon: '🌳'
               }
             ].map((item) => (
@@ -45,6 +63,14 @@ export function GuideContent() {
                   <p className="text-sm text-muted-foreground">
                     {item.description}
                   </p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {item.keyPoints.map((point) => (
+                      <li key={point} className="flex items-start gap-2">
+                        <span className="mt-0.5 block h-1.5 w-1.5 rounded-full bg-zinc-500" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             ))}

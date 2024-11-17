@@ -20,6 +20,9 @@ interface Challenge {
   instructions: string;
   difficulty_level: string;
   time_allocation: number;
+  word_count?: number;
+  grammar_focus?: string[];
+  vocabulary_themes?: string[];
 }
 
 interface RightColumnProps {
@@ -81,19 +84,49 @@ export default function RightColumn({
   };
 
   return (
-    <div className="w-1/3 flex flex-col gap-4">
+    <div className="w-1/3 flex flex-col">
       {/* Challenge Selection */}
-      <div className="space-y-4">
+      <div className={hasStartedWriting ? "" : "space-y-4"}>
         {showChallenges && (
           <>
             <Tabs defaultValue="a1" className="w-full" onValueChange={setSelectedLevel}>
-              <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-gray-800">
-                <TabsTrigger value="a1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">A1</TabsTrigger>
-                <TabsTrigger value="a2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">A2</TabsTrigger>
-                <TabsTrigger value="b1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">B1</TabsTrigger>
-                <TabsTrigger value="b2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">B2</TabsTrigger>
-                <TabsTrigger value="c1" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">C1</TabsTrigger>
-                <TabsTrigger value="c2" className="data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300">C2</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-6 bg-gray-50 dark:bg-gray-900 p-1">
+                <TabsTrigger 
+                  value="a1" 
+                  className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white dark:data-[state=active]:bg-emerald-500
+                            data-[state=inactive]:text-emerald-600 dark:data-[state=inactive]:text-emerald-400
+                            hover:text-emerald-800 dark:hover:text-emerald-300"
+                >A1</TabsTrigger>
+                <TabsTrigger 
+                  value="a2" 
+                  className="data-[state=active]:bg-green-600 data-[state=active]:text-white dark:data-[state=active]:bg-green-500
+                            data-[state=inactive]:text-green-600 dark:data-[state=inactive]:text-green-400
+                            hover:text-green-800 dark:hover:text-green-300"
+                >A2</TabsTrigger>
+                <TabsTrigger 
+                  value="b1" 
+                  className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white dark:data-[state=active]:bg-yellow-500
+                            data-[state=inactive]:text-yellow-600 dark:data-[state=inactive]:text-yellow-400
+                            hover:text-yellow-800 dark:hover:text-yellow-300"
+                >B1</TabsTrigger>
+                <TabsTrigger 
+                  value="b2" 
+                  className="data-[state=active]:bg-orange-600 data-[state=active]:text-white dark:data-[state=active]:bg-orange-500
+                            data-[state=inactive]:text-orange-600 dark:data-[state=inactive]:text-orange-400
+                            hover:text-orange-800 dark:hover:text-orange-300"
+                >B2</TabsTrigger>
+                <TabsTrigger 
+                  value="c1" 
+                  className="data-[state=active]:bg-rose-600 data-[state=active]:text-white dark:data-[state=active]:bg-rose-500
+                            data-[state=inactive]:text-rose-600 dark:data-[state=inactive]:text-rose-400
+                            hover:text-rose-800 dark:hover:text-rose-300"
+                >C1</TabsTrigger>
+                <TabsTrigger 
+                  value="c2" 
+                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white dark:data-[state=active]:bg-red-500
+                            data-[state=inactive]:text-red-600 dark:data-[state=inactive]:text-red-400
+                            hover:text-red-800 dark:hover:text-red-300"
+                >C2</TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -185,19 +218,62 @@ export default function RightColumn({
               )}
             </div>
             <AccordionContent className="px-4 pb-4">
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <h3 className="font-semibold mb-2">Topic</h3>
                   <p className="text-zinc-600 dark:text-zinc-400">
                     {selectedChallenge.title}
                   </p>
                 </div>
+
                 <div>
                   <h3 className="font-semibold mb-2">Instructions</h3>
                   <div className="text-zinc-600 dark:text-zinc-400 space-y-2">
                     {selectedChallenge.instructions.split('\n').map((instruction: string, index: number) => (
                       <p key={index}>{instruction}</p>
                     ))}
+                  </div>
+                </div>
+
+                {selectedChallenge.word_count && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Word Count Requirement</h3>
+                    <p className="text-zinc-600 dark:text-zinc-400">
+                      {selectedChallenge.word_count}
+                    </p>
+                  </div>
+                )}
+
+                {selectedChallenge.grammar_focus && selectedChallenge.grammar_focus.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Grammar Focus</h3>
+                    <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
+                      {selectedChallenge.grammar_focus.map((point: string, index: number) => (
+                        <li key={index}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedChallenge.vocabulary_themes && selectedChallenge.vocabulary_themes.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Vocabulary Themes</h3>
+                    <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
+                      {selectedChallenge.vocabulary_themes.map((theme: string, index: number) => (
+                        <li key={index}>{theme}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                  <div className="flex items-center gap-2">
+                    <HiArrowPath className="h-4 w-4" />
+                    <span>{selectedChallenge.time_allocation} minutes</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <HiStop className="h-4 w-4" />
+                    <span>{selectedChallenge.difficulty_level}</span>
                   </div>
                 </div>
               </div>

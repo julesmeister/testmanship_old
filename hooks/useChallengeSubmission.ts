@@ -9,6 +9,9 @@ interface SubmitChallengeParams {
   difficulty: string;
   formatId: string;
   timeAllocation: number;
+  wordCount: number;
+  grammarFocus: string[];
+  vocabularyThemes: string[];
 }
 
 export function useChallengeSubmission(supabase: SupabaseClient) {
@@ -46,7 +49,10 @@ export function useChallengeSubmission(supabase: SupabaseClient) {
         difficulty_level: data.difficulty,
         format_id: data.formatId,
         created_by: session.user.id,
-        time_allocation: data.timeAllocation
+        time_allocation: data.timeAllocation,
+        word_count: data.wordCount,
+        grammar_focus: data.grammarFocus,
+        vocabulary_themes: data.vocabularyThemes
       };
 
       // Log the data being saved

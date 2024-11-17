@@ -4,6 +4,26 @@ import { headers } from 'next/headers';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+// Helper function to get word count range based on difficulty
+function getWordCountRange(difficulty: string): number {
+  switch (difficulty.toUpperCase()) {
+    case 'A1':
+      return 75;
+    case 'A2':
+      return 125;
+    case 'B1':
+      return 175;
+    case 'B2':
+      return 225;
+    case 'C1':
+      return 275;
+    case 'C2':
+      return 350;
+    default:
+      return 200;
+  }
+}
+
 export async function POST(req: Request) {
   console.log('API Route started');
   try {
@@ -29,50 +49,70 @@ export async function POST(req: Request) {
     let prompt;
     if (title) {
       // Generate instructions for a specific title
+      const wordCount = getWordCountRange(difficulty);
       prompt = `Generate a writing challenge based on the following parameters:
       Title: "${title}"
       Difficulty Level: ${difficulty}
       Format: ${format}
       Time Allocation: ${timeAllocation} minutes
+      Word Count: ${wordCount}
 
       Provide:
       1. A brief description of the task
       2. 3-5 key points or elements to include
+      3. Specific grammar structures to use (based on ${difficulty} level)
+      4. Suggested vocabulary themes
       
       Format the response as a JSON array with a single object with this structure:
       {
         "suggestions": [{
           "title": "${title}",
           "description": "string",
-          "keyPoints": ["string"]
+          "keyPoints": ["string"],
+          "wordCount": ${wordCount},
+          "grammarFocus": ["string"],
+          "vocabularyThemes": ["string"]
         }]
       }
       
       Make sure the challenge is:
-      - Appropriate for the ${difficulty} proficiency level
+      - Appropriate for the ${difficulty} proficiency level (see word count and grammar requirements)
       - Follows the ${format} format requirements
       - Clear and well-structured
-      - Achievable within ${timeAllocation} minutes`;
+      - Achievable within ${timeAllocation} minutes
+      - Includes appropriate grammar structures for ${difficulty} level
+      - Has vocabulary suitable for ${difficulty} level`;
     } else {
       // Generate multiple challenge suggestions
+      const wordCount = getWordCountRange(difficulty);
       prompt = `Generate 3 unique writing challenge suggestions for a ${difficulty} level English proficiency student using the ${format} format.
+      Word Count Requirement: ${wordCount}
+
       For each suggestion, provide:
       1. A clear and concise title
       2. A brief description of the task
       3. Key points or elements to include
+      4. Required grammar structures for ${difficulty} level
+      5. Suggested vocabulary themes
       
       Format the response as a JSON object with this structure:
       {
         "suggestions": [{
           "title": "string",
           "description": "string",
-          "keyPoints": ["string"]
+          "keyPoints": ["string"],
+          "wordCount": ${wordCount},
+          "grammarFocus": ["string"],
+          "vocabularyThemes": ["string"]
         }]
       }
       
       Make sure the suggestions are:
       - Appropriate for the ${difficulty} proficiency level
       - Follow the ${format} format requirements
+      - Match the word count requirement: ${wordCount}
+      - Include grammar structures appropriate for ${difficulty} level
+      - Use vocabulary suitable for ${difficulty} level
       - Engaging and creative
       - Clear and well-structured
       - Focused on practical language use

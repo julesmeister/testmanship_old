@@ -60,7 +60,10 @@ create table challenges (
   created_by uuid references auth.users not null,
   time_allocation integer not null default 30,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  word_count INTEGER,
+  grammar_focus TEXT[],
+  vocabulary_themes TEXT[]
 );
 alter table challenges enable row level security;
 create policy "Challenges are viewable by everyone." 
@@ -76,6 +79,11 @@ create policy "Users can create challenges"
 create policy "Users can update their own challenges." 
   on challenges for update 
   using (auth.uid() = created_by);
+
+-- Add comments for the new columns
+COMMENT ON COLUMN challenges.word_count IS 'Expected word count range for the challenge';
+COMMENT ON COLUMN challenges.grammar_focus IS 'Array of grammar points to focus on';
+COMMENT ON COLUMN challenges.vocabulary_themes IS 'Array of vocabulary themes to incorporate';
 
 -- Function to update the updated_at timestamp
 create or replace function update_updated_at_column()

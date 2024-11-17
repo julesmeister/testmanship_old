@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Check, Clock, Award, FileText, BrainCircuit } from 'lucide-react';
+import { Check, Clock, Award, FileText, BrainCircuit, GraduationCap, BookOpen, ListTodo } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { Suggestion } from '@/types/challenge-generator';
@@ -34,26 +34,73 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
           <p className="text-base text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed">
             {suggestion.description}
           </p>
-          <div className="space-y-3">
-            <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-              <BrainCircuit className="h-4 w-4 text-blue-500" />
-              Key Learning Points
-            </h5>
-            <ul className="space-y-2">
-              {suggestion.keyPoints.map((point, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
-                  <BrainCircuit className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
-                  <span className="text-sm leading-relaxed">{point}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="grid gap-6 mb-4">
+            <div className="space-y-3">
+              <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <BrainCircuit className="h-4 w-4 text-blue-500" />
+                Key Learning Points
+              </h5>
+              <ul className="space-y-2">
+                {suggestion.keyPoints.map((point, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
+                    <ListTodo className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
+                    <span className="text-sm leading-relaxed">{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {suggestion.grammarFocus && (
+              <div className="space-y-3">
+                <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-blue-500" />
+                  Grammar Focus
+                </h5>
+                <ul className="space-y-2">
+                  {suggestion.grammarFocus.map((grammar, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
+                      <BrainCircuit className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
+                      <span className="text-sm leading-relaxed">{grammar}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {suggestion.vocabularyThemes && (
+              <div className="space-y-3">
+                <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-blue-500" />
+                  Vocabulary Themes
+                </h5>
+                <ul className="space-y-2">
+                  {suggestion.vocabularyThemes.map((theme, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
+                      <BrainCircuit className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
+                      <span className="text-sm leading-relaxed">{theme}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
+
           <div className="mt-4 flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-              <Clock className="h-4 w-4" />
-              <span>{form.getValues('timeAllocation')} minutes</span>
-              <Award className="h-4 w-4 ml-2" />
-              <span>{form.getValues('difficulty')}</span>
+            <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>{form.getValues('timeAllocation')} minutes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4" />
+                <span>{form.getValues('difficulty')}</span>
+              </div>
+              {suggestion.wordCount && (
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span>{suggestion.wordCount} words minimum</span>
+                </div>
+              )}
             </div>
             <Button
               type="button"
@@ -62,14 +109,31 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
               className="transition-all duration-200 hover:border-blue-500 hover:text-blue-500"
               onClick={() => {
                 const timeAllocation = form.getValues('timeAllocation');
-                const formattedInstructions = `${suggestion.description}\n\nKey Points:\n${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}\n• Time Allocation: ${timeAllocation} minutes`;
+                const formattedInstructions = `${suggestion.description}
+
+Key Points:
+${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}
+
+Time Allocation: ${timeAllocation} minutes
+Word Count: ${suggestion.wordCount} words minimum`;
+
                 form.setValue('title', suggestion.title);
                 form.setValue('instructions', formattedInstructions);
+                form.setValue('wordCount', suggestion.wordCount);
+                if (suggestion.grammarFocus) {
+                  form.setValue('grammarFocus', suggestion.grammarFocus);
+                }
+                if (suggestion.vocabularyThemes) {
+                  form.setValue('vocabularyThemes', suggestion.vocabularyThemes);
+                }
                 form.trigger('title');
                 form.trigger('instructions');
+                form.trigger('wordCount');
+                form.trigger('grammarFocus');
+                form.trigger('vocabularyThemes');
                 setSuggestions([]);
                 toast.success('Challenge updated', {
-                  description: 'Title and instructions have been added to the form.',
+                  description: 'Challenge details have been added to the form.',
                 });
               }}
             >

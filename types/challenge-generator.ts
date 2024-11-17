@@ -12,6 +12,9 @@ export interface Suggestion {
   title: string;
   description: string;
   keyPoints: string[];
+  wordCount: number;
+  grammarFocus: string[];
+  vocabularyThemes: string[];
 }
 
 export interface ChallengeGeneratorViewProps {

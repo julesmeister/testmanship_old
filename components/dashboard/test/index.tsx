@@ -18,7 +18,7 @@ import { useTheme } from 'next-themes';
 import { useState, useEffect, useRef } from 'react';
 import { HiUser, HiSparkles, HiMiniPencilSquare } from 'react-icons/hi2';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import RightColumn from './RightColumn';
 
@@ -47,6 +47,7 @@ export default function Test({ user, userDetails }: Props) {
   const startTimeRef = useRef<number | null>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [hasStartedWriting, setHasStartedWriting] = useState(false);
+  const [mode, setMode] = useState<'practice' | 'exam'>('practice');
 
   useEffect(() => {
     return () => {
@@ -215,6 +216,26 @@ export default function Test({ user, userDetails }: Props) {
       <div className="flex w-full gap-6 h-[calc(100vh-200px)]">
         {/* Left Column - Writing Area */}
         <div className="flex-1 flex flex-col">
+          <Tabs defaultValue="practice" className="mb-4" onValueChange={(value) => setMode(value as 'practice' | 'exam')}>
+            <TabsList className="grid w-full grid-cols-2 bg-indigo-50 dark:bg-indigo-950 p-1">
+              <TabsTrigger 
+                value="practice" 
+                className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 
+                          data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
+                          hover:text-indigo-800 dark:hover:text-indigo-300"
+              >
+                Practice Mode
+              </TabsTrigger>
+              <TabsTrigger 
+                value="exam" 
+                className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500
+                          data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
+                          hover:text-indigo-800 dark:hover:text-indigo-300"
+              >
+                Exam Mode
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <textarea
             value={inputMessage}
             onChange={handleTextChange}
