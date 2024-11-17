@@ -27,14 +27,6 @@ export const routes: IRoute[] = [
     collapse: false
   },
   {
-    name: 'Profile Settings',
-    path: '/dashboard/settings',
-    icon: (
-      <HiOutlineCog8Tooth className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
-    ),
-    collapse: false
-  },
-  {
     name: 'Challenge Generator',
     path: '/dashboard/challenge-generator',
     icon: (
@@ -43,11 +35,11 @@ export const routes: IRoute[] = [
     collapse: false,
   },
   {
-    name: 'AI Assistant',
-    path: '/dashboard/ai-assistant',
+    name: 'Performance',
+    path: '/dashboard/performance',
     icon: <HiOutlineUser className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />,
     collapse: false,
-    disabled: true
+    disabled: false
   },
   {
     name: 'Users List',
@@ -75,5 +67,13 @@ export const routes: IRoute[] = [
     ),
     collapse: false,
     disabled: true
+  },
+  {
+    name: 'Profile Settings',
+    path: '/dashboard/settings',
+    icon: (
+      <HiOutlineCog8Tooth className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
+    ),
+    collapse: false
   }
 ];
