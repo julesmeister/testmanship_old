@@ -33,22 +33,83 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
-/**
-* CUSTOMERS
-* Note: this is a private table that contains a mapping of user IDs to Stripe customer IDs.
-*/
-create table customers (
-  -- UUID from auth.users
-  id uuid references auth.users not null primary key,
-  -- The user's customer ID in Stripe. User must not be able to update this.
-  stripe_customer_id text
+
+-- Create enum for difficulty levels
+create type difficulty_level as enum ('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
+
+-- Challenge formats table
+create table challenge_formats (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  description text,
+  difficulty_level difficulty_level not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-alter table customers enable row level security;
--- No policies as this is a private table that the user must not have access to.
+alter table challenge_formats enable row level security;
+create policy "Challenge formats are viewable by everyone." 
+  on challenge_formats for select 
+  using (true);
 
-drop type if exists subscription_status cascade;
-drop table if exists subscriptions cascade;
-drop table if exists prices cascade;
-drop table if exists products cascade;
+-- Challenges table
+create table challenges (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  instructions text not null,
+  difficulty_level difficulty_level not null,
+  format_id uuid references challenge_formats not null,
+  created_by uuid references auth.users not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+alter table challenges enable row level security;
+create policy "Challenges are viewable by everyone." 
+  on challenges for select 
+  using (true);
+create policy "Users can create challenges." 
+  on challenges for insert 
+  with check (auth.uid() = created_by);
+create policy "Users can update their own challenges." 
+  on challenges for update 
+  using (auth.uid() = created_by);
 
-drop publication if exists supabase_realtime;
+-- Function to update the updated_at timestamp
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+    new.updated_at = timezone('utc'::text, now());
+    return new;
+end;
+$$ language plpgsql;
+
+-- Trigger to automatically update the updated_at column
+create trigger update_challenges_updated_at
+    before update on challenges
+    for each row
+    execute function update_updated_at_column();
+
+-- Insert default challenge formats
+INSERT INTO challenge_formats (name, description, difficulty_level) VALUES
+-- A1 Formats
+('Personal Information', 'Write about basic personal information', 'A1'),
+('Daily Routine', 'Describe your daily activities', 'A1'),
+('Simple Description', 'Describe a person, place, or thing', 'A1'),
+-- A2 Formats
+('Short Story', 'Write a simple story about past events', 'A2'),
+('Informal Email', 'Write a basic email to a friend', 'A2'),
+('Simple Opinion', 'Express basic opinions on familiar topics', 'A2'),
+-- B1 Formats
+('Blog Post', 'Write a blog post about personal experiences', 'B1'),
+('Formal Letter', 'Write a formal letter for common purposes', 'B1'),
+('Review', 'Write a review of a movie, book, or product', 'B1'),
+-- B2 Formats
+('Essay', 'Write an essay expressing and supporting opinions', 'B2'),
+('Report', 'Write a report analyzing data or situations', 'B2'),
+('Article', 'Write an article for a magazine or website', 'B2'),
+-- C1 Formats
+('Academic Essay', 'Write an academic essay with research', 'C1'),
+('Proposal', 'Write a detailed proposal for a project', 'C1'),
+('Critical Review', 'Write a critical analysis of media or literature', 'C1'),
+-- C2 Formats
+('Research Paper', 'Write an in-depth research paper', 'C2'),
+('Technical Report', 'Write a detailed technical report', 'C2'),
+('Academic Thesis', 'Write a thesis-style academic paper', 'C2');

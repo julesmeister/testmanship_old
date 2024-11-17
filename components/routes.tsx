@@ -35,13 +35,12 @@ export const routes: IRoute[] = [
     collapse: false
   },
   {
-    name: 'AI Generator',
-    path: '/dashboard/ai-generator',
+    name: 'Challenge Generator',
+    path: '/dashboard/challenge-generator',
     icon: (
       <HiOutlineDocumentText className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
     ),
     collapse: false,
-    disabled: true
   },
   {
     name: 'AI Assistant',

@@ -2,6 +2,7 @@ import SupabaseProvider from './supabase-provider';
 import { PropsWithChildren } from 'react';
 import '@/styles/globals.css';
 import { ThemeProvider } from './theme-provider';
+import { Toaster } from 'sonner';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,6 +69,7 @@ export default function RootLayout({
       <body id={'root'} className="loading bg-white">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SupabaseProvider>
+            <Toaster richColors closeButton position="top-right" />
             <main id="skip">{children}</main>
           </SupabaseProvider>
         </ThemeProvider>

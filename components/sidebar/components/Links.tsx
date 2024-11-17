@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable */
-import NavLink from '@/components/link/NavLink';
+import NavLink from '@/components/link/navlink';
 import { IRoute } from '@/types/types';
 import { usePathname } from 'next/navigation';
 import { PropsWithChildren, useCallback } from 'react';
@@ -68,7 +68,7 @@ export function SidebarLinks(props: SidebarLinksProps) {
               <NavLink
                 href={route.layout ? route.layout + route.path : route.path}
                 key={key}
-                styles={{ width: '100%' }}
+                className="w-full"
               >
                 <div className="w-full items-center justify-center">
                   <div className="flex w-full items-center justify-center">
