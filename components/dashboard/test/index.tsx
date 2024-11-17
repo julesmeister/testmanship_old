@@ -15,10 +15,11 @@ import Bg from '@/public/img/light/test/bg-image.png';
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HiUser, HiSparkles, HiMiniPencilSquare } from 'react-icons/hi2';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Props {
   user: User | null | undefined;
@@ -39,9 +40,59 @@ export default function Test({ user, userDetails }: Props) {
   const [wordCount, setWordCount] = useState<number>(0);
   const [paragraphCount, setParagraphCount] = useState<number>(0);
   const [charCount, setCharCount] = useState<number>(0);
-  const [timeToRead, setTimeToRead] = useState<string>("0 min");
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [isWriting, setIsWriting] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number | null>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [hasStartedWriting, setHasStartedWriting] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setInputMessage(text);
+    
+    // Start timer if this is the first keystroke
+    if (!isWriting && text.length > 0) {
+      setIsWriting(true);
+      startTimeRef.current = Date.now();
+      timerRef.current = setInterval(() => {
+        const now = Date.now();
+        const start = startTimeRef.current || now;
+        setElapsedTime(Math.floor((now - start) / 1000));
+      }, 1000);
+    }
+    
+    // Stop timer if text is cleared
+    if (isWriting && text.length === 0) {
+      setIsWriting(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      setElapsedTime(0);
+    }
+
+    // Update counts
+    setWordCount(text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(word => word.length > 0).length);
+    setParagraphCount(text.trim() === '' ? 0 : text.trim().split(/\n\s*\n/).filter(para => para.trim().length > 0).length);
+    setCharCount(text.length);
+    if (!hasStartedWriting && text.length > 0) {
+      setHasStartedWriting(true);
+    }
+  };
 
   // API Key
   const handleTranslate = async () => {
@@ -121,32 +172,6 @@ export default function Test({ user, userDetails }: Props) {
   //  document.body.removeChild(el);
   // };
 
-  const updateTextStatistics = (text: string) => {
-    // Word count
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
-
-    // Paragraph count (counting double line breaks as paragraph separators)
-    const paragraphs = text.split(/\n\s*\n/).filter(para => para.trim().length > 0);
-    setParagraphCount(paragraphs.length);
-
-    // Character count (excluding spaces)
-    setCharCount(text.replace(/\s/g, '').length);
-
-    // Time to read (assuming average reading speed of 200 words per minute)
-    const minutes = Math.ceil(words.length / 200);
-    setTimeToRead(`${minutes} min${minutes !== 1 ? 's' : ''}`);
-  };
-
-  const handleChange = (Event: any) => {
-    const newText = Event.target.value;
-    setInputMessage(newText);
-    updateTextStatistics(newText);
-    if (!hasStartedWriting && newText.length > 0) {
-      setHasStartedWriting(true);
-    }
-  };
-
   return (
     <DashboardLayout
       user={user}
@@ -159,29 +184,45 @@ export default function Test({ user, userDetails }: Props) {
         <div className="flex-1 flex flex-col">
           <textarea
             value={inputMessage}
-            onChange={handleChange}
+            onChange={handleTextChange}
             placeholder="Start writing your essay here..."
             className="w-full h-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400"
           />
           {/* Writing Statistics Bar */}
           <div className="mt-4 p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
-            <div className="flex flex-wrap gap-6 justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Words</div>
-                <div className="text-lg font-semibold text-zinc-900 dark:text-white">{wordCount}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Paragraphs</div>
-                <div className="text-lg font-semibold text-zinc-900 dark:text-white">{paragraphCount}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Characters</div>
-                <div className="text-lg font-semibold text-zinc-900 dark:text-white">{charCount}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Reading Time</div>
-                <div className="text-lg font-semibold text-zinc-900 dark:text-white">{timeToRead}</div>
-              </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <p className="text-sm font-medium text-muted-foreground">Words</p>
+                    <div className="text-2xl font-bold text-foreground">{wordCount}</div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <p className="text-sm font-medium text-muted-foreground">Paragraphs</p>
+                    <div className="text-2xl font-bold text-foreground">{paragraphCount}</div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <p className="text-sm font-medium text-muted-foreground">Characters</p>
+                    <div className="text-2xl font-bold text-foreground">{charCount}</div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <p className="text-sm font-medium text-muted-foreground">Time Elapsed</p>
+                    <div className="text-2xl font-bold text-foreground">{formatTime(elapsedTime)}</div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
