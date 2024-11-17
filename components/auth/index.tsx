@@ -19,17 +19,29 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
   const { theme, setTheme } = useTheme();
   return (
     <div className="relative h-max dark:bg-zinc-950">
-      <div className="mx-auto flex w-full flex-col justify-center px-5 pt-0 md:h-[unset] md:max-w-[66%] lg:h-[100vh] lg:max-w-[66%] lg:px-6 xl:pl-0 ">
-        <a className="mt-10 w-fit text-zinc-950 dark:text-white" href="/">
-          <div className="flex w-fit items-center lg:pl-0 lg:pt-0 xl:pt-0">
-            <FaChevronLeft className="mr-3 h-[13px] w-[8px] text-zinc-950 dark:text-white" />
-            <p className="ml-0 text-sm text-zinc-950 dark:text-white">
-              Back to the website
-            </p>
+      <div className="relative flex min-h-screen">
+        {/* Left column - constrained width */}
+        <div className="flex w-full flex-col px-5 pt-0 md:max-w-[66%] lg:max-w-[50%] xl:max-w-[50%] 2xl:max-w-[56%]">
+          {/* Back button with proper spacing */}
+          <div className="mt-10 mb-6 px-4 lg:px-8">
+            <a className="inline-flex items-center text-zinc-950 dark:text-white" href="/">
+              <FaChevronLeft className="mr-3 h-[13px] w-[8px]" />
+              <span className="text-sm">Back to the website</span>
+            </a>
           </div>
-        </a>
-        {children}
-        <div className="absolute right-0 hidden h-full min-h-[100vh] xl:block xl:w-[50vw] 2xl:w-[44vw]">
+
+          {/* Main content area */}
+          <div className="flex-1 px-4 lg:px-8">
+            {children}
+          </div>
+          <div className="flex w-full justify-center">
+            <Footer />
+          </div>
+
+        </div>
+
+        {/* Right column - decorative background */}
+        <div className="fixed right-0 hidden h-full min-h-screen xl:block xl:w-[50%] 2xl:w-[44%]">
           <div className="absolute flex h-full w-full flex-col items-end justify-start overflow-y-auto snap-y snap-mandatory">
             {/* Background with gradient and overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-600 to-indigo-900 dark:from-blue-600 dark:via-blue-800 dark:to-indigo-950">
@@ -75,8 +87,8 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
             <PolicySections />
           </div>
         </div>
-        <Footer />
       </div>
+     
       <Button
         className="absolute bottom-10 right-10 flex min-h-10 min-w-10 cursor-pointer rounded-full bg-zinc-950 p-0 text-xl text-white hover:bg-zinc-950 dark:bg-white dark:text-zinc-950 hover:dark:bg-white xl:bg-white xl:text-zinc-950 xl:hover:bg-white xl:dark:text-zinc-900"
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

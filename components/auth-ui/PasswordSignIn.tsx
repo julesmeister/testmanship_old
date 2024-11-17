@@ -60,7 +60,7 @@ export default function PasswordSignIn({
               Email
             </label>
             <Input
-              className="mr-2.5 mb-2 h-full min-h-[44px] w-full px-4 py-3 focus:outline-0 dark:placeholder:text-zinc-400"
+              className="mr-2.5 mb-2 h-full min-h-[44px] w-full rounded-lg border border-zinc-200 px-4 py-3 transition-all hover:border-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:hover:border-zinc-700 dark:focus:border-emerald-500 dark:placeholder:text-zinc-400"
               id="email"
               placeholder="name@example.com"
               type="email"
@@ -81,7 +81,7 @@ export default function PasswordSignIn({
               type="password"
               name="password"
               autoComplete="current-password"
-              className="mr-2.5 mb-2 h-full min-h-[44px] w-full px-4 py-3 focus:outline-0 dark:placeholder:text-zinc-400"
+              className="mr-2.5 mb-2 h-full min-h-[44px] w-full rounded-lg border border-zinc-200 px-4 py-3 transition-all hover:border-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:hover:border-zinc-700 dark:focus:border-emerald-500 dark:placeholder:text-zinc-400"
             />
           </div>
           <Button

@@ -31,21 +31,22 @@ export default function OauthSignIn() {
   };
 
   return (
-    <div className="mt-8">
+    <div className="w-full">
       {oAuthProviders.map((provider) => (
         <form
           key={provider.name}
-          className="pb-2"
+          className="w-full"
           onSubmit={(e) => handleSubmit(e)}
         >
           <Input type="hidden" name="provider" value={provider.name} />
           <Button
             variant="outline"
             type="submit"
-            className="w-full text-zinc-950 py-6 dark:text-white" 
+            disabled={isSubmitting}
+            className="flex h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-950 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white dark:hover:bg-zinc-900"
           >
-            <span className="mr-2">{provider.icon}</span>
-            <span>{provider.displayName}</span>
+            {provider.icon}
+            <span>Continue with {provider.displayName}</span>
           </Button>
         </form>
       ))}
