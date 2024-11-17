@@ -39,6 +39,7 @@ import { User } from '@supabase/supabase-js';
 import DashboardLayout from '@/components/layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from '@/components/ui/slider';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const difficultyLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 
@@ -48,10 +49,8 @@ const formSchema = z.object({
   difficulty: z.enum(difficultyLevels, {
     required_error: 'Please select a difficulty level',
   }),
-  format: z.string().uuid({
-    message: 'Please select a format',
-  }),
-  timeAllocation: z.number().min(5).max(120)
+  format: z.string().min(1, 'Please select a format'),
+  timeAllocation: z.number().min(1).max(120)
 });
 
 interface ChallengeFormat {
@@ -85,7 +84,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
     defaultValues: {
       title: '',
       instructions: '',
-      difficulty: undefined,
+      difficulty: 'A1',
       format: '',
       timeAllocation: 30
     }
@@ -160,7 +159,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ difficulty, format }),
+        body: JSON.stringify({ difficulty, format: format.name, timeAllocation }),
       });
 
       if (!response.ok) throw new Error('Failed to generate suggestions');
@@ -223,7 +222,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
       form.reset({
         title: '',
         instructions: '',
-        difficulty: undefined,
+        difficulty: 'A1',
         format: '',
         timeAllocation: 30
       });
@@ -347,6 +346,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value}
+                                  required
                                 >
                                   <FormControl>
                                     <SelectTrigger>
@@ -374,9 +374,6 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                     ))}
                                   </SelectContent>
                                 </Select>
-                                <FormDescription>
-                                  {formats.find(f => f.id === field.value)?.description || 'Select a format to see its description'}
-                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -394,7 +391,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                   <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                       <Slider
-                                        min={5}
+                                        min={1}
                                         max={120}
                                         step={5}
                                         defaultValue={[field.value || 30]}
@@ -483,69 +480,105 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                                       form.trigger('title');
                                     }}
                                   />
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    className="flex-shrink-0"
-                                    disabled={!field.value || isGenerating}
-                                    onClick={async () => {
-                                      try {
-                                        setIsGenerating(true);
-                                        toast.loading('Generating instructions...', {
-                                          id: 'generating-instructions',
-                                        });
+                                  <TooltipProvider delayDuration={0}>
+                                    <Tooltip defaultOpen>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
+                                          className="flex-shrink-0"
+                                          disabled={!field.value || isGenerating}
+                                          onClick={async () => {
+                                            try {
+                                              setIsGenerating(true);
+                                              toast.loading('Generating instructions...', {
+                                                id: 'generating-instructions',
+                                              });
 
-                                        const difficulty = form.getValues('difficulty');
-                                        const format = formats.find(f => f.id === form.getValues('format'));
-                                        const timeAllocation = form.getValues('timeAllocation');
+                                              const difficulty = form.getValues('difficulty');
+                                              const formatId = form.getValues('format');
+                                              console.log('Current formats:', formats);
+                                              console.log('Selected format ID:', formatId);
+                                              
+                                              const format = formats.find(f => f.id === formatId);
+                                              console.log('Found format:', format);
+                                              
+                                              const timeAllocation = form.getValues('timeAllocation');
 
-                                        const response = await fetch('/api/challenge-suggestions/route', {
-                                          method: 'POST',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                          },
-                                          body: JSON.stringify({
-                                            title: field.value,
-                                            difficulty,
-                                            format: format?.name,
-                                            timeAllocation
-                                          }),
-                                        });
+                                              if (!formatId) {
+                                                throw new Error('Please select a format');
+                                              }
 
-                                        if (!response.ok) throw new Error('Failed to generate instructions');
+                                              if (!format) {
+                                                throw new Error(`Format not found (ID: ${formatId})`);
+                                              }
 
-                                        const data = await response.json();
-                                        if (!data.suggestions || !data.suggestions.length) {
-                                          throw new Error('No suggestions received');
-                                        }
+                                              console.log('Sending request with:', {
+                                                title: field.value,
+                                                difficulty,
+                                                format: format.name,
+                                                timeAllocation
+                                              });
 
-                                        const suggestion = data.suggestions[0];
-                                        const formattedInstructions = `${suggestion.description}\n\nKey Points:\n${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}\n• Time Allocation: ${timeAllocation} minutes`;
-                                        form.setValue('instructions', formattedInstructions);
-                                        form.trigger('instructions');
+                                              const response = await fetch('/api/challenge-suggestions', {
+                                                method: 'POST',
+                                                headers: {
+                                                  'Content-Type': 'application/json',
+                                                },
+                                                body: JSON.stringify({
+                                                  title: field.value,
+                                                  difficulty,
+                                                  format: format.name,
+                                                  timeAllocation
+                                                }),
+                                              });
 
-                                        toast.success('Instructions generated', {
-                                          id: 'generating-instructions',
-                                          description: 'AI-generated instructions have been added to the form.',
-                                        });
-                                      } catch (error) {
-                                        console.error('Error generating instructions:', error);
-                                        toast.error('Failed to generate instructions', {
-                                          id: 'generating-instructions',
-                                          description: 'Please try again or write your own instructions.',
-                                        });
-                                      } finally {
-                                        setIsGenerating(false);
-                                      }
-                                    }}
-                                  >
-                                    {isGenerating ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Sparkles className="h-4 w-4" />
-                                    )}
-                                  </Button>
+                                              const data = await response.json();
+                                              
+                                              if (!response.ok) {
+                                                throw new Error(data.error || 'Failed to generate instructions');
+                                              }
+
+                                              if (!data.suggestions || !data.suggestions.length) {
+                                                throw new Error('No suggestions received');
+                                              }
+
+                                              const suggestion = data.suggestions[0];
+                                              const formattedInstructions = `${suggestion.description}\n\nKey Points:\n${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}\n• Time Allocation: ${timeAllocation} minutes`;
+                                              form.setValue('instructions', formattedInstructions);
+                                              form.trigger('instructions');
+
+                                              toast.success('Instructions generated', {
+                                                id: 'generating-instructions',
+                                                description: 'AI-generated instructions have been added to the form.',
+                                              });
+                                            } catch (error) {
+                                              console.error('Error generating instructions:', error);
+                                              toast.error('Failed to generate instructions', {
+                                                id: 'generating-instructions',
+                                                description: error instanceof Error ? error.message : 'Please try again or write your own instructions.',
+                                              });
+                                            } finally {
+                                              setIsGenerating(false);
+                                            }
+                                          }}
+                                        >
+                                          {isGenerating ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <Sparkles className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent 
+                                        side="bottom"
+                                        className="bg-zinc-900 text-white"
+                                      >
+                                        <p className="text-xs">Generate AI instructions based on title</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 </div>
                               </FormControl>
                               <FormDescription>
