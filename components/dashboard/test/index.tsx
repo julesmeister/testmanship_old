@@ -7,10 +7,13 @@ import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
 import { useState, useEffect, useRef } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import TimerProgress from './TimerProgress';
 import { Card, CardContent } from '@/components/ui/card';
 import LeftColumn from './LeftColumn';
 import toast from 'react-hot-toast';
+import { makeAIRequest } from '@/utils/ai';
+import { useAIFeedback } from '@/hooks/useAIFeedback';
 
 interface Props {
   user: User | null | undefined;
@@ -63,103 +66,121 @@ export default function Test({ user, userDetails }: Props) {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
-  const [hasStartedWriting, setHasStartedWriting] = useState(false);
   const [mode, setMode] = useState<'practice' | 'exam'>('exam');
-  const [timeElapsed, setTimeElapsed] = useState(0);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const [prevText, setPrevText] = useState<string>('');
+  const [lastEditedParagraphIndex, setLastEditedParagraphIndex] = useState<number>(-1);
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const editingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedChallenge && elapsedTime >= selectedChallenge.time_allocation * 60) {
-      setIsTimeUp(true);
-    }
-  }, [elapsedTime, selectedChallenge]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (hasStartedWriting && selectedChallenge?.time_allocation) {
-      interval = setInterval(() => {
-        setTimeElapsed(prev => prev + 1);
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [hasStartedWriting, selectedChallenge]);
-
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  const { feedback, generateFeedback, cleanup: cleanupFeedback } = useAIFeedback({
+    challenge: selectedChallenge
+  });
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (isTimeUp) return; // Prevent changes if time is up
+    
     const text = e.target.value;
     setInputMessage(text);
     
-    // Start timer if this is the first keystroke
-    if (!isWriting && text.length > 0) {
+    // Start timer if this is the first keystroke and time isn't up
+    if (!isWriting && text.length > 0 && !isTimeUp) {
       setIsWriting(true);
       startTimeRef.current = Date.now();
       timerRef.current = setInterval(() => {
         const now = Date.now();
         const start = startTimeRef.current || now;
-        setElapsedTime(Math.floor((now - start) / 1000));
+        const newElapsedTime = Math.floor((now - start) / 1000);
+        
+        // Check time limit before updating
+        if (selectedChallenge && newElapsedTime >= selectedChallenge.time_allocation * 60) {
+          clearInterval(timerRef.current!);
+          timerRef.current = null;
+          setIsTimeUp(true);
+          setIsWriting(false);
+          setElapsedTime(selectedChallenge.time_allocation * 60);
+        } else {
+          setElapsedTime(newElapsedTime);
+        }
       }, 1000);
     }
     
-    // Stop timer if text is cleared
-    if (isWriting && text.length === 0) {
-      setIsWriting(false);
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      setElapsedTime(0);
+    // Clear any pending feedback requests
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+      feedbackTimeoutRef.current = null;
+    }
+    if (editingTimeoutRef.current) {
+      clearTimeout(editingTimeoutRef.current);
+      editingTimeoutRef.current = null;
     }
 
-    // Update counts
+    const paragraphs = text.split(/\n\s*\n/);
+    const prevParagraphs = prevText.split(/\n\s*\n/);
+    
+    // Find which paragraph is being edited
+    let editedParagraphIndex = -1;
+    for (let i = 0; i < Math.max(paragraphs.length, prevParagraphs.length); i++) {
+      if (paragraphs[i] !== prevParagraphs[i]) {
+        editedParagraphIndex = i;
+        break;
+      }
+    }
+
+    // Handle new paragraph creation
+    const justCreatedNewParagraph = 
+      text.endsWith('\n\n') && 
+      !prevText.endsWith('\n\n') && 
+      paragraphs.length > prevParagraphs.length;
+
+    if (justCreatedNewParagraph && paragraphs.length >= 2) {
+      const lastCompletedParagraph = paragraphs[paragraphs.length - 2];
+      if (lastCompletedParagraph?.trim().length > 0) {
+        feedbackTimeoutRef.current = setTimeout(() => {
+          generateFeedback(lastCompletedParagraph, true);
+        }, 1000);
+      }
+    }
+    // Handle paragraph editing
+    else if (editedParagraphIndex !== -1 && 
+             editedParagraphIndex !== paragraphs.length - 1 && // Not the current paragraph
+             editedParagraphIndex !== lastEditedParagraphIndex && // Not the same paragraph as last time
+             paragraphs[editedParagraphIndex]?.trim().length > 0) { // Has content
+      setLastEditedParagraphIndex(editedParagraphIndex);
+      
+      // Wait for user to finish editing
+      editingTimeoutRef.current = setTimeout(() => {
+        generateFeedback(paragraphs[editedParagraphIndex]);
+      }, 1500); // Slightly longer delay for editing existing paragraphs
+    }
+    
+    // Update previous text for next comparison
+    setPrevText(text);
+    
+    // Update counts without affecting timer
     setWordCount(text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(word => word.length > 0).length);
     setParagraphCount(text.trim() === '' ? 0 : text.trim().split(/\n\s*\n/).filter(para => para.trim().length > 0).length);
     setCharCount(text.length);
-    if (!hasStartedWriting && text.length > 0) {
-      setHasStartedWriting(true);
-    }
   };
 
   const handleStartChallenge = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
-    // Reset timer and counts
-    setElapsedTime(0);
-    setWordCount(0);
-    setParagraphCount(0);
-    setCharCount(0);
-    setInputMessage('');
-    setOutputCode('');
-    setHasStartedWriting(true);
-    
-    // Start the timer
-    setIsWriting(true);
+    // Start the timer immediately when challenge starts
     startTimeRef.current = Date.now();
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     timerRef.current = setInterval(() => {
-      const now = Date.now();
-      const start = startTimeRef.current || now;
-      setElapsedTime(Math.floor((now - start) / 1000));
+      if (startTimeRef.current) {
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        setElapsedTime(elapsed);
+      }
     }, 1000);
+    setIsTimeUp(false);
+    setElapsedTime(0);
+    setInputMessage('');
+    toast.success(`${mode === 'exam' ? 'Exam' : 'Practice'} mode challenge started (${challenge.time_allocation} minutes)`, { duration: 3000 });
   };
 
   const handleStopChallenge = () => {
@@ -169,34 +190,65 @@ export default function Test({ user, userDetails }: Props) {
     }
     setIsWriting(false);
     startTimeRef.current = null;
+    setSelectedChallenge(null); // Reset selected challenge
+    setElapsedTime(0); // Reset elapsed time
+    setInputMessage(''); // Clear input
+    setOutputCode(''); // Clear output
+    setWordCount(0); // Reset word count
+    setParagraphCount(0); // Reset paragraph count
+    setCharCount(0); // Reset character count
   };
 
-  const handleGenerateFeedback = async () => {
-    if (!selectedChallenge || !inputMessage) return;
-
+  const handleGenerateFeedback = async (text: string, isFullEssay: boolean) => {
     setIsGeneratingFeedback(true);
     try {
-      const response = await fetch('/api/challenge-feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          challengeId: selectedChallenge.id,
-          essayContent: inputMessage,
-          targetLanguage: selectedChallenge.difficulty_level
-        }),
-      });
+      if (isFullEssay) {
+        // Use the dedicated API endpoint for full essay analysis
+        const response = await fetch('/api/challenge-suggestions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            essayContent: text,
+            challengeId: selectedChallenge?.id,
+            targetLanguage: selectedChallenge?.difficulty_level
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate feedback');
+        if (!response.ok) {
+          throw new Error('Failed to generate feedback');
+        }
+
+        const data = await response.json();
+        setOutputCode(data.feedback);
+        return data.feedback;
+      } else {
+        // For individual paragraphs, use the existing prompt-based approach
+        const prompt = `Analyze this paragraph. Format your response using these prefixes:
+        ✓ for positive points and strengths
+        ✗ for errors or issues that need correction
+        ! for suggestions and improvements
+
+        Paragraph:
+        ${text}`;
+
+        const suggestions = await makeAIRequest([
+          {
+            role: 'system',
+            content: 'You are a writing tutor providing paragraph-level feedback. Use ✓ for positive points, ✗ for errors, and ! for suggestions. Each point should be on a new line.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]);
+        setOutputCode(suggestions);
+        return suggestions;
       }
-
-      const data = await response.json();
-      setOutputCode(data.feedback);
     } catch (error) {
       console.error('Error generating feedback:', error);
-      toast.error('Failed to generate feedback');
+      throw error;
     } finally {
       setIsGeneratingFeedback(false);
     }
@@ -280,6 +332,51 @@ export default function Test({ user, userDetails }: Props) {
   //  document.body.removeChild(el);
   // };
 
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleBackToChallenges = () => {
+    handleStopChallenge();
+  };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+      if (editingTimeoutRef.current) {
+        clearTimeout(editingTimeoutRef.current);
+      }
+      cleanupFeedback();
+    };
+  }, [cleanupFeedback]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  // Check for time up
+  useEffect(() => {
+    if (selectedChallenge && elapsedTime >= selectedChallenge.time_allocation * 60) {
+      setIsTimeUp(true);
+      // Clear the timer when time is up
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setIsWriting(false);
+    }
+  }, [elapsedTime, selectedChallenge]);
+
   return (
     <DashboardLayout
       user={user}
@@ -289,23 +386,22 @@ export default function Test({ user, userDetails }: Props) {
     >
       <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row gap-6">
         <LeftColumn
-          selectedChallenge={selectedChallenge}
-          hasStartedWriting={hasStartedWriting}
-          outputCode={outputCode}
+          challenge={selectedChallenge}
+          outputCode={feedback}
           onStartChallenge={handleStartChallenge}
           onStopChallenge={handleStopChallenge}
           onGenerateFeedback={handleGenerateFeedback}
           isGeneratingFeedback={isGeneratingFeedback}
           isTimeUp={isTimeUp}
           mode={mode}
-          timeElapsed={timeElapsed}
+          timeElapsed={elapsedTime}
           timeAllocation={selectedChallenge?.time_allocation}
-          setHasStartedWriting={setHasStartedWriting}
+          inputMessage={inputMessage}
         />
 
         {/* Writing Area */}
         <div className="flex-1 flex flex-col space-y-4">
-          {!hasStartedWriting && (
+          {!selectedChallenge ? (
             <Tabs defaultValue="exam" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger 
@@ -326,6 +422,19 @@ export default function Test({ user, userDetails }: Props) {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+          ) : (
+            <TimerProgress
+              timeElapsed={elapsedTime}
+              timeAllocation={selectedChallenge.time_allocation}
+              mode={mode}
+              onGradeChallenge={() => {
+                // First record the challenge results
+                // TODO: Add your API call here to save the challenge results
+                
+                // Then navigate back to challenges
+                handleBackToChallenges();
+              }}
+            />
           )}
           <textarea
             value={inputMessage}

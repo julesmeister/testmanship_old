@@ -7,9 +7,14 @@ import OauthSignIn from '@/components/auth-ui/OauthSignIn';
 import ForgotPassword from '@/components/auth-ui/ForgotPassword';
 import UpdatePassword from '@/components/auth-ui/UpdatePassword';
 import SignUp from '@/components/auth-ui/Signup';
-import { FiUser, FiLock, FiMail, FiRefreshCw } from 'react-icons/fi';
+import { FiUser, FiLock, FiMail, FiRefreshCw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/utils/cn';
 
 export default function AuthUI(props: any) {
+  const [showPasswordSignIn, setShowPasswordSignIn] = useState(false);
+
   const getIcon = () => {
     switch (props.viewProp) {
       case 'signup':
@@ -56,11 +61,33 @@ export default function AuthUI(props: any) {
           <>
             <div className="mt-4 w-full space-y-4">
               <OauthSignIn />
-              <Separator text="or continue with" />
+              <Separator text="or" />
+              {props.viewProp !== 'forgot_password' && (
+                <Button
+                  variant="ghost"
+                  className="w-full flex items-center justify-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                  onClick={() => setShowPasswordSignIn(!showPasswordSignIn)}
+                >
+                  {showPasswordSignIn ? (
+                    <>
+                      Hide password sign in
+                      <FiChevronUp className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      Show password sign in
+                      <FiChevronDown className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </>
         )}
-      <div className="w-full">
+      <div className={cn("w-full transition-all duration-200", {
+        "max-h-0 opacity-0 overflow-hidden": !showPasswordSignIn && props.viewProp === 'password_signin',
+        "max-h-[500px] opacity-100": showPasswordSignIn || props.viewProp !== 'password_signin'
+      })}>
         {props.viewProp === 'password_signin' && (
           <PasswordSignIn
             allowEmail={props.allowEmail}

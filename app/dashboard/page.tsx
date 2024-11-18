@@ -79,8 +79,8 @@ export default async function Dashboard() {
     }
 
     console.log('=== Dashboard Page End ===');
-    // Redirect to main dashboard
-    redirect('/dashboard/main');
+    // Return redirect to main dashboard
+    return redirect('/dashboard/main');
   } catch (error) {
     console.error('Dashboard page error:', error);
     return redirect('/dashboard/signin?error=unexpected_error');

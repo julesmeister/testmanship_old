@@ -109,3 +109,59 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function POST_essayAnalysis(req: Request) {
+  try {
+    // Missing instructions
+    const { essayContent, challengeId, targetLanguage } = await req.json();
+
+    if (!essayContent) {
+      return NextResponse.json(
+        { error: 'Essay content is required' },
+        { status: 400 }
+      );
+    }
+
+    const prompt = `Analyze this complete essay for a ${targetLanguage} level student. Format your response using these prefixes:
+    for positive points and strengths
+    for errors or issues that need correction
+    ! for suggestions and improvements
+
+    Provide a comprehensive analysis covering:
+    1. Overall Structure and Flow
+    2. Grammar and Language Use
+    3. Content and Arguments
+    4. Vocabulary and Expression
+    5. Achievement of Writing Goals
+
+    Essay:
+    ${essayContent}`;
+
+    const systemMessage = `You are an expert writing tutor specializing in ${targetLanguage} level essay analysis.
+    - Use to highlight strengths and achievements
+    - Use to point out errors or areas needing correction
+    - Use ! to provide constructive suggestions
+    - Each point should be on a new line
+    - Be specific and provide examples where possible
+    - Consider both technical aspects and content quality`;
+
+    const suggestions = await makeAIRequest([
+      {
+        role: 'system',
+        content: systemMessage
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ]);
+
+    return NextResponse.json({ feedback: suggestions });
+  } catch (error) {
+    console.error('Error generating suggestions:', error);
+    return NextResponse.json(
+      { error: 'Failed to generate suggestions' },
+      { status: 500 }
+    );
+  }
+}

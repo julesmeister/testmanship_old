@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Wave animation for timer progress */
+.wave-container {
+  position: relative;
+  overflow: hidden;
+  animation: fillUp 1s ease-out;
+}
+
+@keyframes waveAnimation {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+.timer-fill {
+  position: relative;
+  overflow: hidden;
+}
+
+.timer-fill.animate-fill {
+  animation: fillUp 1s ease-out forwards;
+}
+
+.timer-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: waveAnimation 2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes fillUp {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Timer progress container */
+.timer-progress {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}

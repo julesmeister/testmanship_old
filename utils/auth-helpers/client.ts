@@ -82,7 +82,7 @@ export async function signInWithOAuth(
   const supabase = createClient();
 
   try {
-    toast.loading('Connecting to provider...', {
+    toast.loading(`Connecting to ${provider.charAt(0).toUpperCase() + provider.slice(1)}...`, {
       id: 'oauth-signin',
       duration: 2000
     });

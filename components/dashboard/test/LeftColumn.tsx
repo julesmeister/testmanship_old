@@ -17,6 +17,7 @@ import { HiXMark, HiLightBulb } from 'react-icons/hi2';
 import { toast } from 'react-hot-toast';
 import { cn } from "@/lib/utils";
 import { useDraggable } from '@/hooks/useDraggable';
+import { CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
 
 interface Challenge {
   id: string;
@@ -30,18 +31,17 @@ interface Challenge {
 }
 
 interface LeftColumnProps {
-  selectedChallenge: any;
-  hasStartedWriting: boolean;
+  challenge: Challenge | null;
   outputCode: string;
-  onStartChallenge: (challenge: any) => void;
+  onStartChallenge: (challenge: Challenge) => void;
   onStopChallenge: () => void;
-  mode?: string;
-  timeElapsed?: number;
+  onGenerateFeedback: (paragraph: string, isFullEssay: boolean) => Promise<string>;
+  isGeneratingFeedback: boolean;
+  isTimeUp: boolean;
+  mode: 'practice' | 'exam';
+  timeElapsed: number;
   timeAllocation?: number;
-  isTimeUp?: boolean;
-  isGeneratingFeedback?: boolean;
-  onGenerateFeedback?: () => void;
-  setHasStartedWriting: (value: boolean) => void;
+  inputMessage: string;
 }
 
 const difficultyLevels = [
@@ -131,18 +131,17 @@ function DraggableWindow({
 }
 
 export default function LeftColumn({
-  selectedChallenge,
-  hasStartedWriting,
+  challenge,
   outputCode,
   onStartChallenge,
   onStopChallenge,
-  mode = 'exam',
-  timeElapsed = 0,
-  timeAllocation = 0,
-  isTimeUp = false,
-  isGeneratingFeedback = false,
   onGenerateFeedback,
-  setHasStartedWriting
+  isGeneratingFeedback,
+  isTimeUp,
+  mode,
+  timeElapsed,
+  timeAllocation,
+  inputMessage,
 }: LeftColumnProps) {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedLevel, setSelectedLevel] = useState('a1');
@@ -152,6 +151,7 @@ export default function LeftColumn({
   const [showFeedback, setShowFeedback] = useState(true);
   const [accordionValue, setAccordionValue] = useState<string | undefined>('item-1');
   const supabase = createClientComponentClient();
+  const [outputCodeState, setOutputCode] = useState(outputCode);
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -178,7 +178,7 @@ export default function LeftColumn({
   }, [selectedLevel, searchQuery, supabase]);
 
   useEffect(() => {
-    if (timeElapsed >= timeAllocation * 60) {
+    if (timeAllocation && timeElapsed >= timeAllocation * 60) {
       setAccordionValue(undefined);
     }
   }, [timeElapsed, timeAllocation]);
@@ -194,12 +194,37 @@ export default function LeftColumn({
     setShowChallenges(true);
     setAccordionValue('item-1');
     onStopChallenge();
-    setHasStartedWriting(false);
+    setShowTip(true);
+    setSelectedLevel('a1'); // Reset difficulty level
   };
 
-  const handleFinishChallenge = () => {
-    onGenerateFeedback?.();
+  const handleFinishChallenge = async () => {
+    setShowChallenges(false);
+    setShowFeedback(true);
+    
+    // Generate full essay feedback
+    const promise = onGenerateFeedback(inputMessage, true);
+    toast.promise(promise, {
+      loading: 'Analyzing your complete essay...',
+      success: 'Generated comprehensive feedback',
+      error: 'Failed to generate feedback'
+    });
+
+    try {
+      const newFeedback = await promise;
+      setOutputCode(newFeedback);
+    } catch (error) {
+      console.error('Error updating feedback:', error);
+    }
+
+    onStopChallenge();
   };
+
+  useEffect(() => {
+    if (timeAllocation && timeElapsed >= timeAllocation && !isTimeUp) {
+      handleFinishChallenge();
+    }
+  }, [timeElapsed, timeAllocation, isTimeUp]);
 
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
@@ -253,8 +278,8 @@ export default function LeftColumn({
         </div>
       )}
       {/* Challenge Selection */}
-      <div className={hasStartedWriting ? "" : "space-y-4"}>
-        {showChallenges && !hasStartedWriting && (
+      <div className={!challenge ? "space-y-4" : ""}>
+        {(showChallenges || !challenge) && (
           <>
             <Tabs defaultValue="a1" className="w-full" onValueChange={setSelectedLevel}>
               <TabsList className="grid w-full grid-cols-6 bg-gray-50 dark:bg-gray-900 p-1">
@@ -330,26 +355,8 @@ export default function LeftColumn({
       </div>
 
       {/* Instructions & Criteria */}
-      {selectedChallenge && !showChallenges && (
+      {challenge && !showChallenges && (
         <div>
-          {/* Finish Challenge Button - Only show in exam mode */}
-          {mode === 'exam' && (
-            <Button
-              className="w-full mb-4"
-              variant="default"
-              onClick={handleFinishChallenge}
-              disabled={!isTimeUp || isGeneratingFeedback}
-            >
-              {isGeneratingFeedback ? (
-                <>
-                  <span className="mr-2">Generating Feedback</span>
-                  <HiSparkles className="h-4 w-4 animate-spin" />
-                </>
-              ) : (
-                'Finish Challenge'
-              )}
-            </Button>
-          )}
           <Accordion 
             type="single" 
             collapsible 
@@ -386,14 +393,14 @@ export default function LeftColumn({
                   <div>
                     <h3 className="font-semibold mb-2">Topic</h3>
                     <p className="text-zinc-600 dark:text-zinc-400">
-                      {selectedChallenge.title}
+                      {challenge.title}
                     </p>
                   </div>
 
                   <div>
                     <h3 className="font-semibold mb-2">Instructions</h3>
                     <div className="text-zinc-600 dark:text-zinc-400 space-y-2">
-                      {selectedChallenge.instructions.split('\n').map((instruction: string, index: number) => (
+                      {challenge.instructions.split('\n').map((instruction: string, index: number) => (
                         <p key={index}>{instruction}</p>
                       ))}
                     </div>
@@ -402,35 +409,35 @@ export default function LeftColumn({
                   <div>
                     <h3 className="font-semibold mb-2">Time Allocation</h3>
                     <p className="text-zinc-600 dark:text-zinc-400">
-                      {selectedChallenge.time_allocation} minutes
+                      {challenge.time_allocation} minutes
                     </p>
                   </div>
 
-                  {selectedChallenge.word_count && (
+                  {challenge.word_count && (
                     <div>
                       <h3 className="font-semibold mb-2">Word Count Requirement</h3>
                       <p className="text-zinc-600 dark:text-zinc-400">
-                        {selectedChallenge.word_count}
+                        {challenge.word_count}
                       </p>
                     </div>
                   )}
 
-                  {selectedChallenge.grammar_focus && selectedChallenge.grammar_focus.length > 0 && (
+                  {challenge.grammar_focus && challenge.grammar_focus.length > 0 && (
                     <div>
                       <h3 className="font-semibold mb-2">Grammar Focus</h3>
                       <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
-                        {selectedChallenge.grammar_focus.map((point: string, index: number) => (
+                        {challenge.grammar_focus.map((point: string, index: number) => (
                           <li key={index}>{point}</li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-                  {selectedChallenge.vocabulary_themes && selectedChallenge.vocabulary_themes.length > 0 && (
+                  {challenge.vocabulary_themes && challenge.vocabulary_themes.length > 0 && (
                     <div>
                       <h3 className="font-semibold mb-2">Vocabulary Themes</h3>
                       <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
-                        {selectedChallenge.vocabulary_themes.map((theme: string, index: number) => (
+                        {challenge.vocabulary_themes.map((theme: string, index: number) => (
                           <li key={index}>{theme}</li>
                         ))}
                       </ul>
@@ -440,11 +447,11 @@ export default function LeftColumn({
                   <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 pt-4 border-t border-zinc-200 dark:border-zinc-700">
                     <div className="flex items-center gap-2">
                       <HiArrowPath className="h-4 w-4" />
-                      <span>{selectedChallenge.time_allocation} minutes</span>
+                      <span>{challenge.time_allocation} minutes</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <HiStop className="h-4 w-4" />
-                      <span>{selectedChallenge.difficulty_level}</span>
+                      <span>{challenge.difficulty_level}</span>
                     </div>
                   </div>
                 </div>
@@ -455,7 +462,7 @@ export default function LeftColumn({
       )}
 
       {/* Toggle Feedback Button */}
-      {selectedChallenge && hasStartedWriting && !showFeedback && (
+      {challenge && !showFeedback && (
         <button
           onClick={() => setShowFeedback(true)}
           className="fixed bottom-4 right-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:opacity-90 transition-opacity"
@@ -465,19 +472,78 @@ export default function LeftColumn({
       )}
 
       {/* AI Feedback Window */}
-      {selectedChallenge && hasStartedWriting && showFeedback && (
+      {challenge && showFeedback && (
         <DraggableWindow onClose={() => setShowFeedback(false)}>
-          <div className="p-3 max-h-[50vh] overflow-y-auto">
-            <div className="space-y-2">
-              {outputCode ? (
-                <div className="text-zinc-600 dark:text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap">
-                  {outputCode}
-                </div>
-              ) : (
-                <div className="text-zinc-500/80 dark:text-zinc-400/80 text-xs italic">
-                  Start writing to receive real-time feedback on your essay.
-                </div>
+          <div className="flex flex-col gap-3">
+            {/* Paragraph Selection Buttons */}
+            <div className="flex gap-2 p-3 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
+              {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
+                paragraph.trim() && (
+                  <button
+                    key={index}
+                    onClick={async () => {
+                      const promise = onGenerateFeedback(paragraph, false);
+                      toast.promise(promise, {
+                        loading: `Analyzing paragraph ${index + 1}...`,
+                        success: `Generated feedback for paragraph ${index + 1}`,
+                        error: 'Failed to generate feedback'
+                      });
+                      // Update the feedback display when promise resolves
+                      try {
+                        const newFeedback = await promise;
+                        setOutputCode(newFeedback);
+                      } catch (error) {
+                        console.error('Error updating feedback:', error);
+                      }
+                    }}
+                    className="group flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700/70 transition-all hover:shadow-sm active:scale-95"
+                  >
+                    <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
+                    <span>P{index + 1}</span>
+                  </button>
+                )
               )}
+            </div>
+
+            {/* Feedback Content */}
+            <div className="p-3 max-h-[40vh] overflow-y-auto">
+              <div className="space-y-2">
+                {outputCodeState ? (
+                  <div className="text-zinc-600 dark:text-zinc-400 text-md leading-relaxed">
+                    {outputCodeState.split('\n').map((line, index) => {
+                      if (line.trim().startsWith('✓')) {
+                        return (
+                          <div key={index} className="flex items-start gap-2 mb-2">
+                            <CheckCircle2 className="w-5 h-5 mt-0.5 text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
+                            <span>{line.replace('✓', '').trim()}</span>
+                          </div>
+                        );
+                      } else if (line.trim().startsWith('✗')) {
+                        return (
+                          <div key={index} className="flex items-start gap-2 mb-2">
+                            <XCircle className="w-5 h-5 mt-0.5 text-red-500 dark:text-red-400 flex-shrink-0" />
+                            <span>{line.replace('✗', '').trim()}</span>
+                          </div>
+                        );
+                      } else if (line.trim().startsWith('!')) {
+                        return (
+                          <div key={index} className="flex items-start gap-2 mb-2">
+                            <AlertCircle className="w-5 h-5 mt-0.5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+                            <span>{line.replace('!', '').trim()}</span>
+                          </div>
+                        );
+                      } else if (line.trim()) {
+                        return <p key={index} className="mb-2">{line}</p>;
+                      }
+                      return null;
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-zinc-500/80 dark:text-zinc-400/80 text-xs italic">
+                    Select a paragraph or start writing to receive real-time feedback on your essay.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </DraggableWindow>
