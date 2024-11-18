@@ -25,9 +25,16 @@ export default function OauthSignIn() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    setIsSubmitting(true); // Disable the button while the request is being handled
-    await signInWithOAuth(e);
-    setIsSubmitting(false);
+    setIsSubmitting(true);
+    try {
+      console.log('Starting OAuth sign-in process...');
+      await signInWithOAuth(e);
+      console.log('OAuth sign-in process completed');
+    } catch (error) {
+      console.error('OAuth sign-in error in component:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
