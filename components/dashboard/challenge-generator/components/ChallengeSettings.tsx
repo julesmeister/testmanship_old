@@ -149,10 +149,10 @@ export function ChallengeSettings({
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <Slider
-                              min={1}
+                              min={5}
                               max={120}
                               step={5}
-                              defaultValue={[field.value || 30]}
+                              defaultValue={[Math.ceil((field.value || 30) / 5) * 5]}
                               onValueChange={([value]) => field.onChange(value)}
                               className="w-[calc(100%-4rem)]"
                             />

@@ -1,26 +1,15 @@
 'use client';
 /*eslint-disable*/
 
-import MessageBoxChat from '@/components/MessageBoxChat';
 import DashboardLayout from '@/components/layout';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger
-} from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import Bgdark from '@/public/img/dark/test/bg-image.png';
-import Bg from '@/public/img/light/test/bg-image.png';
+
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
 import { useState, useEffect, useRef } from 'react';
-import { HiUser, HiSparkles, HiMiniPencilSquare } from 'react-icons/hi2';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import RightColumn from './LeftColumn';
+import LeftColumn from './LeftColumn';
 import toast from 'react-hot-toast';
 
 interface Props {
@@ -40,7 +29,6 @@ interface Challenge {
 }
 
 export default function Test({ user, userDetails }: Props) {
-  const { theme, setTheme } = useTheme();
   // *** If you use .env.local variable for your API key, method which we recommend, use the apiKey variable commented below
   // Input States
   const [inputOnSubmit, setInputOnSubmit] = useState<string>('');
@@ -60,7 +48,8 @@ export default function Test({ user, userDetails }: Props) {
   const startTimeRef = useRef<number | null>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [hasStartedWriting, setHasStartedWriting] = useState(false);
-  const [mode, setMode] = useState<'practice' | 'exam'>('practice');
+  const [mode, setMode] = useState<'practice' | 'exam'>('exam');
+  const [timeElapsed, setTimeElapsed] = useState(0);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
 
@@ -77,6 +66,22 @@ export default function Test({ user, userDetails }: Props) {
       setIsTimeUp(true);
     }
   }, [elapsedTime, selectedChallenge]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (hasStartedWriting && selectedChallenge?.time_allocation) {
+      interval = setInterval(() => {
+        setTimeElapsed(prev => prev + 1);
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [hasStartedWriting, selectedChallenge]);
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -266,7 +271,7 @@ export default function Test({ user, userDetails }: Props) {
       description="Get instant feedback on your writing"
     >
       <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row gap-6">
-        <RightColumn 
+        <LeftColumn 
           selectedChallenge={selectedChallenge}
           hasStartedWriting={hasStartedWriting}
           outputCode={outputCode}
@@ -275,12 +280,15 @@ export default function Test({ user, userDetails }: Props) {
           onGenerateFeedback={handleGenerateFeedback}
           isGeneratingFeedback={isGeneratingFeedback}
           isTimeUp={isTimeUp}
+          mode={mode}
+          timeElapsed={timeElapsed}
+          timeAllocation={selectedChallenge?.time_allocation}
         />
 
         {/* Writing Area */}
         <div className="flex-1 flex flex-col">
-          <Tabs defaultValue="practice" className="mb-4" onValueChange={(value) => setMode(value as 'practice' | 'exam')}>
-            <TabsList className="grid w-full grid-cols-2 bg-indigo-50 dark:bg-indigo-950 p-1">
+          <Tabs defaultValue="exam" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger 
                 value="practice" 
                 className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 

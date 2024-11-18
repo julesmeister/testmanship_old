@@ -6,7 +6,12 @@ export const formSchema = z.object({
   instructions: z.string().min(1, "Instructions are required"),
   format: z.string().min(1, "Format is required"),
   difficulty: z.string().min(1, "Difficulty is required"),
-  timeAllocation: z.number().min(1, "Time allocation is required"),
+  timeAllocation: z.number()
+    .min(5, "Time allocation must be at least 5 minutes")
+    .max(120, "Time allocation cannot exceed 120 minutes")
+    .refine(val => val % 5 === 0, {
+      message: "Time allocation must be in multiples of 5 minutes"
+    }),
   wordCount: z.number().min(50, "Word count must be at least 50").max(500, "Word count cannot exceed 500"),
   grammarFocus: z.array(z.string()),
   vocabularyThemes: z.array(z.string())

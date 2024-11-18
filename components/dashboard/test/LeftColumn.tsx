@@ -26,32 +26,38 @@ interface Challenge {
   vocabulary_themes?: string[];
 }
 
-interface RightColumnProps {
+interface LeftColumnProps {
   selectedChallenge: any;
   hasStartedWriting: boolean;
-  outputCode: string | null;
-  onStartChallenge: (challenge: Challenge) => void;
+  outputCode: string;
+  onStartChallenge: (challenge: any) => void;
   onStopChallenge: () => void;
-  onGenerateFeedback: () => void;
-  isTimeUp: boolean;
-  isGeneratingFeedback: boolean;
+  mode?: string;
+  timeElapsed?: number;
+  timeAllocation?: number;
+  isTimeUp?: boolean;
+  isGeneratingFeedback?: boolean;
+  onGenerateFeedback?: () => void;
 }
 
-export default function RightColumn({ 
-  selectedChallenge, 
-  hasStartedWriting, 
+export default function LeftColumn({
+  selectedChallenge,
+  hasStartedWriting,
   outputCode,
   onStartChallenge,
   onStopChallenge,
-  onGenerateFeedback,
-  isTimeUp,
-  isGeneratingFeedback
-}: RightColumnProps) {
+  mode = 'exam',
+  timeElapsed = 0,
+  timeAllocation = 0,
+  isTimeUp = false,
+  isGeneratingFeedback = false,
+  onGenerateFeedback
+}: LeftColumnProps) {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedLevel, setSelectedLevel] = useState('a1');
   const [searchQuery, setSearchQuery] = useState('');
   const [showChallenges, setShowChallenges] = useState(true);
-  const [accordionValue, setAccordionValue] = useState<string>('');
+  const [accordionValue, setAccordionValue] = useState<string | undefined>('item-1');
   const [showTip, setShowTip] = useState(true);
   const supabase = createClientComponentClient();
 
@@ -79,6 +85,12 @@ export default function RightColumn({
     fetchChallenges();
   }, [selectedLevel, searchQuery, supabase]);
 
+  useEffect(() => {
+    if (timeElapsed >= timeAllocation * 60) {
+      setAccordionValue(undefined);
+    }
+  }, [timeElapsed, timeAllocation]);
+
   const handleStartChallenge = (challenge: Challenge) => {
     setShowChallenges(false);
     setAccordionValue('instructions');
@@ -87,12 +99,12 @@ export default function RightColumn({
 
   const handleBackToChallenges = () => {
     setShowChallenges(true);
-    setAccordionValue('');
+    setAccordionValue('item-1');
     onStopChallenge();
   };
 
   const handleFinishChallenge = () => {
-    onGenerateFeedback();
+    onGenerateFeedback?.();
   };
 
   return (
@@ -208,7 +220,10 @@ export default function RightColumn({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            onClick={() => handleStartChallenge(challenge)}
+                            onClick={() => {
+                              handleStartChallenge(challenge);
+                              setShowTip(false);
+                            }}
                             className="shrink-0 flex items-center gap-2"
                             variant="emerald"
                           >
@@ -231,23 +246,24 @@ export default function RightColumn({
       {/* Instructions & Criteria */}
       {selectedChallenge && !showChallenges && (
         <div>
-          {/* Finish Challenge Button */}
-          <Button
-            className="w-full mb-4"
-            variant="default"
-            onClick={handleFinishChallenge}
-            disabled={!isTimeUp || isGeneratingFeedback}
-          >
-            {isGeneratingFeedback ? (
-              <>
-                <span className="mr-2">Generating Feedback</span>
-                <HiSparkles className="h-4 w-4 animate-spin" />
-              </>
-            ) : (
-              'Finish Challenge'
-            )}
-          </Button>
-
+          {/* Finish Challenge Button - Only show in exam mode */}
+          {mode === 'exam' && (
+            <Button
+              className="w-full mb-4"
+              variant="default"
+              onClick={handleFinishChallenge}
+              disabled={!isTimeUp || isGeneratingFeedback}
+            >
+              {isGeneratingFeedback ? (
+                <>
+                  <span className="mr-2">Generating Feedback</span>
+                  <HiSparkles className="h-4 w-4 animate-spin" />
+                </>
+              ) : (
+                'Finish Challenge'
+              )}
+            </Button>
+          )}
           <Accordion 
             type="single" 
             collapsible 
