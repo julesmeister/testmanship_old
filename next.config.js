@@ -1,3 +1,4 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false, // changed this to false
   images: {
@@ -19,7 +20,16 @@ const nextConfig = {
         port: '',
         pathname: '**',
       },
-    ]
+    ],
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        punycode: false,
+      };
+    }
+    return config;
   },
   typescript: {
     ignoreBuildErrors: true

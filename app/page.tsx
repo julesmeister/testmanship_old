@@ -1,4 +1,4 @@
-'use client';
+'use server';
 
 import { getUser } from '@/utils/supabase/queries';
 import { redirect } from 'next/navigation';
