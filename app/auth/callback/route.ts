@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
         console.error('Auth error:', authError);
         return NextResponse.redirect(
           getErrorRedirect(
-            `${requestUrl.origin}/dashboard/signin/sign-in`,
+            `${requestUrl.origin}/dashboard/signin`,
             authError.name,
             "Sorry, we weren't able to log you in. Please try again."
           )
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         console.error('No user in session after exchange');
         return NextResponse.redirect(
           getErrorRedirect(
-            `${requestUrl.origin}/dashboard/signin/sign-in`,
+            `${requestUrl.origin}/dashboard/signin`,
             'NoUserError',
             "Sorry, we couldn't complete the sign-in process. Please try again."
           )
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       console.error('Unexpected error in callback:', error);
       return NextResponse.redirect(
         getErrorRedirect(
-          `${requestUrl.origin}/dashboard/signin/sign-in`,
+          `${requestUrl.origin}/dashboard/signin`,
           'UnexpectedError',
           "An unexpected error occurred. Please try again."
         )
