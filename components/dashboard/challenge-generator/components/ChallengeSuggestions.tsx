@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Suggestion } from '@/types/challenge-generator';
 import { formSchema } from '../schema';
 import { toast } from 'sonner';
+import { Icon } from '@/components/ui/icon';
 
 interface ChallengeSuggestionsProps {
   suggestions: Suggestion[];
@@ -28,7 +29,7 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
           className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 transition-all duration-200 hover:shadow-md hover:border-blue-500/50"
         >
           <h4 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-500" />
+            <Icon icon={FileText} size="md" className="text-blue-500" />
             {suggestion.title}
           </h4>
           <p className="text-base text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed">
@@ -37,13 +38,13 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
           <div className="grid gap-6 mb-4">
             <div className="space-y-3">
               <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                <BrainCircuit className="h-4 w-4 text-blue-500" />
+                <Icon icon={BrainCircuit} size="sm" className="text-blue-500" />
                 Key Learning Points
               </h5>
               <ul className="space-y-2">
                 {suggestion.keyPoints.map((point, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
-                    <ListTodo className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
+                    <Icon icon={ListTodo} size="sm" className="mt-1 flex-shrink-0 text-blue-500" />
                     <span className="text-sm leading-relaxed">{point}</span>
                   </li>
                 ))}
@@ -53,13 +54,13 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
             {suggestion.grammarFocus && (
               <div className="space-y-3">
                 <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-blue-500" />
+                  <Icon icon={GraduationCap} size="sm" className="text-blue-500" />
                   Grammar Focus
                 </h5>
                 <ul className="space-y-2">
                   {suggestion.grammarFocus.map((grammar, idx) => (
                     <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
-                      <BrainCircuit className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
+                      <Icon icon={BrainCircuit} size="sm" className="mt-1 flex-shrink-0 text-blue-500" />
                       <span className="text-sm leading-relaxed">{grammar}</span>
                     </li>
                   ))}
@@ -70,13 +71,13 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
             {suggestion.vocabularyThemes && (
               <div className="space-y-3">
                 <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-blue-500" />
+                  <Icon icon={BookOpen} size="sm" className="text-blue-500" />
                   Vocabulary Themes
                 </h5>
                 <ul className="space-y-2">
                   {suggestion.vocabularyThemes.map((theme, idx) => (
                     <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
-                      <BrainCircuit className="mt-1 h-4 w-4 flex-shrink-0 text-blue-500" />
+                      <Icon icon={BrainCircuit} size="sm" className="mt-1 flex-shrink-0 text-blue-500" />
                       <span className="text-sm leading-relaxed">{theme}</span>
                     </li>
                   ))}
@@ -88,16 +89,16 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
           <div className="mt-4 flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
+                <Icon icon={Clock} size="sm" />
                 <span>{form.getValues('timeAllocation')} minutes</span>
               </div>
               <div className="flex items-center gap-2">
-                <Award className="h-4 w-4" />
+                <Icon icon={Award} size="sm" />
                 <span>{form.getValues('difficulty')}</span>
               </div>
               {suggestion.wordCount && (
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
+                  <Icon icon={FileText} size="sm" />
                   <span>{suggestion.wordCount} words minimum</span>
                 </div>
               )}
@@ -137,7 +138,7 @@ Word Count: ${suggestion.wordCount} words minimum`;
                 });
               }}
             >
-              <Check className="mr-2 h-4 w-4" />
+              <Icon icon={Check} size="sm" className="mr-2" />
               Use This Challenge
             </Button>
           </div>

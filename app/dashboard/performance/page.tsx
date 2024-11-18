@@ -4,7 +4,7 @@ import { getUserDetails, getUser } from '@/utils/supabase/queries';
 import { createClient } from '@/utils/supabase/server';
 
 export default async function PerformancePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const [user, userDetails] = await Promise.all([
     getUser(supabase),
     getUserDetails(supabase)

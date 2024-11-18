@@ -7,11 +7,9 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { OpenContext, UserContext } from '@/contexts/layout';
-import { getRedirectMethod } from '@/utils/auth-helpers/settings';
+import { OpenContext, UserContext, UserDetailsContext } from '@/contexts/layout';
 import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { FiAlignJustify } from 'react-icons/fi';
 import {
   HiOutlineMoon,
@@ -19,42 +17,23 @@ import {
   HiOutlineInformationCircle,
   HiOutlineArrowRightOnRectangle
 } from 'react-icons/hi2';
-import { createClient } from '@/utils/supabase/client';
-import { toast } from "sonner";
 import LanguageSelector from '@/components/language/LanguageSelector';
+import { useSignOut } from '@/hooks/useSignOut';
 
-const supabase = createClient();
 export default function HeaderLinks(props: { [x: string]: any }) {
   const { open, setOpen } = useContext(OpenContext);
   const user = useContext(UserContext);
+  const userDetails = useContext(UserDetailsContext);
   const { theme, setTheme } = useTheme();
-  const router = getRedirectMethod() === 'client' ? useRouter() : null;
+  const [mounted, setMounted] = useState(false);
+  const signOut = useSignOut();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const onOpen = () => {
     setOpen(!open);
-  };
-
-  const handleSignOut = async (e) => {
-    e.preventDefault();
-    toast.loading('Signing out...', {
-      id: 'signout',
-      duration: 1000,
-    });
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Sign out failed', {
-        id: 'signout',
-        description: 'Please try again.',
-      });
-    } else {
-      toast.success('Signed out successfully', {
-        id: 'signout',
-      });
-      if (router) {
-        router.push('/dashboard/signin');
-      } else {
-        window.location.href = '/dashboard/signin';
-      }
-    }
   };
 
   return (
@@ -63,6 +42,8 @@ export default function HeaderLinks(props: { [x: string]: any }) {
         <LanguageSelector 
           userId={user?.id}
           className="w-[180px] h-9 md:h-10"
+          forceDialog={!userDetails?.target_language_id}
+          initialLanguageId={userDetails?.target_language_id}
         />
         <Button
           variant="outline"
@@ -76,12 +57,16 @@ export default function HeaderLinks(props: { [x: string]: any }) {
         variant="outline"
         className="flex h-9 min-w-9 cursor-pointer rounded-full border-zinc-200 p-0 text-xl text-zinc-950 dark:border-zinc-800 dark:text-white md:min-h-10 md:min-w-10"
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        aria-label="Toggle theme"
       >
-        {theme === 'light' ? (
-          <HiOutlineMoon className="h-4 w-4 stroke-2" />
-        ) : (
-          <HiOutlineSun className="h-5 w-5 stroke-2" />
-        )}
+        {mounted ? (
+          theme === 'light' ? (
+            <HiOutlineMoon className="h-4 w-4 stroke-2" />
+          ) : (
+            <HiOutlineSun className="h-4 w-4 stroke-2" />
+          )
+        ) : null}
+        <span className="sr-only">Toggle theme</span>
       </Button>
 
       {/* Dropdown Menu */}
@@ -89,54 +74,44 @@ export default function HeaderLinks(props: { [x: string]: any }) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="flex h-9 min-w-9 cursor-pointer rounded-full border-zinc-200 p-0 text-xl text-zinc-950 dark:border-zinc-800 dark:text-white md:min-h-10 md:min-w-10"
+            className="flex h-9 min-w-9 cursor-pointer items-center gap-2 rounded-full border-zinc-200 px-2 text-xl text-zinc-950 dark:border-zinc-800 dark:text-white md:min-h-10 md:min-w-10"
           >
-            <HiOutlineInformationCircle className="h-[20px] w-[20px] text-zinc-950 dark:text-white" />
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarFallback>
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 p-2">
-          <a
-            target="blank"
-            href="https://horizon-ui.com/boilerplate-shadcn#pricing"
-            className="w-full"
-            // className="flex h-[44px] w-full min-w-[44px] cursor-pointer items-center rounded-lg border border-zinc-200 bg-transparent text-center text-sm font-medium text-zinc-950 duration-100 placeholder:text-zinc-950 hover:bg-gray-100 focus:bg-zinc-200 active:bg-zinc-200 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/20 dark:active:bg-white/20"
-          >
-            <Button variant="outline" className="mb-2 w-full">
-              Pricing
+        <DropdownMenuContent align="end" className="w-56">
+          <div className="flex items-center justify-start gap-2 p-2">
+            <div className="flex flex-col space-y-1 leading-none">
+              {user?.email && (
+                <p className="font-medium">{user.email}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-start gap-2"
+              onClick={() => window.open('https://docs.codeium.com/cascade/cascade-overview', '_blank')}
+            >
+              <HiOutlineInformationCircle className="h-4 w-4" />
+              <span>Documentation</span>
             </Button>
-          </a>
-          <a target="blank" href="mailto:hello@horizon-ui.com">
-            <Button variant="outline" className="mb-2 w-full">
-              Help & Support
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-start gap-2"
+              onClick={signOut}
+            >
+              <HiOutlineArrowRightOnRectangle className="h-4 w-4" />
+              <span>Sign out</span>
             </Button>
-          </a>
-          <a target="blank" href="/#faqs">
-            <Button variant="outline" className="w-full">
-              FAQs & More
-            </Button>
-          </a>
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <Button
-        onClick={(e) => handleSignOut(e)}
-        variant="outline"
-        className="flex h-9 min-w-9 cursor-pointer rounded-full border-zinc-200 p-0 text-xl text-zinc-950 dark:border-zinc-800 dark:text-white md:min-h-10 md:min-w-10"
-      >
-        <HiOutlineArrowRightOnRectangle className="h-4 w-4 stroke-2 text-zinc-950 dark:text-white" />
-      </Button>
-      <a className="w-full" href="/dashboard/settings">
-        <Avatar className="h-9 min-w-9 md:min-h-10 md:min-w-10">
-          <AvatarImage src={user?.user_metadata.avatar_url} />
-          <AvatarFallback className="font-bold">
-            {user?.user_metadata?.full_name
-              ? `${user.user_metadata.full_name[0]}`
-              : user?.email
-              ? `${user.email[0].toUpperCase()}`
-              : 'U'}
-          </AvatarFallback>
-        </Avatar>
-      </a>
     </div>
   );
 }

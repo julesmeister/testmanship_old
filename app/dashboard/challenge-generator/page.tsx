@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ChallengeGeneratorPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const [user, userDetails] = await Promise.all([
     getUser(supabase),
     getUserDetails(supabase)

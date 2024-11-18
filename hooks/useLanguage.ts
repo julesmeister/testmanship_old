@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from "sonner";
@@ -13,15 +15,28 @@ export function useLanguage(userId?: string) {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     async function loadLanguages() {
       try {
-        const { data: languagesData } = await supabase
+        const { data: languagesData, error: languagesError } = await supabase
           .from('supported_languages')
           .select('*')
           .order('name');
+
+        if (languagesError) {
+          console.error('Error fetching supported languages:', languagesError);
+          toast.error('Failed to load supported languages');
+          return;
+        }
 
         if (languagesData) {
           setLanguages(languagesData);
@@ -32,33 +47,46 @@ export function useLanguage(userId?: string) {
             .from('users')
             .select('target_language_id, full_name')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
 
           if (fetchError) {
-            console.error('Error fetching user language:', fetchError);
-            setShowDialog(true);
+            if (mounted) {
+              console.error('Error fetching user language:', {
+                error: fetchError.message,
+                code: fetchError.code,
+                details: fetchError.details,
+                hint: fetchError.hint
+              });
+              toast.error('Failed to load language preference');
+              setShowDialog(true);
+            }
           } else if (userData?.target_language_id) {
-            setSelectedLanguage(userData.target_language_id);
+            if (mounted) {
+              setSelectedLanguage(userData.target_language_id);
+            }
           } else {
-            setShowDialog(true);
+            if (mounted) {
+              setShowDialog(true);
+            }
           }
         }
       } catch (error) {
-        console.error('Error loading languages:', error);
-        toast.error("Failed to load language preferences");
+        if (mounted) {
+          console.error('Error loading languages:', error instanceof Error ? error.message : 'Unknown error');
+          toast.error("Failed to load language preferences");
+        }
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     loadLanguages();
-  }, [userId, supabase]);
+  }, [userId, supabase, mounted]);
 
   const handleLanguageChange = async (value: string) => {
-    if (!userId) {
-      console.error('No userId available for language update');
-      return;
-    }
+    if (!userId || !mounted) return;
 
     try {
       const { data: langCheck, error: langError } = await supabase
@@ -95,7 +123,7 @@ export function useLanguage(userId?: string) {
 
       setSelectedLanguage(value);
       setShowDialog(false);
-      toast.success(`Language set to ${langCheck.name}!`);
+      toast.success(`Learning language set to ${langCheck.name}!`);
     } catch (error) {
       console.error('Error saving language:', error);
       toast.error("Failed to save language preference");
@@ -106,8 +134,8 @@ export function useLanguage(userId?: string) {
     languages,
     selectedLanguage,
     showDialog,
-    isLoading,
     setShowDialog,
-    handleLanguageChange
+    handleLanguageChange,
+    isLoading,
   };
 }

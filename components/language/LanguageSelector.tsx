@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -16,34 +16,85 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from '@/hooks/useLanguage';
+import { useLanguageStore } from '@/stores/language';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { toast } from 'sonner';
 
 interface Props {
   userId?: string;
   className?: string;
+  forceDialog?: boolean;
+  initialLanguageId?: string | null;
 }
 
-export default function LanguageSelector({ userId, className }: Props) {
+export default function LanguageSelector({ userId, className, forceDialog, initialLanguageId }: Props) {
   const [tempSelectedLanguage, setTempSelectedLanguage] = useState<string>('');
   const {
     languages,
-    selectedLanguage,
+    selectedLanguageId,
     showDialog,
-    isLoading,
     setShowDialog,
-    handleLanguageChange
-  } = useLanguage(userId);
+    loadLanguages,
+    updateUserLanguage,
+    setSelectedLanguageId
+  } = useLanguageStore();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function init() {
+      await loadLanguages();
+      
+      // If initialLanguageId is provided and not null
+      if (initialLanguageId) {
+        setSelectedLanguageId(initialLanguageId);
+        setTempSelectedLanguage(initialLanguageId);
+      } else if (userId) {
+        // If no initial language or it's null, fetch from user data
+        const supabase = createClientComponentClient();
+        const { data: userData, error: fetchError } = await supabase
+          .from('users')
+          .select('target_language_id')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error('Error fetching user language:', fetchError);
+          toast.error('Failed to load language preference');
+        } else if (userData?.target_language_id) {
+          setSelectedLanguageId(userData.target_language_id);
+          setTempSelectedLanguage(userData.target_language_id);
+        }
+      }
+
+      // Show dialog if no language is selected and forceDialog is true
+      if (forceDialog && !initialLanguageId && !selectedLanguageId) {
+        setShowDialog(true);
+      }
+      
+      setIsLoading(false);
+    }
+    init();
+  }, [userId, loadLanguages, forceDialog, initialLanguageId, setSelectedLanguageId, selectedLanguageId]);
 
   if (isLoading) return null;
+
+  const currentLanguage = languages.find(l => l.id === selectedLanguageId);
 
   return (
     <>
       <Select
-        value={tempSelectedLanguage}
-        onValueChange={(value) => setTempSelectedLanguage(value)}
+        value={selectedLanguageId || ''}
+        onValueChange={(value) => {
+          setTempSelectedLanguage(value);
+          if (userId) {
+            updateUserLanguage(userId, value);
+          }
+        }}
       >
         <SelectTrigger className={className}>
-          <SelectValue placeholder="Select a language" />
+          <SelectValue placeholder="Select a learning language">
+            {currentLanguage?.name}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-white dark:bg-zinc-950">
           {languages.map((language) => (
@@ -72,7 +123,7 @@ export default function LanguageSelector({ userId, className }: Props) {
               onValueChange={(value) => setTempSelectedLanguage(value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a language" />
+                <SelectValue placeholder="Select a learning language" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-zinc-950">
                 {languages.map((language) => (
@@ -89,8 +140,9 @@ export default function LanguageSelector({ userId, className }: Props) {
             <Button
               className="w-full"
               onClick={() => {
-                handleLanguageChange(tempSelectedLanguage);
-                setTempSelectedLanguage(selectedLanguage);
+                if (userId && tempSelectedLanguage) {
+                  updateUserLanguage(userId, tempSelectedLanguage);
+                }
               }}
               disabled={!tempSelectedLanguage}
             >

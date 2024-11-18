@@ -2,21 +2,18 @@
 
 import { Button } from '../ui/button';
 import Footer from '@/components/footer/FooterAuthDefault';
-import { useTheme } from 'next-themes';
-import { PropsWithChildren } from 'react';
 import { FaChevronLeft } from 'react-icons/fa6';
 import { HiBolt } from 'react-icons/hi2';
-import { IoMoon, IoSunny } from 'react-icons/io5';
-import PolicySections  from '../auth/policy-sections';
+import PolicySections from '../auth/policy-sections';
+import { ModeToggle } from '../mode-toggle';
 
-interface DefaultAuthLayoutProps extends PropsWithChildren {
-  children: JSX.Element;
-  viewProp: any;
+interface DefaultAuthLayoutProps {
+  children: React.ReactNode;
 }
 
 export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
   const { children } = props;
-  const { theme, setTheme } = useTheme();
+
   return (
     <div className="relative h-max dark:bg-zinc-950">
       <div className="relative flex min-h-screen">
@@ -37,7 +34,6 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
           <div className="flex w-full justify-center mt-8 md:mt-12">
             <Footer />
           </div>
-
         </div>
 
         {/* Right column - decorative background */}
@@ -89,16 +85,9 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
         </div>
       </div>
      
-      <Button
-        className="absolute bottom-10 right-10 flex min-h-10 min-w-10 cursor-pointer rounded-full bg-zinc-950 p-0 text-xl text-white hover:bg-zinc-950 dark:bg-white dark:text-zinc-950 hover:dark:bg-white xl:bg-white xl:text-zinc-950 xl:hover:bg-white xl:dark:text-zinc-900"
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      >
-        {theme === 'light' ? (
-          <IoMoon className="h-4 w-4" />
-        ) : (
-          <IoSunny className="h-4 w-4" />
-        )}
-      </Button>
+      <div className="fixed bottom-10 right-10">
+        <ModeToggle />
+      </div>
     </div>
   );
 }

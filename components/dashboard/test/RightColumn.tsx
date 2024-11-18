@@ -31,6 +31,9 @@ interface RightColumnProps {
   outputCode: string | null;
   onStartChallenge: (challenge: Challenge) => void;
   onStopChallenge: () => void;
+  onGenerateFeedback: () => void;
+  isTimeUp: boolean;
+  isGeneratingFeedback: boolean;
 }
 
 export default function RightColumn({ 
@@ -38,7 +41,10 @@ export default function RightColumn({
   hasStartedWriting, 
   outputCode,
   onStartChallenge,
-  onStopChallenge
+  onStopChallenge,
+  onGenerateFeedback,
+  isTimeUp,
+  isGeneratingFeedback
 }: RightColumnProps) {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedLevel, setSelectedLevel] = useState('a1');
@@ -81,6 +87,10 @@ export default function RightColumn({
     setShowChallenges(true);
     setAccordionValue('');
     onStopChallenge();
+  };
+
+  const handleFinishChallenge = () => {
+    onGenerateFeedback();
   };
 
   return (
@@ -186,100 +196,119 @@ export default function RightColumn({
 
       {/* Instructions & Criteria */}
       {selectedChallenge && !showChallenges && (
-        <Accordion 
-          type="single" 
-          collapsible 
-          className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700"
-          value={accordionValue}
-          onValueChange={setAccordionValue}
-        >
-          <AccordionItem value="instructions">
-            <div className="flex justify-between items-center pr-4">
-              <AccordionTrigger className="px-4 flex-grow">Writing Instructions & Criteria</AccordionTrigger>
-              {!showChallenges && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="flex items-center gap-2"
-                        onClick={handleBackToChallenges}
-                      >
-                        <HiMiniArrowLeftOnRectangle className="w-4 h-4" />
-                        Exit Challenge
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left" className="bg-black border-black">
-                      <p className="text-white">Stop timer and return to challenges</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-            <AccordionContent className="px-4 pb-4">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Topic</h3>
-                  <p className="text-zinc-600 dark:text-zinc-400">
-                    {selectedChallenge.title}
-                  </p>
-                </div>
+        <div>
+          {/* Finish Challenge Button */}
+          <Button
+            className="w-full mb-4"
+            variant="default"
+            onClick={handleFinishChallenge}
+            disabled={!isTimeUp || isGeneratingFeedback}
+          >
+            {isGeneratingFeedback ? (
+              <>
+                <span className="mr-2">Generating Feedback</span>
+                <HiSparkles className="h-4 w-4 animate-spin" />
+              </>
+            ) : (
+              'Finish Challenge'
+            )}
+          </Button>
 
-                <div>
-                  <h3 className="font-semibold mb-2">Instructions</h3>
-                  <div className="text-zinc-600 dark:text-zinc-400 space-y-2">
-                    {selectedChallenge.instructions.split('\n').map((instruction: string, index: number) => (
-                      <p key={index}>{instruction}</p>
-                    ))}
-                  </div>
-                </div>
-
-                {selectedChallenge.word_count && (
+          <Accordion 
+            type="single" 
+            collapsible 
+            className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700"
+            value={accordionValue}
+            onValueChange={setAccordionValue}
+          >
+            <AccordionItem value="instructions">
+              <div className="flex justify-between items-center pr-4">
+                <AccordionTrigger className="px-4 flex-grow">Writing Instructions & Criteria</AccordionTrigger>
+                {!showChallenges && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="flex items-center gap-2"
+                          onClick={handleBackToChallenges}
+                        >
+                          <HiMiniArrowLeftOnRectangle className="w-4 h-4" />
+                          Exit Challenge
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="bg-black border-black">
+                        <p className="text-white">Stop timer and return to challenges</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-6">
                   <div>
-                    <h3 className="font-semibold mb-2">Word Count Requirement</h3>
+                    <h3 className="font-semibold mb-2">Topic</h3>
                     <p className="text-zinc-600 dark:text-zinc-400">
-                      {selectedChallenge.word_count}
+                      {selectedChallenge.title}
                     </p>
                   </div>
-                )}
 
-                {selectedChallenge.grammar_focus && selectedChallenge.grammar_focus.length > 0 && (
                   <div>
-                    <h3 className="font-semibold mb-2">Grammar Focus</h3>
-                    <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
-                      {selectedChallenge.grammar_focus.map((point: string, index: number) => (
-                        <li key={index}>{point}</li>
+                    <h3 className="font-semibold mb-2">Instructions</h3>
+                    <div className="text-zinc-600 dark:text-zinc-400 space-y-2">
+                      {selectedChallenge.instructions.split('\n').map((instruction: string, index: number) => (
+                        <p key={index}>{instruction}</p>
                       ))}
-                    </ul>
+                    </div>
                   </div>
-                )}
 
-                {selectedChallenge.vocabulary_themes && selectedChallenge.vocabulary_themes.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Vocabulary Themes</h3>
-                    <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
-                      {selectedChallenge.vocabulary_themes.map((theme: string, index: number) => (
-                        <li key={index}>{theme}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                  {selectedChallenge.word_count && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Word Count Requirement</h3>
+                      <p className="text-zinc-600 dark:text-zinc-400">
+                        {selectedChallenge.word_count}
+                      </p>
+                    </div>
+                  )}
 
-                <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                  <div className="flex items-center gap-2">
-                    <HiArrowPath className="h-4 w-4" />
-                    <span>{selectedChallenge.time_allocation} minutes</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <HiStop className="h-4 w-4" />
-                    <span>{selectedChallenge.difficulty_level}</span>
+                  {selectedChallenge.grammar_focus && selectedChallenge.grammar_focus.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Grammar Focus</h3>
+                      <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
+                        {selectedChallenge.grammar_focus.map((point: string, index: number) => (
+                          <li key={index}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedChallenge.vocabulary_themes && selectedChallenge.vocabulary_themes.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Vocabulary Themes</h3>
+                      <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
+                        {selectedChallenge.vocabulary_themes.map((theme: string, index: number) => (
+                          <li key={index}>{theme}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                    <div className="flex items-center gap-2">
+                      <HiArrowPath className="h-4 w-4" />
+                      <span>{selectedChallenge.time_allocation} minutes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <HiStop className="h-4 w-4" />
+                      <span>{selectedChallenge.difficulty_level}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
       )}
 
       {/* AI Feedback */}

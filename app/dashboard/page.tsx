@@ -41,7 +41,7 @@ async function ensureUserRecord(supabase: any, authUser: any) {
 }
 
 export default async function Dashboard() {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   // Get authenticated user
   const { data: { user: authUser } } = await supabase.auth.getUser();

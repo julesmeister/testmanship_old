@@ -11,6 +11,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { ChallengeFormat } from '@/types/challenge-generator';
 import { formSchema } from '../schema';
+import { Icon } from '@/components/ui/icon';
 
 interface ChallengeSettingsProps {
   form: UseFormReturn<z.infer<typeof formSchema>>;
@@ -33,22 +34,22 @@ export function ChallengeSettings({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-zinc-900 dark:text-white">
-          <GraduationCap className="h-5 w-5" />
+          <Icon icon={GraduationCap} size="md" />
           Challenge Settings
         </CardTitle>
         <CardDescription className="space-y-2">
           <p>Configure the parameters for your writing challenge:</p>
           <ul className="space-y-2 text-sm">
             <li className="flex items-start gap-2">
-              <Award className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+              <Icon icon={Award} size="sm" className="mt-0.5 flex-shrink-0 text-blue-500" />
               <span>Select proficiency level (A1-C2)</span>
             </li>
             <li className="flex items-start gap-2">
-              <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+              <Icon icon={FileText} size="sm" className="mt-0.5 flex-shrink-0 text-blue-500" />
               <span>Choose writing format</span>
             </li>
             <li className="flex items-start gap-2">
-              <Timer className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+              <Icon icon={Timer} size="sm" className="mt-0.5 flex-shrink-0 text-blue-500" />
               <span>Set time allocation</span>
             </li>
           </ul>
@@ -182,7 +183,7 @@ export function ChallengeSettings({
                 {isGenerating ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
+                  <Icon icon={Sparkles} size="md" className="mr-2" />
                 )}
                 {isGenerating ? 'Generating...' : 'Generate Suggestions'}
               </Button>

@@ -3,6 +3,9 @@ import { PropsWithChildren } from 'react';
 import '@/styles/globals.css';
 import { ThemeProvider } from './theme-provider';
 import { Toaster } from 'sonner';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +15,7 @@ export default function RootLayout({
   children
 }: PropsWithChildren) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <title>
           Testmanship - Elevate Your Writing with AI-Powered Feedback
@@ -66,7 +69,7 @@ export default function RootLayout({
         <link rel="canonical" href="https://testmanship" />
         <link rel="icon" href="/img/favicon.ico" />
       </head>
-      <body id={'root'} className="loading bg-white">
+      <body id={'root'} className={`loading bg-white ${inter.className}`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SupabaseProvider>
             <Toaster richColors closeButton position="top-right" />

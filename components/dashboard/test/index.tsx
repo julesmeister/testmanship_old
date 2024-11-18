@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import RightColumn from './RightColumn';
+import toast from 'react-hot-toast';
 
 interface Props {
   user: User | null | undefined;
@@ -48,6 +49,8 @@ export default function Test({ user, userDetails }: Props) {
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [hasStartedWriting, setHasStartedWriting] = useState(false);
   const [mode, setMode] = useState<'practice' | 'exam'>('practice');
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -56,6 +59,12 @@ export default function Test({ user, userDetails }: Props) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (elapsedTime >= selectedChallenge?.time_allocation * 60) {
+      setIsTimeUp(true);
+    }
+  }, [elapsedTime, selectedChallenge]);
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -126,6 +135,37 @@ export default function Test({ user, userDetails }: Props) {
     }
     setIsWriting(false);
     startTimeRef.current = null;
+  };
+
+  const handleGenerateFeedback = async () => {
+    if (!selectedChallenge || !inputMessage) return;
+
+    setIsGeneratingFeedback(true);
+    try {
+      const response = await fetch('/api/challenge-feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          challengeId: selectedChallenge.id,
+          essayContent: inputMessage,
+          targetLanguage: selectedChallenge.difficulty_level
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate feedback');
+      }
+
+      const data = await response.json();
+      setOutputCode(data.feedback);
+    } catch (error) {
+      console.error('Error generating feedback:', error);
+      toast.error('Failed to generate feedback');
+    } finally {
+      setIsGeneratingFeedback(false);
+    }
   };
 
   // API Key
@@ -241,39 +281,40 @@ export default function Test({ user, userDetails }: Props) {
             onChange={handleTextChange}
             placeholder="Start writing your essay here..."
             className="w-full h-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400"
+            disabled={isTimeUp}
           />
           {/* Writing Statistics Bar */}
-          <div className="mt-4 p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="mt-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <Card className="bg-card">
+                <CardContent className="p-6">
+                  <div className="flex flex-col space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Words</p>
-                    <div className="text-2xl font-bold text-foreground">{wordCount}</div>
+                    <div className="text-2xl font-bold text-foreground dark:text-white">{wordCount}</div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Card className="bg-card">
+                <CardContent className="p-6">
+                  <div className="flex flex-col space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Paragraphs</p>
-                    <div className="text-2xl font-bold text-foreground">{paragraphCount}</div>
+                    <div className="text-2xl font-bold text-foreground dark:text-white">{paragraphCount}</div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Card className="bg-card">
+                <CardContent className="p-6">
+                  <div className="flex flex-col space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Characters</p>
-                    <div className="text-2xl font-bold text-foreground">{charCount}</div>
+                    <div className="text-2xl font-bold text-foreground dark:text-white">{charCount}</div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Card className="bg-card">
+                <CardContent className="p-6">
+                  <div className="flex flex-col space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Time Elapsed</p>
-                    <div className="text-2xl font-bold text-foreground">{formatTime(elapsedTime)}</div>
+                    <div className="text-2xl font-bold text-foreground dark:text-white">{formatTime(elapsedTime)}</div>
                   </div>
                 </CardContent>
               </Card>
@@ -287,6 +328,8 @@ export default function Test({ user, userDetails }: Props) {
           outputCode={outputCode}
           onStartChallenge={handleStartChallenge}
           onStopChallenge={handleStopChallenge}
+          onGenerateFeedback={handleGenerateFeedback}
+          isGeneratingFeedback={isGeneratingFeedback}
         />
       </div>
     </DashboardLayout>

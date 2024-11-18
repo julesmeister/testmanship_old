@@ -10,13 +10,17 @@ import {
   getRedirectMethod
 } from '@/utils/auth-helpers/settings';
 
-export default async function SignIn({
-  params,
-  searchParams
-}: {
+interface PageProps {
   params: { id: string };
-  searchParams: { disable_button: boolean };
-}) {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function SignIn(props: PageProps) {
+  // Await and destructure params
+  const params = await Promise.resolve(props.params);
+  const id = params.id;
+  
+  const searchParamsData = await Promise.resolve(props.searchParams);
   const { allowOauth, allowEmail, allowPassword } = getAuthTypes();
   const viewTypes = getViewTypes();
   const redirectMethod = getRedirectMethod();
@@ -24,18 +28,18 @@ export default async function SignIn({
   // Declare 'viewProp' and initialize with the default value
   let viewProp: string;
 
-  // Assign url id to 'viewProp' if it's a valid string and ViewTypes includes it
-  if (typeof params.id === 'string' && viewTypes.includes(params.id)) {
-    viewProp = params.id;
+  // Check if the id is valid
+  if (viewTypes.includes(id)) {
+    viewProp = id;
   } else {
-    const preferredSignInView =
-      cookies().get('preferredSignInView')?.value || null;
+    const cookieStore = await cookies();
+    const preferredSignInView = cookieStore.get('preferredSignInView')?.value || null;
     viewProp = getDefaultSignInView(preferredSignInView);
     return redirect(`/dashboard/signin/${viewProp}`);
   }
 
   // Check if the user is already logged in and redirect to the account page if so
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user }
@@ -47,6 +51,9 @@ export default async function SignIn({
     return redirect('/dashboard/signin');
   }
 
+  // Parse the disable_button param safely
+  const disableButton = searchParamsData.disable_button === 'true';
+
   return (
     <DefaultAuth viewProp={viewProp}>
       <div>
@@ -56,7 +63,7 @@ export default async function SignIn({
           allowPassword={allowPassword}
           allowEmail={allowEmail}
           redirectMethod={redirectMethod}
-          disableButton={searchParams.disable_button}
+          disableButton={disableButton}
           allowOauth={allowOauth}
         />
       </div>
