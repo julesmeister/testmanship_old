@@ -37,22 +37,14 @@ export function SidebarLinks(props: SidebarLinksProps) {
         return (
           <div
             key={key}
-            className={`flex w-full max-w-full cursor-not-allowed items-center justify-between rounded-lg py-3 pl-8 font-medium`}
+            className={`flex w-full max-w-full cursor-not-allowed items-center rounded-lg py-3 pl-8 font-medium`}
           >
-            <div className="w-full items-center justify-center">
-              <div className="flex w-full items-center justify-center">
-                <div
-                  className={`text mr-3 mt-1.5 text-zinc-950 opacity-30 dark:text-white`}
-                >
-                  {route.icon}
-                </div>
-                <p
-                  className={`mr-auto text-sm text-zinc-950 opacity-30 dark:text-white`}
-                >
-                  {route.name}
-                </p>
-              </div>
-            </div>
+            <span className="flex items-center text-zinc-950 opacity-30 dark:text-white">
+              {route.icon}
+            </span>
+            <span className="ml-3 text-sm text-zinc-950 opacity-30 dark:text-white">
+              {route.name}
+            </span>
           </div>
         );
       } else {
@@ -70,28 +62,26 @@ export function SidebarLinks(props: SidebarLinksProps) {
                 key={key}
                 className="w-full"
               >
-                <div className="w-full items-center justify-center">
-                  <div className="flex w-full items-center justify-center">
-                    <div
-                      className={`text mr-3 mt-1.5 ${
-                        activeRoute(route.path.toLowerCase())
-                          ? 'font-semibold text-white dark:text-zinc-950'
-                          : 'text-zinc-950 dark:text-white hover:text-zinc-950 dark:hover:text-white'
-                      } `}
-                    >
-                      {route.icon}
-                    </div>
-                    <p
-                      className={`mr-auto text-sm ${
-                        activeRoute(route.path.toLowerCase())
-                          ? 'font-semibold text-white dark:text-zinc-950'
-                          : 'font-medium text-zinc-950 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
-                      }`}
-                    >
-                      {route.name}
-                    </p>
-                  </div>
-                </div>
+                <span className="flex items-center">
+                  <span
+                    className={`mr-3 ${
+                      activeRoute(route.path.toLowerCase())
+                        ? 'font-semibold text-white dark:text-zinc-950'
+                        : 'text-zinc-950 dark:text-white hover:text-zinc-950 dark:hover:text-white'
+                    }`}
+                  >
+                    {route.icon}
+                  </span>
+                  <span
+                    className={`text-sm ${
+                      activeRoute(route.path.toLowerCase())
+                        ? 'font-semibold text-white dark:text-zinc-950'
+                        : 'font-medium text-zinc-950 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
+                    }`}
+                  >
+                    {route.name}
+                  </span>
+                </span>
               </NavLink>
             </div>
           </div>

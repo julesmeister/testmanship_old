@@ -108,13 +108,13 @@ export default function Sidebar(props: SidebarProps) {
                 key={route.name}
                 variant={route.path === pathname ? "secondary" : "ghost"}
                 className={cn(
-                  "w-full justify-start gap-2 dark:hover:text-current",
+                  "w-full flex items-center justify-start gap-2 dark:hover:text-current min-h-[40px]",
                   isCollapsed && "justify-center px-2"
                 )}
                 onClick={() => router?.push(route.path)}
               >
-                {route.icon}
-                {!isCollapsed && <span>{route.name}</span>}
+                <span className="inline-flex shrink-0 self-center pt-1">{route.icon}</span>
+                {!isCollapsed && <span className="inline-flex self-center">{route.name}</span>}
               </Button>
             ))}
           </div>

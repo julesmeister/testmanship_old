@@ -1,9 +1,10 @@
-import { getUser } from '@/utils/supabase/queries';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 
 async function ensureUserRecord(supabase: any, authUser: any) {
   try {
+    console.log('Ensuring user record for:', authUser.id);
+    
     // Check if user record exists
     const { data: existingUser, error: fetchError } = await supabase
       .from('users')
@@ -11,7 +12,13 @@ async function ensureUserRecord(supabase: any, authUser: any) {
       .eq('id', authUser.id)
       .single();
 
-    if (!existingUser || fetchError?.code === 'PGRST116') {
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('Error fetching user record:', fetchError);
+      throw fetchError;
+    }
+
+    if (!existingUser) {
+      console.log('Creating new user record');
       // Create user record if it doesn't exist
       const { error: insertError } = await supabase
         .from('users')
@@ -41,22 +48,41 @@ async function ensureUserRecord(supabase: any, authUser: any) {
 }
 
 export default async function Dashboard() {
-  const supabase = await createClient();
-  
-  // Get authenticated user
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  try {
+    console.log('=== Dashboard Page Start ===');
+    
+    const supabase = await createClient();
+    
+    // Get authenticated user
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
-  if (!authUser) {
-    return redirect('/dashboard/signin');
+    if (authError) {
+      console.error('Auth error:', authError);
+      return redirect('/dashboard/signin');
+    }
+
+    if (!authUser) {
+      console.log('No authenticated user found');
+      return redirect('/dashboard/signin');
+    }
+
+    console.log('Authenticated user:', authUser.id);
+
+    // Ensure user record exists in public.users table
+    const recordCreated = await ensureUserRecord(supabase, authUser);
+    
+    if (!recordCreated) {
+      console.error('Failed to create user record');
+      // Sign out the user if we can't create their record
+      await supabase.auth.signOut();
+      return redirect('/dashboard/signin?error=user_creation_failed');
+    }
+
+    console.log('=== Dashboard Page End ===');
+    // Redirect to main dashboard
+    redirect('/dashboard/main');
+  } catch (error) {
+    console.error('Dashboard page error:', error);
+    return redirect('/dashboard/signin?error=unexpected_error');
   }
-
-  // Ensure user record exists in public.users table
-  const recordCreated = await ensureUserRecord(supabase, authUser);
-  
-  if (!recordCreated) {
-    console.error('Failed to create user record');
-  }
-
-  // Redirect to main dashboard
-  redirect('/dashboard/main');
 }

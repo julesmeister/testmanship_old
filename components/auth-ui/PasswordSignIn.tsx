@@ -2,14 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { signInWithPassword } from "@/utils/auth-helpers/server-actions";
-import { handleRequest } from "@/utils/auth-helpers/client";
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 
-// Define prop type with allowEmail boolean
 interface PasswordSignInProps {
   allowEmail: boolean;
   redirectMethod: string;
@@ -19,7 +17,7 @@ export default function PasswordSignIn({
   allowEmail,
   redirectMethod
 }: PasswordSignInProps) {
-  const router = redirectMethod === 'client' ? useRouter() : null;
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,8 +44,11 @@ export default function PasswordSignIn({
       }
 
       setIsSubmitting(true);
+      
+      // Show loading toast
       toast.loading('Signing in...', {
         id: 'signin',
+        duration: 10000, // 10 seconds timeout
       });
 
       const formData = new FormData(e.currentTarget);
@@ -55,50 +56,51 @@ export default function PasswordSignIn({
       
       if (response?.error) {
         toast.dismiss('signin');
-        
-        // Handle specific error cases
-        if (response.error.includes('Invalid login credentials')) {
-          toast.error('Sign in failed', {
-            id: 'signin-error',
-            description: 'The email or password you entered is incorrect. Please check your credentials and try again.',
-            duration: 6000
-          });
-        } else if (response.error.includes('Email not confirmed')) {
-          toast.error('Email not verified', {
-            id: 'signin-error',
-            description: 'Please check your email and click the verification link before signing in.',
-            duration: 6000
-          });
-        } else if (response.error.includes('Too many requests')) {
-          toast.error('Too many attempts', {
-            id: 'signin-error',
-            description: 'Too many sign in attempts. Please wait a few minutes before trying again.',
-            duration: 6000
-          });
-        } else {
-          toast.error('Sign in error', {
-            id: 'signin-error',
-            description: response.error,
-            duration: 6000
-          });
-        }
+        toast.error('Sign in failed', {
+          description: response.error,
+          duration: 6000
+        });
         return;
       }
 
-      // Only dismiss the loading toast on success
-      toast.dismiss('signin');
-      if (redirectMethod === 'client' && router) {
-        router.push('/dashboard');
+      // Success case
+      if (response?.redirect) {
+        toast.dismiss('signin');
+        toast.success('Signed in successfully', {
+          duration: 3000
+        });
+        
+        // Small delay to allow the success message to show
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Perform the redirect
+        router.push(response.redirect);
+        router.refresh();
+        return;
       }
-    } catch (error) {
-      // Dismiss the loading toast before showing the error
+
+      // Unexpected case
       toast.dismiss('signin');
       toast.error('Sign in error', {
-        id: 'signin-error',
-        description: 'An unexpected error occurred. Please try again later.',
+        description: 'An unexpected error occurred during sign in.',
         duration: 6000
       });
+    } catch (error: any) {
       console.error('Sign in error:', error);
+      toast.dismiss('signin');
+      
+      // Handle specific error cases
+      if (error?.message?.includes('session')) {
+        toast.error('Session error', {
+          description: 'There was a problem with your session. Please try again.',
+          duration: 6000
+        });
+      } else {
+        toast.error('Sign in error', {
+          description: 'An unexpected error occurred. Please try again later.',
+          duration: 6000
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -117,52 +119,33 @@ export default function PasswordSignIn({
               Email
             </label>
             <Input
-              className="mr-2.5 mb-2 h-full min-h-[44px] w-full rounded-lg border border-zinc-200 px-4 py-3 transition-all hover:border-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:hover:border-zinc-700 dark:focus:border-emerald-500 dark:placeholder:text-zinc-400"
               id="email"
-              placeholder="name@example.com"
-              type="email"
               name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="email"
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              required
               disabled={isSubmitting}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
-            <label
-              className="text-zinc-950 mt-2 dark:text-white"
-              htmlFor="password"
-            >
+          </div>
+          <div className="grid gap-1">
+            <label className="text-zinc-950 dark:text-white" htmlFor="password">
               Password
             </label>
             <Input
               id="password"
-              placeholder="Password"
-              type="password"
               name="password"
+              type="password"
+              autoComplete="current-password"
+              disabled={isSubmitting}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              className="mr-2.5 mb-2 h-full min-h-[44px] w-full rounded-lg border border-zinc-200 px-4 py-3 transition-all hover:border-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:hover:border-zinc-700 dark:focus:border-emerald-500 dark:placeholder:text-zinc-400"
-              required
-              disabled={isSubmitting}
             />
           </div>
-          <Button
-            variant="emerald"
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-2 flex h-[unset] w-full items-center justify-center rounded-lg px-4 py-4 text-sm font-medium"
-          >
-            {isSubmitting ? (
-              <>
-                <Spinner className="mr-2" />
-                Signing in...
-              </>
-            ) : (
-              'Sign in'
-            )}
+          <Button disabled={isSubmitting} type="submit" className="mt-2">
+            {isSubmitting ? <Spinner /> : 'Sign In'}
           </Button>
         </div>
       </form>

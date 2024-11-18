@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { redirect } from 'next/navigation';
 import { getURL, getErrorRedirect, getStatusRedirect } from '@/utils/helpers';
 import { getAuthTypes } from '@/utils/auth-helpers/settings';
 
@@ -11,7 +10,7 @@ function isValidEmail(email: string) {
 }
 
 export async function redirectToPath(path: string) {
-  return redirect(path);
+  return { redirect: path };
 }
 
 export async function SignOut(formData: FormData) {
@@ -27,7 +26,7 @@ export async function SignOut(formData: FormData) {
     );
   }
 
-  return redirect('/');
+  return { redirect: '/' };
 }
 
 export async function signInWithEmail(formData: FormData) {
@@ -70,7 +69,7 @@ export async function signInWithEmail(formData: FormData) {
 export async function signInWithPassword(formData: FormData) {
   const email = String(formData.get('email')).trim();
   const password = String(formData.get('password')).trim();
-  const redirectTo = String(formData.get('redirectTo') || '').trim();
+  const redirectTo = String(formData.get('redirectTo') || '/dashboard').trim();
 
   try {
     console.log('=== Starting Sign In Process ===');
@@ -142,7 +141,10 @@ export async function signInWithPassword(formData: FormData) {
     }
 
     console.log('Sign in successful:', data.user.id);
-    return redirect(redirectTo || '/dashboard');
+    console.log('Redirecting to:', redirectTo);
+    
+    // Force a hard redirect instead of using Next.js redirect
+    return { redirect: redirectTo };
   } catch (error) {
     console.error('=== Unexpected Error ===');
     console.error('Error:', error);
@@ -301,9 +303,8 @@ export async function signUp(formData: FormData) {
     }
 
     console.log('=== Signup Completed Successfully ===');
-    
-    // Use Next.js redirect
-    return redirect(redirectTo || '/dashboard');
+    console.log('Redirecting to:', redirectTo || '/dashboard');
+    return { redirect: redirectTo || '/dashboard' };
   } catch (error) {
     if ((error as any)?.digest?.startsWith('NEXT_REDIRECT')) {
       // This is an expected redirect, rethrow it

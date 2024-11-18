@@ -94,7 +94,7 @@ export default function RightColumn({
   };
 
   return (
-    <div className="w-1/3 flex flex-col">
+    <div className="w-full lg:w-1/3 flex flex-col">
       {/* Challenge Selection */}
       <div className={hasStartedWriting ? "" : "space-y-4"}>
         {showChallenges && (

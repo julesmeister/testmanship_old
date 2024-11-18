@@ -4,7 +4,9 @@
 */
 -- Drop existing tables and triggers
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_deleted ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP FUNCTION IF EXISTS public.handle_user_deleted();
 DROP TABLE IF EXISTS public.users CASCADE;
 
 -- Recreate users table with correct schema
@@ -43,7 +45,7 @@ CREATE POLICY "Can insert own user data."
     ON users FOR INSERT 
     WITH CHECK (auth.uid() = id OR auth.jwt()->>'role' = 'service_role');
 
--- Create trigger function
+-- Create trigger function for new users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -58,10 +60,36 @@ BEGIN
 END;
 $$;
 
--- Create trigger
+-- Create trigger for new users
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Create trigger function for deleted users
+CREATE OR REPLACE FUNCTION public.handle_user_deleted()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    -- Log the deletion
+    RAISE NOTICE 'User deleted: %', old.id;
+    
+    -- The actual deletion of the users record will happen automatically
+    -- due to the ON DELETE CASCADE constraint
+    
+    -- Perform any additional cleanup here if needed
+    -- For example, you might want to delete user-specific data from other tables
+    
+    RETURN old;
+END;
+$$;
+
+-- Create trigger for deleted users
+CREATE TRIGGER on_auth_user_deleted
+    BEFORE DELETE ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_user_deleted();
 
 -- Add updated_at column if it doesn't exist
 DO $$ 

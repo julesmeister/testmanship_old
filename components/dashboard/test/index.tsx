@@ -265,9 +265,20 @@ export default function Test({ user, userDetails }: Props) {
       title="Writing Assistant"
       description="Get instant feedback on your writing"
     >
-      <div className="flex h-full flex-col lg:flex-row">
-        <div className="order-2 lg:order-1 flex-1">
-          {/* Left Column - Writing Area */}
+      <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row gap-6">
+        <RightColumn 
+          selectedChallenge={selectedChallenge}
+          hasStartedWriting={hasStartedWriting}
+          outputCode={outputCode}
+          onStartChallenge={handleStartChallenge}
+          onStopChallenge={handleStopChallenge}
+          onGenerateFeedback={handleGenerateFeedback}
+          isGeneratingFeedback={isGeneratingFeedback}
+          isTimeUp={isTimeUp}
+        />
+
+        {/* Writing Area */}
+        <div className="flex-1 flex flex-col">
           <Tabs defaultValue="practice" className="mb-4" onValueChange={(value) => setMode(value as 'practice' | 'exam')}>
             <TabsList className="grid w-full grid-cols-2 bg-indigo-50 dark:bg-indigo-950 p-1">
               <TabsTrigger 
@@ -288,13 +299,15 @@ export default function Test({ user, userDetails }: Props) {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <textarea
-            value={inputMessage}
-            onChange={handleTextChange}
-            placeholder="Start writing your essay here..."
-            className="w-full h-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400"
-            disabled={isTimeUp}
-          />
+          <div className="flex-1 flex flex-col">
+            <textarea
+              value={inputMessage}
+              onChange={handleTextChange}
+              placeholder="Start writing your essay here..."
+              className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent"
+              disabled={isTimeUp}
+            />
+          </div>
           {/* Writing Statistics Bar */}
           <div className="mt-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -332,19 +345,6 @@ export default function Test({ user, userDetails }: Props) {
               </Card>
             </div>
           </div>
-        </div>
-
-        <div className="order-1 lg:order-2">
-          <RightColumn 
-            selectedChallenge={selectedChallenge}
-            hasStartedWriting={hasStartedWriting}
-            outputCode={outputCode}
-            onStartChallenge={handleStartChallenge}
-            onStopChallenge={handleStopChallenge}
-            onGenerateFeedback={handleGenerateFeedback}
-            isGeneratingFeedback={isGeneratingFeedback}
-            isTimeUp={isTimeUp}
-          />
         </div>
       </div>
     </DashboardLayout>

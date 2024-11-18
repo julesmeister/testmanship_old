@@ -86,9 +86,9 @@ export default function HeaderLinks(props: { [x: string]: any }) {
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="min-w-[14rem] max-w-[20rem] w-auto">
           <div className="flex items-center gap-3 border-b border-border/40 p-4">
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-10 w-10 flex-shrink-0">
               <AvatarImage src={user?.user_metadata?.avatar_url} />
               <AvatarFallback className="bg-primary/10">
                 {user?.user_metadata?.full_name
@@ -96,11 +96,11 @@ export default function HeaderLinks(props: { [x: string]: any }) {
                   : user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
-              <p className="text-sm font-semibold text-foreground dark:text-white">
+            <div className="flex flex-col min-w-0">
+              <p className="text-sm font-semibold text-foreground dark:text-white truncate">
                 {user?.user_metadata?.full_name || 'User'}
               </p>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 truncate">
                 {user?.email}
               </p>
             </div>
