@@ -78,7 +78,7 @@ export default function HeaderLinks(props: { [x: string]: any }) {
           >
             <Avatar className="h-full w-full">
               <AvatarImage src={user?.user_metadata?.avatar_url} className="object-cover" />
-              <AvatarFallback className="rounded-full">
+              <AvatarFallback className="rounded-full bg-primary text-primary-foreground font-medium">
                 {user?.user_metadata?.full_name
                   ? user.user_metadata.full_name.charAt(0).toUpperCase()
                   : user?.email?.charAt(0).toUpperCase() || 'U'}
@@ -90,7 +90,7 @@ export default function HeaderLinks(props: { [x: string]: any }) {
           <div className="flex items-center gap-3 border-b border-border/40 p-4">
             <Avatar className="h-10 w-10 flex-shrink-0">
               <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-primary/10">
+              <AvatarFallback className="bg-primary text-primary-foreground font-medium">
                 {user?.user_metadata?.full_name
                   ? user.user_metadata.full_name.charAt(0).toUpperCase()
                   : user?.email?.charAt(0).toUpperCase() || 'U'}
