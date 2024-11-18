@@ -265,9 +265,9 @@ export default function Test({ user, userDetails }: Props) {
       title="Writing Assistant"
       description="Get instant feedback on your writing"
     >
-      <div className="flex w-full gap-6 h-[calc(100vh-200px)]">
-        {/* Left Column - Writing Area */}
-        <div className="flex-1 flex flex-col">
+      <div className="flex h-full flex-col lg:flex-row">
+        <div className="order-2 lg:order-1 flex-1">
+          {/* Left Column - Writing Area */}
           <Tabs defaultValue="practice" className="mb-4" onValueChange={(value) => setMode(value as 'practice' | 'exam')}>
             <TabsList className="grid w-full grid-cols-2 bg-indigo-50 dark:bg-indigo-950 p-1">
               <TabsTrigger 
@@ -334,16 +334,18 @@ export default function Test({ user, userDetails }: Props) {
           </div>
         </div>
 
-        <RightColumn 
-          selectedChallenge={selectedChallenge}
-          hasStartedWriting={hasStartedWriting}
-          outputCode={outputCode}
-          onStartChallenge={handleStartChallenge}
-          onStopChallenge={handleStopChallenge}
-          onGenerateFeedback={handleGenerateFeedback}
-          isGeneratingFeedback={isGeneratingFeedback}
-          isTimeUp={isTimeUp}
-        />
+        <div className="order-1 lg:order-2">
+          <RightColumn 
+            selectedChallenge={selectedChallenge}
+            hasStartedWriting={hasStartedWriting}
+            outputCode={outputCode}
+            onStartChallenge={handleStartChallenge}
+            onStopChallenge={handleStopChallenge}
+            onGenerateFeedback={handleGenerateFeedback}
+            isGeneratingFeedback={isGeneratingFeedback}
+            isTimeUp={isTimeUp}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -2,31 +2,66 @@
 * USERS
 * Note: This table contains user data. Users should only be able to view and update their own data.
 */
--- Now create the users table if it doesn't exist
-CREATE TABLE IF NOT EXISTS public.users (
-    id uuid references auth.users not null primary key,
-    full_name text,
-    avatar_url text,
+-- Drop existing tables and triggers
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP TABLE IF EXISTS public.users CASCADE;
+
+-- Recreate users table with correct schema
+CREATE TABLE public.users (
+    id uuid NOT NULL PRIMARY KEY,
+    full_name text DEFAULT '',
+    avatar_url text DEFAULT '',
     credits bigint DEFAULT 0,
     trial_credits bigint DEFAULT 3,
-    billing_address jsonb,
-    payment_method jsonb,
-    target_language_id uuid REFERENCES supported_languages,
-    native_language_id uuid REFERENCES supported_languages
+    billing_address jsonb DEFAULT NULL,
+    payment_method jsonb DEFAULT NULL,
+    target_language_id uuid REFERENCES supported_languages DEFAULT NULL,
+    native_language_id uuid REFERENCES supported_languages DEFAULT NULL,
+    updated_at timestamptz DEFAULT now(),
+    CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
--- If the users table already exists, add the language columns
-DO $$ 
-BEGIN 
-    BEGIN
-        ALTER TABLE public.users
-        ADD COLUMN target_language_id uuid REFERENCES supported_languages,
-        ADD COLUMN native_language_id uuid REFERENCES supported_languages;
-    EXCEPTION
-        WHEN duplicate_column THEN 
-            RAISE NOTICE 'columns already exist';
-    END;
-END $$;
+-- Enable RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies
+DROP POLICY IF EXISTS "Can view own user data." ON users;
+DROP POLICY IF EXISTS "Can update own user data." ON users;
+DROP POLICY IF EXISTS "Can insert own user data." ON users;
+
+-- Create new policies with service role bypass
+CREATE POLICY "Can view own user data." 
+    ON users FOR SELECT 
+    USING (auth.uid() = id OR auth.jwt()->>'role' = 'service_role');
+
+CREATE POLICY "Can update own user data." 
+    ON users FOR UPDATE 
+    USING (auth.uid() = id OR auth.jwt()->>'role' = 'service_role');
+
+CREATE POLICY "Can insert own user data." 
+    ON users FOR INSERT 
+    WITH CHECK (auth.uid() = id OR auth.jwt()->>'role' = 'service_role');
+
+-- Create trigger function
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    INSERT INTO public.users (id)
+    VALUES (new.id)
+    ON CONFLICT (id) DO NOTHING;
+    RETURN new;
+END;
+$$;
+
+-- Create trigger
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Add updated_at column if it doesn't exist
 DO $$ 
@@ -38,89 +73,6 @@ BEGIN
         ALTER TABLE users ADD COLUMN updated_at timestamptz DEFAULT now();
     END IF;
 END $$;
-
--- Add RLS policies if they don't exist
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Can view own user data.'
-    ) THEN
-        CREATE POLICY "Can view own user data." ON users FOR SELECT USING (auth.uid() = id);
-    END IF;
-    
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Can update own user data.'
-    ) THEN
-        CREATE POLICY "Can update own user data." ON users FOR UPDATE USING (auth.uid() = id);
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Can insert own user data.'
-    ) THEN
-        CREATE POLICY "Can insert own user data." ON users FOR INSERT WITH CHECK (auth.uid() = id);
-    END IF;
-END $$;
-
-DROP POLICY IF EXISTS "Can view own user data." ON users;
-DROP POLICY IF EXISTS "Can update own user data." ON users;
-DROP POLICY IF EXISTS "Can insert own user data." ON users;
-
-CREATE POLICY "Can view own user data." ON users FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Can update own user data." ON users FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Can insert own user data." ON users FOR INSERT WITH CHECK (auth.uid() = id);
-
-/**
-* This trigger automatically creates a user entry when a new user signs up via Supabase Auth.
-*/ 
-CREATE OR REPLACE FUNCTION public.handle_new_user() 
-RETURNS trigger 
-SECURITY DEFINER 
-SET search_path = public 
-AS $$
-DECLARE
-  name_from_metadata text;
-  avatar_from_metadata text;
-BEGIN
-  -- Try different metadata fields for name
-  name_from_metadata := coalesce(
-    new.raw_user_meta_data->>'full_name',
-    new.raw_user_meta_data->>'name',
-    new.raw_user_meta_data->>'given_name' || ' ' || new.raw_user_meta_data->>'family_name',
-    'Anonymous User'
-  );
-  
-  -- Try different metadata fields for avatar
-  avatar_from_metadata := coalesce(
-    new.raw_user_meta_data->>'avatar_url',
-    new.raw_user_meta_data->>'picture'
-  );
-
-  -- Insert or update the user record
-  INSERT INTO public.users (id, full_name, avatar_url, credits, trial_credits)
-  VALUES (
-    new.id,
-    name_from_metadata,
-    avatar_from_metadata,
-    0,
-    3
-  )
-  ON CONFLICT (id) DO UPDATE
-  SET 
-    full_name = EXCLUDED.full_name,
-    avatar_url = EXCLUDED.avatar_url
-  WHERE users.full_name IS NULL OR users.avatar_url IS NULL;
-
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Create enum for difficulty levels
 create type difficulty_level as enum ('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
@@ -357,7 +309,7 @@ COMMENT ON TABLE challenge_attempts IS 'Stores individual challenge attempts by 
 COMMENT ON TABLE skill_metrics IS 'Tracks user proficiency in specific writing skills';
 COMMENT ON TABLE performance_metrics IS 'Detailed performance metrics for each challenge attempt';
 COMMENT ON TABLE user_progress IS 'Aggregated user progress and statistics';
-COMMENT ON TABLE writing_errors IS 'Tracks common writing errors for personalized feedback';
+COMMENT ON TABLE writing_errors IS 'Tracks common writing errors for personalized feedback'
 
 CREATE TABLE supported_languages (
   id uuid default gen_random_uuid() primary key,
