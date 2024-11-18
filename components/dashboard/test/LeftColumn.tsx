@@ -273,7 +273,7 @@ export default function LeftColumn({
           >
             <AccordionItem value="instructions">
               <div className="flex justify-between items-center pr-4">
-                <AccordionTrigger className="px-4 flex-grow">Writing Instructions & Criteria</AccordionTrigger>
+                <AccordionTrigger className="px-4 flex-grow text-left text-base sm:text-sm [&>svg]:ml-4">Writing Instructions & Criteria</AccordionTrigger>
                 {!showChallenges && (
                   <TooltipProvider>
                     <Tooltip>
