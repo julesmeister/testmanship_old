@@ -45,17 +45,30 @@ export function useChallengeSuggestions(
       });
 
       const data = await response.json();
+      console.log('API Response:', { status: response.status, data });
 
       if (!response.ok) {
         // Check for rate limit error specifically
         if (response.status === 429 || data.error?.code === 429) {
           throw new Error('Rate limit exceeded. Please wait a moment before generating more suggestions.');
         }
-        throw new Error('Failed to generate suggestions');
+        throw new Error(`Failed to generate suggestions: ${data.error || 'Unknown error'}`);
       }
 
       if (!data.suggestions?.length) {
-        throw new Error('No suggestions received');
+        console.error('No suggestions in response:', data);
+        throw new Error('No suggestions received from the API. Please try again.');
+      }
+
+      // Validate suggestion format
+      const invalidSuggestions = data.suggestions.filter((s: Suggestion) => 
+        !s.title || !s.instructions || !s.wordCount || !s.timeAllocation || 
+        !Array.isArray(s.grammarFocus) || !Array.isArray(s.vocabularyThemes)
+      );
+      
+      if (invalidSuggestions.length > 0) {
+        console.error('Invalid suggestions format:', invalidSuggestions);
+        throw new Error('Received malformed suggestions from the API. Please try again.');
       }
 
       // Add new titles to usedTitles

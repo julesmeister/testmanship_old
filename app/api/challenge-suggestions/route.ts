@@ -24,16 +24,21 @@ function getWordCountRange(difficulty: string): number {
 export async function POST(req: Request) {
   console.log('API Route started');
   try {
-    const { difficulty, topics = [], usedTitles = [] } = await req.json();
+    const body = await req.json();
+    console.log('Request body:', body);
+    
+    const { difficulty, format, timeAllocation, topics = [], usedTitles = [] } = body;
 
     if (!difficulty) {
+      console.error('Missing difficulty in request');
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required field: difficulty' },
         { status: 400 }
       );
     }
 
     const wordCount = getWordCountRange(difficulty);
+    console.log('Generating suggestions with:', { difficulty, format, timeAllocation, wordCount });
 
     const prompt = `Generate 3 unique writing challenge suggestions for language learners at ${difficulty} level.
 
@@ -41,7 +46,7 @@ export async function POST(req: Request) {
     - title: A unique, engaging title for the challenge (30-60 characters)
     - instructions: Clear, detailed writing instructions (100-150 words)
     - word_count: Target word count (${wordCount} words)
-    - time_allocation: Time limit in minutes (30-45 minutes)
+    - time_allocation: Time limit in minutes (${timeAllocation} minutes)
     - difficulty_level: "${difficulty}"
     - grammar_focus: Array of 2-3 grammar points to focus on
     - vocabulary_themes: Array of 2-3 vocabulary themes relevant to the topic
@@ -51,20 +56,48 @@ export async function POST(req: Request) {
     
     Return ONLY the JSON object, no additional text or explanation.`;
 
-    const suggestions = await makeAIRequest([
+    console.log('Sending prompt to AI');
+    const aiResponse = await makeAIRequest([
       {
         role: 'user',
         content: prompt,
       },
     ]);
+    console.log('Received AI response:', aiResponse);
 
     try {
-      const parsedSuggestions = JSON.parse(suggestions);
-      return NextResponse.json(parsedSuggestions);
+      const parsedSuggestions = JSON.parse(aiResponse);
+      console.log('Parsed suggestions:', parsedSuggestions);
+      
+      // Transform response to camelCase format
+      const transformSuggestion = (suggestion: any) => ({
+        title: suggestion.title,
+        instructions: suggestion.instructions,
+        wordCount: suggestion.word_count,
+        timeAllocation: suggestion.time_allocation,
+        difficultyLevel: suggestion.difficulty_level,
+        grammarFocus: suggestion.grammar_focus,
+        vocabularyThemes: suggestion.vocabulary_themes
+      });
+
+      // Ensure we have an array of suggestions
+      const suggestionsArray = Array.isArray(parsedSuggestions) ? parsedSuggestions : parsedSuggestions.suggestions;
+      
+      if (!Array.isArray(suggestionsArray)) {
+        console.error('Invalid suggestions format:', parsedSuggestions);
+        return NextResponse.json(
+          { error: 'Invalid suggestions format from AI' },
+          { status: 500 }
+        );
+      }
+
+      // Transform and return the suggestions
+      const transformedSuggestions = suggestionsArray.map(transformSuggestion);
+      return NextResponse.json({ suggestions: transformedSuggestions });
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
+      console.error('Failed to parse AI response:', parseError, 'Raw response:', aiResponse);
       return NextResponse.json(
-        { error: 'Invalid response format' },
+        { error: 'Failed to parse AI response', details: parseError.message },
         { status: 500 }
       );
     }

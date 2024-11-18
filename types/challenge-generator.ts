@@ -10,9 +10,10 @@ export interface ChallengeFormat {
 
 export interface Suggestion {
   title: string;
-  description: string;
-  keyPoints: string[];
+  instructions: string;
   wordCount: number;
+  timeAllocation: number;
+  difficultyLevel: string;
   grammarFocus: string[];
   vocabularyThemes: string[];
 }

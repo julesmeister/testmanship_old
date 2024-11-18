@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSupabase } from '@/app/supabase-provider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { BookOpen, PenTool } from 'lucide-react';
+import { BookOpen, PenTool, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +22,7 @@ import { ChallengeInstructions } from './components/ChallengeInstructions';
 import { ChallengeSuggestions } from './components/ChallengeSuggestions';
 import { GuideContent } from './components/GuideContent';
 import { z } from 'zod';
+import { Button } from '@/components/ui/button';
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -29,6 +30,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
   const { supabase } = useSupabase();
   const typedSupabase = supabase as SupabaseClient;
   const router = useRouter();
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -36,7 +38,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
       title: '',
       instructions: '',
       format: '',
-      difficulty: '',
+      difficulty: 'A1',
       timeAllocation: 30,
       wordCount: 150,
       grammarFocus: [],
@@ -114,6 +116,10 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
     }
   };
 
+  const scrollToSuggestions = () => {
+    suggestionsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <DashboardLayout
       user={user}
@@ -167,11 +173,29 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                   handleGenerateInstructions={handleGenerateInstructions}
                 />
 
-                <ChallengeSuggestions
-                  suggestions={suggestions}
-                  setSuggestions={setSuggestions}
-                  form={form}
-                />
+                {suggestions.length > 0 && (
+                  <div
+                    className="fixed bottom-8 right-8 z-50"
+                    onClick={scrollToSuggestions}
+                  >
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="default"
+                      className="rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      <ArrowDown className="h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
+
+                <div ref={suggestionsRef}>
+                  <ChallengeSuggestions
+                    suggestions={suggestions}
+                    setSuggestions={setSuggestions}
+                    form={form}
+                  />
+                </div>
               </div>
             </div>
           </TabsContent>

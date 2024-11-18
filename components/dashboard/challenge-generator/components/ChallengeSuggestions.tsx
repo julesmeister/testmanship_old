@@ -33,16 +33,16 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
             {suggestion.title}
           </h4>
           <p className="text-base text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed">
-            {suggestion.description}
+            {suggestion.instructions}
           </p>
           <div className="grid gap-6 mb-4">
             <div className="space-y-3">
               <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
                 <Icon icon={BrainCircuit} size="sm" className="text-blue-500" />
-                Key Learning Points
+                Grammar Focus
               </h5>
               <ul className="space-y-2">
-                {suggestion.keyPoints.map((point, idx) => (
+                {suggestion.grammarFocus.map((point, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
                     <Icon icon={ListTodo} size="sm" className="mt-1 flex-shrink-0 text-blue-500" />
                     <span className="text-sm leading-relaxed">{point}</span>
@@ -50,23 +50,6 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
                 ))}
               </ul>
             </div>
-
-            {suggestion.grammarFocus && (
-              <div className="space-y-3">
-                <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <Icon icon={GraduationCap} size="sm" className="text-blue-500" />
-                  Grammar Focus
-                </h5>
-                <ul className="space-y-2">
-                  {suggestion.grammarFocus.map((grammar, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
-                      <Icon icon={BrainCircuit} size="sm" className="mt-1 flex-shrink-0 text-blue-500" />
-                      <span className="text-sm leading-relaxed">{grammar}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
             {suggestion.vocabularyThemes && (
               <div className="space-y-3">
@@ -110,10 +93,13 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
               className="transition-all duration-200 hover:border-blue-500 hover:text-blue-500"
               onClick={() => {
                 const timeAllocation = form.getValues('timeAllocation');
-                const formattedInstructions = `${suggestion.description}
+                const formattedInstructions = `${suggestion.instructions}
 
-Key Points:
-${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}
+Grammar Focus:
+${suggestion.grammarFocus.map(point => `• ${point}`).join('\n')}
+
+Vocabulary Themes:
+${suggestion.vocabularyThemes.map(theme => `• ${theme}`).join('\n')}
 
 Time Allocation: ${timeAllocation} minutes
 Word Count: ${suggestion.wordCount} words minimum`;
