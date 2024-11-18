@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '../ui/button';
 import Footer from '@/components/footer/FooterAuthDefault';
 import { FaChevronLeft } from 'react-icons/fa6';
 import { HiBolt } from 'react-icons/hi2';
@@ -17,6 +16,27 @@ export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
 
   return (
     <div className="relative h-max dark:bg-zinc-950">
+      {/* Geometric background */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        {/* Hexagon-like shape */}
+        <div className="absolute top-[10%] left-[8%] h-[500px] w-[500px] rotate-[25deg] bg-gradient-to-br from-blue-100/40 via-indigo-200/30 to-transparent dark:from-blue-900/30 dark:via-indigo-800/20 [clip-path:polygon(25%_0%,75%_0%,100%_50%,75%_100%,25%_100%,0%_50%)] blur-3xl" />
+        
+        {/* Triangle shape */}
+        <div className="absolute top-[15%] right-[12%] h-[400px] w-[400px] rotate-[45deg] bg-gradient-to-tl from-purple-100/30 via-indigo-200/25 to-transparent dark:from-purple-900/20 dark:via-indigo-800/15 [clip-path:polygon(50%_0%,100%_100%,0%_100%)] blur-3xl" />
+        
+        {/* Diamond shape */}
+        <div className="absolute bottom-[15%] left-[20%] h-[450px] w-[450px] -rotate-[15deg] bg-gradient-to-r from-indigo-100/35 via-blue-200/25 to-transparent dark:from-indigo-900/25 dark:via-blue-800/15 [clip-path:polygon(50%_0%,100%_50%,50%_100%,0%_50%)] blur-3xl" />
+        
+        {/* Octagon shape */}
+        <div className="absolute bottom-[12%] right-[15%] h-[600px] w-[600px] rotate-[30deg] bg-gradient-to-bl from-blue-100/35 via-purple-200/25 to-transparent dark:from-blue-900/25 dark:via-purple-800/15 [clip-path:polygon(30%_0%,70%_0%,100%_30%,100%_70%,70%_100%,30%_100%,0%_70%,0%_30%)] blur-3xl" />
+        
+        {/* Center abstract shape */}
+        <div className="absolute top-1/2 left-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-purple-100/30 via-indigo-200/25 to-transparent dark:from-purple-900/20 dark:via-indigo-800/15 [clip-path:polygon(50%_0%,80%_20%,100%_50%,80%_80%,50%_100%,20%_80%,0%_50%,20%_20%)] blur-3xl" />
+        
+        {/* Subtle dot pattern with varying sizes */}
+        <div className="absolute inset-0 [background:radial-gradient(#4444441a_1.5px,transparent_1.5px)_14px_14px,radial-gradient(#4444441a_2px,transparent_2px)_34px_34px] dark:[background:radial-gradient(#ffffff1a_1.5px,transparent_1.5px)_14px_14px,radial-gradient(#ffffff1a_2px,transparent_2px)_34px_34px]" />
+      </div>
+      
       <div className="relative flex min-h-screen">
         {/* Left column - constrained width */}
         <div className="flex w-full flex-col px-5 pt-0 md:max-w-[66%] lg:max-w-[50%] xl:max-w-[50%] 2xl:max-w-[56%]">

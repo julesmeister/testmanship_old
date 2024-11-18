@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { HiXMark, HiLightBulb } from 'react-icons/hi2';
 
 interface Challenge {
   id: string;
@@ -51,6 +52,7 @@ export default function RightColumn({
   const [searchQuery, setSearchQuery] = useState('');
   const [showChallenges, setShowChallenges] = useState(true);
   const [accordionValue, setAccordionValue] = useState<string>('');
+  const [showTip, setShowTip] = useState(true);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -95,10 +97,39 @@ export default function RightColumn({
 
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
+      {showTip && (
+        <div className="relative mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px]">
+          <div className="relative flex items-start gap-3 rounded-lg bg-white/95 px-4 py-3 dark:bg-zinc-900/95">
+            <HiLightBulb className="h-5 w-5 flex-shrink-0 text-amber-500 mt-1" />
+            <div className="pr-6 space-y-2 text-sm">
+              <p className="text-zinc-600 dark:text-zinc-300">
+                Welcome! Pick a challenge from the list below and follow the instructions carefully. Best of luck on your writing journey! 🚀
+              </p>
+              <div className="flex gap-4 text-xs">
+                <div>
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">Practice Mode:</span>
+                  <span className="text-zinc-500 dark:text-zinc-400"> Real-time feedback per paragraph</span>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-600 dark:text-blue-400">Exam Mode:</span>
+                  <span className="text-zinc-500 dark:text-zinc-400"> Graded feedback after time limit</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowTip(false)}
+              className="absolute right-2 top-2 rounded-full p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            >
+              <HiXMark className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Challenge Selection */}
       <div className={hasStartedWriting ? "" : "space-y-4"}>
         {showChallenges && (
           <>
+
             <Tabs defaultValue="a1" className="w-full" onValueChange={setSelectedLevel}>
               <TabsList className="grid w-full grid-cols-6 bg-gray-50 dark:bg-gray-900 p-1">
                 <TabsTrigger 

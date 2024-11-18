@@ -20,7 +20,7 @@ import { HiUser, HiSparkles, HiMiniPencilSquare } from 'react-icons/hi2';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import RightColumn from './RightColumn';
+import RightColumn from './LeftColumn';
 import toast from 'react-hot-toast';
 
 interface Props {
