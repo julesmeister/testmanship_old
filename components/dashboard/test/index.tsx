@@ -27,6 +27,18 @@ interface Props {
   user: User | null | undefined;
   userDetails: { [x: string]: any } | null;
 }
+
+interface Challenge {
+  id: string;
+  title: string;
+  instructions: string;
+  difficulty_level: string;
+  time_allocation: number;
+  word_count?: number;
+  grammar_focus?: string[];
+  vocabulary_themes?: string[];
+}
+
 export default function Test({ user, userDetails }: Props) {
   const { theme, setTheme } = useTheme();
   // *** If you use .env.local variable for your API key, method which we recommend, use the apiKey variable commented below
@@ -46,7 +58,7 @@ export default function Test({ user, userDetails }: Props) {
   const [isWriting, setIsWriting] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number | null>(null);
-  const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [hasStartedWriting, setHasStartedWriting] = useState(false);
   const [mode, setMode] = useState<'practice' | 'exam'>('practice');
   const [isTimeUp, setIsTimeUp] = useState(false);
@@ -61,7 +73,7 @@ export default function Test({ user, userDetails }: Props) {
   }, []);
 
   useEffect(() => {
-    if (elapsedTime >= selectedChallenge?.time_allocation * 60) {
+    if (selectedChallenge && elapsedTime >= selectedChallenge.time_allocation * 60) {
       setIsTimeUp(true);
     }
   }, [elapsedTime, selectedChallenge]);
@@ -105,7 +117,7 @@ export default function Test({ user, userDetails }: Props) {
     }
   };
 
-  const handleStartChallenge = (challenge: any) => {
+  const handleStartChallenge = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     // Reset timer and counts
     setElapsedTime(0);
@@ -330,6 +342,7 @@ export default function Test({ user, userDetails }: Props) {
           onStopChallenge={handleStopChallenge}
           onGenerateFeedback={handleGenerateFeedback}
           isGeneratingFeedback={isGeneratingFeedback}
+          isTimeUp={isTimeUp}
         />
       </div>
     </DashboardLayout>

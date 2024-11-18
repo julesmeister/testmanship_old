@@ -9,10 +9,11 @@ import { ModeToggle } from '../mode-toggle';
 
 interface DefaultAuthLayoutProps {
   children: React.ReactNode;
+  viewProp: string;
 }
 
 export default function DefaultAuthLayout(props: DefaultAuthLayoutProps) {
-  const { children } = props;
+  const { children, viewProp } = props;
 
   return (
     <div className="relative h-max dark:bg-zinc-950">
