@@ -28,6 +28,22 @@ interface Challenge {
   vocabulary_themes?: string[];
 }
 
+interface StatCardProps {
+  label: string;
+  value: string | number;
+}
+
+const StatCard = ({ label, value }: StatCardProps) => (
+  <Card className="bg-card">
+    <CardContent className="p-6">
+      <div className="flex flex-col space-y-2">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <div className="text-2xl font-bold text-foreground dark:text-white">{value}</div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 export default function Test({ user, userDetails }: Props) {
   // *** If you use .env.local variable for your API key, method which we recommend, use the apiKey variable commented below
   // Input States
@@ -131,6 +147,7 @@ export default function Test({ user, userDetails }: Props) {
     setCharCount(0);
     setInputMessage('');
     setOutputCode('');
+    setHasStartedWriting(true);
     
     // Start the timer
     setIsWriting(true);
@@ -271,7 +288,7 @@ export default function Test({ user, userDetails }: Props) {
       description="Get instant feedback on your writing"
     >
       <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row gap-6">
-        <LeftColumn 
+        <LeftColumn
           selectedChallenge={selectedChallenge}
           hasStartedWriting={hasStartedWriting}
           outputCode={outputCode}
@@ -283,30 +300,33 @@ export default function Test({ user, userDetails }: Props) {
           mode={mode}
           timeElapsed={timeElapsed}
           timeAllocation={selectedChallenge?.time_allocation}
+          setHasStartedWriting={setHasStartedWriting}
         />
 
         {/* Writing Area */}
         <div className="flex-1 flex flex-col space-y-4">
-          <Tabs defaultValue="exam" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger 
-                value="practice" 
-                className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 
-                          data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
-                          hover:text-indigo-800 dark:hover:text-indigo-300"
-              >
-                Practice Mode
-              </TabsTrigger>
-              <TabsTrigger 
-                value="exam" 
-                className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500
-                          data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
-                          hover:text-indigo-800 dark:hover:text-indigo-300"
-              >
-                Exam Mode
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {!hasStartedWriting && (
+            <Tabs defaultValue="exam" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger 
+                  value="practice" 
+                  className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 
+                            data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
+                            hover:text-indigo-800 dark:hover:text-indigo-300"
+                >
+                  Practice Mode
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="exam" 
+                  className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500
+                            data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
+                            hover:text-indigo-800 dark:hover:text-indigo-300"
+                >
+                  Exam Mode
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
           <textarea
             value={inputMessage}
             onChange={handleTextChange}
@@ -317,38 +337,14 @@ export default function Test({ user, userDetails }: Props) {
           {/* Writing Statistics Bar */}
           <div className="mt-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <Card className="bg-card">
-                <CardContent className="p-6">
-                  <div className="flex flex-col space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Words</p>
-                    <div className="text-2xl font-bold text-foreground dark:text-white">{wordCount}</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-card">
-                <CardContent className="p-6">
-                  <div className="flex flex-col space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Paragraphs</p>
-                    <div className="text-2xl font-bold text-foreground dark:text-white">{paragraphCount}</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-card">
-                <CardContent className="p-6">
-                  <div className="flex flex-col space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Characters</p>
-                    <div className="text-2xl font-bold text-foreground dark:text-white">{charCount}</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-card">
-                <CardContent className="p-6">
-                  <div className="flex flex-col space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Time Elapsed</p>
-                    <div className="text-2xl font-bold text-foreground dark:text-white">{formatTime(elapsedTime)}</div>
-                  </div>
-                </CardContent>
-              </Card>
+              {[
+                { label: 'Words', value: wordCount },
+                { label: 'Paragraphs', value: paragraphCount },
+                { label: 'Characters', value: charCount },
+                { label: 'Time Elapsed', value: formatTime(elapsedTime) }
+              ].map((stat) => (
+                <StatCard key={stat.label} {...stat} />
+              ))}
             </div>
           </div>
         </div>

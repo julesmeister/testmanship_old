@@ -93,19 +93,11 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
               className="transition-all duration-200 hover:border-blue-500 hover:text-blue-500"
               onClick={() => {
                 const timeAllocation = form.getValues('timeAllocation');
-                const formattedInstructions = `${suggestion.instructions}
-
-Grammar Focus:
-${suggestion.grammarFocus.map(point => `• ${point}`).join('\n')}
-
-Vocabulary Themes:
-${suggestion.vocabularyThemes.map(theme => `• ${theme}`).join('\n')}
-
-Time Allocation: ${timeAllocation} minutes
-Word Count: ${suggestion.wordCount} words minimum`;
+                const formattedInstructions = suggestion.instructions;
 
                 form.setValue('title', suggestion.title);
                 form.setValue('instructions', formattedInstructions);
+                form.setValue('timeAllocation', suggestion.timeAllocation || timeAllocation);
                 form.setValue('wordCount', suggestion.wordCount);
                 if (suggestion.grammarFocus) {
                   form.setValue('grammarFocus', suggestion.grammarFocus);
@@ -115,6 +107,7 @@ Word Count: ${suggestion.wordCount} words minimum`;
                 }
                 form.trigger('title');
                 form.trigger('instructions');
+                form.trigger('timeAllocation');
                 form.trigger('wordCount');
                 form.trigger('grammarFocus');
                 form.trigger('vocabularyThemes');

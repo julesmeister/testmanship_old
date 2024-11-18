@@ -14,6 +14,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HiXMark, HiLightBulb } from 'react-icons/hi2';
+import { toast } from 'react-hot-toast';
+import { cn } from "@/lib/utils";
 
 interface Challenge {
   id: string;
@@ -38,7 +40,53 @@ interface LeftColumnProps {
   isTimeUp?: boolean;
   isGeneratingFeedback?: boolean;
   onGenerateFeedback?: () => void;
+  setHasStartedWriting: (value: boolean) => void;
 }
+
+const difficultyLevels = [
+  { 
+    value: 'a1', 
+    label: 'A1', 
+    activeClass: 'data-[state=active]:bg-emerald-600 data-[state=active]:text-white dark:data-[state=active]:bg-emerald-500',
+    inactiveClass: 'data-[state=inactive]:text-emerald-600 dark:data-[state=inactive]:text-emerald-400',
+    hoverClass: 'hover:text-emerald-800 dark:hover:text-emerald-300'
+  },
+  { 
+    value: 'a2', 
+    label: 'A2', 
+    activeClass: 'data-[state=active]:bg-green-600 data-[state=active]:text-white dark:data-[state=active]:bg-green-500',
+    inactiveClass: 'data-[state=inactive]:text-green-600 dark:data-[state=inactive]:text-green-400',
+    hoverClass: 'hover:text-green-800 dark:hover:text-green-300'
+  },
+  { 
+    value: 'b1', 
+    label: 'B1', 
+    activeClass: 'data-[state=active]:bg-yellow-600 data-[state=active]:text-white dark:data-[state=active]:bg-yellow-500',
+    inactiveClass: 'data-[state=inactive]:text-yellow-600 dark:data-[state=inactive]:text-yellow-400',
+    hoverClass: 'hover:text-yellow-800 dark:hover:text-yellow-300'
+  },
+  { 
+    value: 'b2', 
+    label: 'B2', 
+    activeClass: 'data-[state=active]:bg-orange-600 data-[state=active]:text-white dark:data-[state=active]:bg-orange-500',
+    inactiveClass: 'data-[state=inactive]:text-orange-600 dark:data-[state=inactive]:text-orange-400',
+    hoverClass: 'hover:text-orange-800 dark:hover:text-orange-300'
+  },
+  { 
+    value: 'c1', 
+    label: 'C1', 
+    activeClass: 'data-[state=active]:bg-rose-600 data-[state=active]:text-white dark:data-[state=active]:bg-rose-500',
+    inactiveClass: 'data-[state=inactive]:text-rose-600 dark:data-[state=inactive]:text-rose-400',
+    hoverClass: 'hover:text-rose-800 dark:hover:text-rose-300'
+  },
+  { 
+    value: 'c2', 
+    label: 'C2', 
+    activeClass: 'data-[state=active]:bg-red-600 data-[state=active]:text-white dark:data-[state=active]:bg-red-500',
+    inactiveClass: 'data-[state=inactive]:text-red-600 dark:data-[state=inactive]:text-red-400',
+    hoverClass: 'hover:text-red-800 dark:hover:text-red-300'
+  }
+] as const;
 
 export default function LeftColumn({
   selectedChallenge,
@@ -51,7 +99,8 @@ export default function LeftColumn({
   timeAllocation = 0,
   isTimeUp = false,
   isGeneratingFeedback = false,
-  onGenerateFeedback
+  onGenerateFeedback,
+  setHasStartedWriting
 }: LeftColumnProps) {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedLevel, setSelectedLevel] = useState('a1');
@@ -95,12 +144,14 @@ export default function LeftColumn({
     setShowChallenges(false);
     setAccordionValue('instructions');
     onStartChallenge(challenge);
+    toast.success(`${mode === 'exam' ? 'Exam' : 'Practice'} mode challenge started (${challenge.time_allocation} minutes)`, { duration: 3000 });
   };
 
   const handleBackToChallenges = () => {
     setShowChallenges(true);
     setAccordionValue('item-1');
     onStopChallenge();
+    setHasStartedWriting(false);
   };
 
   const handleFinishChallenge = () => {
@@ -139,47 +190,19 @@ export default function LeftColumn({
       )}
       {/* Challenge Selection */}
       <div className={hasStartedWriting ? "" : "space-y-4"}>
-        {showChallenges && (
+        {showChallenges && !hasStartedWriting && (
           <>
-
             <Tabs defaultValue="a1" className="w-full" onValueChange={setSelectedLevel}>
               <TabsList className="grid w-full grid-cols-6 bg-gray-50 dark:bg-gray-900 p-1">
-                <TabsTrigger 
-                  value="a1" 
-                  className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white dark:data-[state=active]:bg-emerald-500
-                            data-[state=inactive]:text-emerald-600 dark:data-[state=inactive]:text-emerald-400
-                            hover:text-emerald-800 dark:hover:text-emerald-300"
-                >A1</TabsTrigger>
-                <TabsTrigger 
-                  value="a2" 
-                  className="data-[state=active]:bg-green-600 data-[state=active]:text-white dark:data-[state=active]:bg-green-500
-                            data-[state=inactive]:text-green-600 dark:data-[state=inactive]:text-green-400
-                            hover:text-green-800 dark:hover:text-green-300"
-                >A2</TabsTrigger>
-                <TabsTrigger 
-                  value="b1" 
-                  className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white dark:data-[state=active]:bg-yellow-500
-                            data-[state=inactive]:text-yellow-600 dark:data-[state=inactive]:text-yellow-400
-                            hover:text-yellow-800 dark:hover:text-yellow-300"
-                >B1</TabsTrigger>
-                <TabsTrigger 
-                  value="b2" 
-                  className="data-[state=active]:bg-orange-600 data-[state=active]:text-white dark:data-[state=active]:bg-orange-500
-                            data-[state=inactive]:text-orange-600 dark:data-[state=inactive]:text-orange-400
-                            hover:text-orange-800 dark:hover:text-orange-300"
-                >B2</TabsTrigger>
-                <TabsTrigger 
-                  value="c1" 
-                  className="data-[state=active]:bg-rose-600 data-[state=active]:text-white dark:data-[state=active]:bg-rose-500
-                            data-[state=inactive]:text-rose-600 dark:data-[state=inactive]:text-rose-400
-                            hover:text-rose-800 dark:hover:text-rose-300"
-                >C1</TabsTrigger>
-                <TabsTrigger 
-                  value="c2" 
-                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white dark:data-[state=active]:bg-red-500
-                            data-[state=inactive]:text-red-600 dark:data-[state=inactive]:text-red-400
-                            hover:text-red-800 dark:hover:text-red-300"
-                >C2</TabsTrigger>
+                {difficultyLevels.map(({ value, label, activeClass, inactiveClass, hoverClass }) => (
+                  <TabsTrigger 
+                    key={value}
+                    value={value} 
+                    className={cn(activeClass, inactiveClass, hoverClass)}
+                  >
+                    {label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
 
@@ -313,6 +336,13 @@ export default function LeftColumn({
                     </div>
                   </div>
 
+                  <div>
+                    <h3 className="font-semibold mb-2">Time Allocation</h3>
+                    <p className="text-zinc-600 dark:text-zinc-400">
+                      {selectedChallenge.time_allocation} minutes
+                    </p>
+                  </div>
+
                   {selectedChallenge.word_count && (
                     <div>
                       <h3 className="font-semibold mb-2">Word Count Requirement</h3>
@@ -363,7 +393,7 @@ export default function LeftColumn({
 
       {/* AI Feedback */}
       {selectedChallenge && hasStartedWriting && (
-        <div className="flex-1 bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 overflow-y-auto">
+        <div className="flex-1 bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 overflow-y-auto mt-4">
           <h2 className="font-semibold mb-4 flex items-center gap-2">
             <HiSparkles className="w-5 h-5" />
             AI Feedback
