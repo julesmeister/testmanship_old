@@ -149,7 +149,10 @@ export default function RightColumn({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <Button variant="outline">Search</Button>
+                <Button 
+                  variant="outline" 
+                  className="text-foreground dark:text-white hover:text-foreground dark:hover:text-white"
+                >Search</Button>
               </div>
             </div>
 
