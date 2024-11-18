@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle } from 'react-icons/hi2';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +16,7 @@ import {
 import { HiXMark, HiLightBulb } from 'react-icons/hi2';
 import { toast } from 'react-hot-toast';
 import { cn } from "@/lib/utils";
+import { useDraggable } from '@/hooks/useDraggable';
 
 interface Challenge {
   id: string;
@@ -88,6 +89,47 @@ const difficultyLevels = [
   }
 ] as const;
 
+function DraggableWindow({ 
+  children, 
+  onClose 
+}: { 
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  const { dragProps, isDragging } = useDraggable({
+    initialPosition: { x: 20, y: 20 }
+  });
+
+  return (
+    <div 
+      {...dragProps}
+      className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm rounded-lg border border-zinc-200/50 dark:border-zinc-700/50 shadow-lg min-w-[300px] max-w-[500px] transition-all"
+    >
+      <div 
+        className="window-handle cursor-grab active:cursor-grabbing bg-gradient-to-r from-indigo-500/90 via-purple-500/90 to-pink-500/90 p-2.5 rounded-t-lg flex items-center justify-between select-none"
+      >
+        <h2 className="font-medium text-sm text-white/90 flex items-center gap-1.5">
+          <HiSparkles className="w-4 h-4" />
+          AI Writing Assistant
+        </h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-full p-1 text-white/70 hover:text-white/90 hover:bg-white/10 transition-colors"
+          >
+            <HiXMark className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="p-3 max-h-[50vh] overflow-y-auto">
+        <div className="space-y-2">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LeftColumn({
   selectedChallenge,
   hasStartedWriting,
@@ -106,8 +148,9 @@ export default function LeftColumn({
   const [selectedLevel, setSelectedLevel] = useState('a1');
   const [searchQuery, setSearchQuery] = useState('');
   const [showChallenges, setShowChallenges] = useState(true);
-  const [accordionValue, setAccordionValue] = useState<string | undefined>('item-1');
   const [showTip, setShowTip] = useState(true);
+  const [showFeedback, setShowFeedback] = useState(true);
+  const [accordionValue, setAccordionValue] = useState<string | undefined>('item-1');
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -160,6 +203,27 @@ export default function LeftColumn({
 
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
+      {/* Add keyframes for shimmer animation */}
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% {
+            background-position: -200% center;
+          }
+          100% {
+            background-position: 200% center;
+          }
+        }
+        .shimmer-button {
+          background: linear-gradient(110deg, #4f46e5, #7c3aed, #2563eb, #4f46e5);
+          background-size: 200% auto;
+          animation: shimmer 4s linear infinite;
+          transition: all 0.3s ease;
+        }
+        .shimmer-button:hover {
+          background-size: 150% auto;
+          animation-duration: 2s;
+        }
+      `}</style>
       {showTip && (
         <div className="relative mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px]">
           <div className="relative flex items-start gap-3 rounded-lg bg-white/95 px-4 py-3 dark:bg-zinc-900/95">
@@ -247,8 +311,7 @@ export default function LeftColumn({
                               handleStartChallenge(challenge);
                               setShowTip(false);
                             }}
-                            className="shrink-0 flex items-center gap-2"
-                            variant="emerald"
+                            className="shrink-0 flex items-center gap-2 shimmer-button text-white hover:opacity-90"
                           >
                             <HiPlay className="w-4 h-4" />
                           </Button>
@@ -391,25 +454,33 @@ export default function LeftColumn({
         </div>
       )}
 
-      {/* AI Feedback */}
-      {selectedChallenge && hasStartedWriting && (
-        <div className="flex-1 bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 overflow-y-auto mt-4">
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <HiSparkles className="w-5 h-5" />
-            AI Feedback
-          </h2>
-          <div className="space-y-4">
-            {outputCode ? (
-              <div className="text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap">
-                {outputCode}
-              </div>
-            ) : (
-              <div className="text-zinc-500 dark:text-zinc-400 italic">
-                Start writing to receive real-time feedback on your essay.
-              </div>
-            )}
+      {/* Toggle Feedback Button */}
+      {selectedChallenge && hasStartedWriting && !showFeedback && (
+        <button
+          onClick={() => setShowFeedback(true)}
+          className="fixed bottom-4 right-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:opacity-90 transition-opacity"
+        >
+          <HiSparkles className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* AI Feedback Window */}
+      {selectedChallenge && hasStartedWriting && showFeedback && (
+        <DraggableWindow onClose={() => setShowFeedback(false)}>
+          <div className="p-3 max-h-[50vh] overflow-y-auto">
+            <div className="space-y-2">
+              {outputCode ? (
+                <div className="text-zinc-600 dark:text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap">
+                  {outputCode}
+                </div>
+              ) : (
+                <div className="text-zinc-500/80 dark:text-zinc-400/80 text-xs italic">
+                  Start writing to receive real-time feedback on your essay.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </DraggableWindow>
       )}
     </div>
   );
