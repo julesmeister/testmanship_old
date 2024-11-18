@@ -74,22 +74,35 @@ export default function HeaderLinks(props: { [x: string]: any }) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="flex h-9 min-w-9 cursor-pointer items-center gap-2 rounded-full border-zinc-200 px-2 text-xl text-zinc-950 dark:border-zinc-800 dark:text-white md:min-h-10 md:min-w-10"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border-zinc-200 p-0 text-xl text-zinc-950 hover:bg-accent hover:text-accent-foreground dark:border-zinc-800 dark:text-white md:h-10 md:w-10"
           >
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback>
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
+            <Avatar className="h-full w-full">
+              <AvatarImage src={user?.user_metadata?.avatar_url} className="object-cover" />
+              <AvatarFallback className="rounded-full">
+                {user?.user_metadata?.full_name
+                  ? user.user_metadata.full_name.charAt(0).toUpperCase()
+                  : user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <div className="flex items-center justify-start gap-2 p-2">
-            <div className="flex flex-col space-y-1 leading-none">
-              {user?.email && (
-                <p className="font-medium">{user.email}</p>
-              )}
+          <div className="flex items-center gap-3 border-b border-border/40 p-4">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarFallback className="bg-primary/10">
+                {user?.user_metadata?.full_name
+                  ? user.user_metadata.full_name.charAt(0).toUpperCase()
+                  : user?.email?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <p className="text-sm font-semibold text-foreground dark:text-white">
+                {user?.user_metadata?.full_name || 'User'}
+              </p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                {user?.email}
+              </p>
             </div>
           </div>
           <div className="flex flex-col">
