@@ -286,7 +286,7 @@ export default function Test({ user, userDetails }: Props) {
         />
 
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col space-y-4">
           <Tabs defaultValue="exam" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger 
@@ -307,15 +307,13 @@ export default function Test({ user, userDetails }: Props) {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="flex-1 flex flex-col">
-            <textarea
-              value={inputMessage}
-              onChange={handleTextChange}
-              placeholder="Start writing your essay here..."
-              className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent"
-              disabled={isTimeUp}
-            />
-          </div>
+          <textarea
+            value={inputMessage}
+            onChange={handleTextChange}
+            placeholder="Start writing your essay here..."
+            className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent"
+            disabled={isTimeUp}
+          />
           {/* Writing Statistics Bar */}
           <div className="mt-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
