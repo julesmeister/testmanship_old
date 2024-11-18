@@ -12,6 +12,7 @@ import { createClient } from '@/utils/supabase/client';
 import { HiChevronLeft, HiOutlineArrowRightOnRectangle } from 'react-icons/hi2';
 import { useSidebarStore } from '@/stores/sidebar';
 import { toast } from 'sonner';
+import { startProgress } from '@/components/ui/progress-bar';
 
 const supabase = createClient();
 
@@ -111,7 +112,10 @@ export default function Sidebar(props: SidebarProps) {
                   "w-full flex items-center justify-start gap-2 dark:hover:text-current min-h-[40px]",
                   isCollapsed && "justify-center px-2"
                 )}
-                onClick={() => router?.push(route.path)}
+                onClick={() => {
+                  startProgress();
+                  router?.push(route.path);
+                }}
               >
                 <span className="inline-flex shrink-0 self-center pt-1">{route.icon}</span>
                 {!isCollapsed && <span className="inline-flex self-center">{route.name}</span>}
