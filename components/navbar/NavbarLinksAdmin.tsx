@@ -108,7 +108,7 @@ export default function HeaderLinks(props: { [x: string]: any }) {
           <div className="flex flex-col">
             <Button
               variant="ghost"
-              className="flex w-full items-center justify-start gap-2"
+              className="flex w-full items-center justify-start gap-2 hover:text-foreground dark:hover:text-foreground"
               onClick={() => window.open('https://docs.codeium.com/cascade/cascade-overview', '_blank')}
             >
               <HiOutlineInformationCircle className="h-4 w-4" />
@@ -116,7 +116,7 @@ export default function HeaderLinks(props: { [x: string]: any }) {
             </Button>
             <Button
               variant="ghost"
-              className="flex w-full items-center justify-start gap-2"
+              className="flex w-full items-center justify-start gap-2 hover:text-foreground dark:hover:text-foreground"
               onClick={signOut}
             >
               <HiOutlineArrowRightOnRectangle className="h-4 w-4" />
