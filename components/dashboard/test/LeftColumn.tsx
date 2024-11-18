@@ -475,34 +475,46 @@ export default function LeftColumn({
       {challenge && showFeedback && (
         <DraggableWindow onClose={() => setShowFeedback(false)}>
           <div className="flex flex-col gap-3">
-            {/* Paragraph Selection Buttons */}
-            <div className="flex gap-2 p-3 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
-              {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
-                paragraph.trim() && (
-                  <button
-                    key={index}
-                    onClick={async () => {
-                      const promise = onGenerateFeedback(paragraph, false);
-                      toast.promise(promise, {
-                        loading: `Analyzing paragraph ${index + 1}...`,
-                        success: `Generated feedback for paragraph ${index + 1}`,
-                        error: 'Failed to generate feedback'
-                      });
-                      // Update the feedback display when promise resolves
-                      try {
-                        const newFeedback = await promise;
-                        setOutputCode(newFeedback);
-                      } catch (error) {
-                        console.error('Error updating feedback:', error);
-                      }
-                    }}
-                    className="group flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700/70 transition-all hover:shadow-sm active:scale-95"
-                  >
-                    <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
-                    <span>P{index + 1}</span>
-                  </button>
-                )
-              )}
+            {/* Feedback Controls */}
+            <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
+              <div className="flex gap-2 overflow-x-auto">
+                {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
+                  paragraph.trim() && (
+                    <button
+                      key={index}
+                      onClick={async () => {
+                        const promise = onGenerateFeedback(paragraph, false);
+                        toast.promise(promise, {
+                          loading: `Analyzing paragraph ${index + 1}...`,
+                          success: `Generated feedback for paragraph ${index + 1}`,
+                          error: 'Failed to generate feedback'
+                        });
+                        try {
+                          const newFeedback = await promise;
+                          setOutputCode(newFeedback);
+                        } catch (error) {
+                          console.error('Error updating feedback:', error);
+                        }
+                      }}
+                      className="group flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700/70 transition-all hover:shadow-sm active:scale-95"
+                    >
+                      <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
+                      <span>P{index + 1}</span>
+                    </button>
+                  )
+                )}
+              </div>
+              
+              <button
+                onClick={() => {
+                  setOutputCode('');
+                  toast.success('Feedback cleared');
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>Clear</span>
+              </button>
             </div>
 
             {/* Feedback Content */}
