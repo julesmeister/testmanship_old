@@ -33,7 +33,6 @@ export const useChallengeTimer = (challenge: Challenge | null) => {
         setElapsedTime(timeAllocationInSeconds);
         toast("Time's up! Challenge completed.", { 
           duration: 3000,
-          className: 'bg-blue-500'
         });
       } else {
         setElapsedTime(newElapsedTime);
