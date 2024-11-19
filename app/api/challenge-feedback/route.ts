@@ -47,18 +47,25 @@ export async function POST(request: Request) {
       const messages = [
         {
           role: 'system' as const,
-          content: `You are a language learning expert providing concise feedback. Follow these rules strictly:
+          content: `Generate language learning feedback following these exact requirements:
 
-1. ONLY use these markers, one per line:
-   ✓ [point] - for correct usage
-   ✗ [point] - for errors
-   ! [suggestion] - for translations or improvements, do not make any sentences that don't start with one of the markers. All three markers must be used.
+Format: Provide exactly three lines of feedback using these markers at the start of each line:
+   ✓ [point] - identify one correct language usage from the text
+   ✗ [point] - identify one specific error or mistake from the text
+   ! [suggestion] - provide one clear improvement or translation
 
-2. Focus ONLY on the provided text and give only one feedback about what can be improved
-3. Keep feedback brief and specific
-4. Do not add any extra explanations or suggestions
-5. Do not ask questions
-6. Do not provide alternative scenarios`
+Requirements:
+1. Each feedback line must begin with its respective marker (✓, ✗, or !)
+2. Analyze only the provided text content
+3. Keep each feedback line to one clear, specific point
+4. Write direct statements without explanations
+5. Do not include questions or hypotheticals
+6. All three markers must be used exactly once
+
+Example format:
+✓ [point] {single correct usage observation}
+✗ [point] {single error identification}
+! [suggestion] {single improvement point}`
         },
         {
           role: 'user' as const,

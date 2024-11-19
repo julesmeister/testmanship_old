@@ -102,19 +102,40 @@ export default function Test({ user, userDetails }: Props) {
     // Start timer if this is the first keystroke and time isn't up
     if (!isWriting && text.length > 0 && !isTimeUp) {
       setIsWriting(true);
-      startTimeRef.current = Date.now();
+      
+      // Clear any existing timer before starting a new one
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Only set start time if it's not already set
+      if (!startTimeRef.current) {
+        startTimeRef.current = Date.now();
+      }
+      
+      // Create a new timer interval
       timerRef.current = setInterval(() => {
+        if (!startTimeRef.current || !selectedChallenge) return; // Safety check
+        
         const now = Date.now();
-        const start = startTimeRef.current || now;
-        const newElapsedTime = Math.floor((now - start) / 1000);
+        const newElapsedTime = Math.floor((now - startTimeRef.current) / 1000);
+        const timeAllocationInSeconds = selectedChallenge.time_allocation * 60;
         
         // Check time limit before updating
-        if (selectedChallenge && newElapsedTime >= selectedChallenge.time_allocation * 60) {
-          clearInterval(timerRef.current!);
-          timerRef.current = null;
+        if (newElapsedTime >= timeAllocationInSeconds) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           setIsTimeUp(true);
           setIsWriting(false);
-          setElapsedTime(selectedChallenge.time_allocation * 60);
+          // Ensure we set exactly to the time limit
+          setElapsedTime(timeAllocationInSeconds);
+          toast("Time's up! Challenge completed.", { 
+            duration: 3000,
+            className: 'bg-blue-500'
+          });
         } else {
           setElapsedTime(newElapsedTime);
         }
@@ -180,25 +201,65 @@ export default function Test({ user, userDetails }: Props) {
   };
 
   const handleStartChallenge = (challenge: Challenge) => {
-    setSelectedChallenge(challenge);
-    // Start the timer immediately when challenge starts
-    startTimeRef.current = Date.now();
+    // Clean up any existing timer state
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
+    
+    setSelectedChallenge(challenge);
+    startTimeRef.current = Date.now(); // Set start time immediately
+    
+    // Start a fresh timer
     timerRef.current = setInterval(() => {
-      if (startTimeRef.current) {
-        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-        setElapsedTime(elapsed);
+      if (!startTimeRef.current || !selectedChallenge) return; // Safety check
+        
+      const now = Date.now();
+      const newElapsedTime = Math.floor((now - startTimeRef.current) / 1000);
+      const timeAllocationInSeconds = selectedChallenge.time_allocation * 60;
+        
+      // Check time limit before updating
+      if (newElapsedTime >= timeAllocationInSeconds) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setIsTimeUp(true);
+        setIsWriting(false);
+        // Ensure we set exactly to the time limit
+        setElapsedTime(timeAllocationInSeconds);
+        toast("Time's up! Challenge completed.", { 
+          duration: 3000,
+          className: 'bg-blue-500'
+        });
+      } else {
+        setElapsedTime(newElapsedTime);
       }
     }, 1000);
+    
     setIsTimeUp(false);
     setElapsedTime(0);
     setInputMessage('');
-    toast.success(`${mode === 'exam' ? 'Exam' : 'Practice'} mode challenge started (${challenge.time_allocation} minutes)`, { duration: 3000 });
+    setIsWriting(false); // Reset writing state
+    toast("Challenge started.", { 
+      duration: 3000,
+      className: 'bg-blue-500'
+    });
   };
 
   const handleStopChallenge = () => {
+    console.log('handleStopChallenge triggered', {
+      caller: new Error().stack,
+      currentState: {
+        isWriting,
+        elapsedTime,
+        timeAllocation: selectedChallenge?.time_allocation,
+        isTimeUp,
+        timerRef: !!timerRef.current,
+        startTimeRef: startTimeRef.current
+      }
+    });
+    
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;

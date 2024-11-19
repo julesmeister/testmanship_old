@@ -229,28 +229,45 @@ export default function LeftColumn({
       return;
     }
 
+    // Don't generate feedback if there's no text
+    if (!inputMessage?.trim()) {
+      toast.error('No text to analyze. Challenge ended.');
+      onStopChallenge();
+      return;
+    }
+
     try {
       setShowChallenges(false);
       setShowFeedback(true);
       
       const promise = handleGenerateFeedback(inputMessage);
-      toast.promise(promise, {
+      await toast.promise(promise, {
         loading: 'Analyzing your complete essay...',
         success: 'Generated comprehensive feedback',
         error: 'Failed to generate feedback'
       });
-      await promise;
       onStopChallenge();
     } catch (error) {
       console.error('Error in finish challenge:', error);
+      onStopChallenge();
     }
   };
 
   useEffect(() => {
-    if (timeAllocation && timeElapsed >= timeAllocation && !isTimeUp) {
-      handleFinishChallenge();
+    // Convert timeAllocation from minutes to seconds for comparison
+    const timeAllocationInSeconds = timeAllocation ? timeAllocation * 60 : 0;
+    
+    if (timeAllocationInSeconds > 0 && timeElapsed >= timeAllocationInSeconds && !isTimeUp) {
+      // Only call handleFinishChallenge if there's actual text to analyze
+      if (inputMessage?.trim()) {
+        handleFinishChallenge();
+      } else {
+        // If no text, just stop the challenge without generating feedback
+        toast.error('Time is up! No text to analyze.');
+        onStopChallenge();
+      }
     }
-  }, [timeElapsed, timeAllocation, isTimeUp]);
+  }, [timeElapsed, timeAllocation, isTimeUp, inputMessage]);
 
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
