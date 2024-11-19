@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { SearchInput } from '@/components/ui/search-input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { difficultyButtonColors } from './constants';
@@ -28,48 +28,16 @@ export function ChallengeFilters({
   totalChallengesCount,
   difficultyLevels
 }: ChallengeFiltersProps) {
-  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
-
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
       <div className="w-full max-w-md">
         <div className="relative w-full">
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            onSearchChange(localSearchQuery);
-          }} className="relative group">
-            <div className="relative flex-1">
-              <div className="relative flex items-center">
-                <Input
-                  placeholder="Search in titles and instructions..."
-                  className="pl-11 pr-11 bg-white dark:bg-zinc-900 h-11 text-base transition-shadow duration-200 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500 focus-visible:border-blue-500"
-                  value={localSearchQuery}
-                  onChange={(e) => setLocalSearchQuery(e.target.value)}
-                />
-                <div className="absolute left-0 inset-y-0 w-11 flex items-center justify-center pointer-events-none">
-                  <Search className="h-4 w-4 text-zinc-400 group-focus-within:text-blue-500 transition-colors duration-200" />
-                </div>
-                {localSearchQuery && (
-                  <div className="absolute right-0 inset-y-0 w-11 flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLocalSearchQuery('');
-                        onSearchChange('');
-                      }}
-                      className="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors duration-200"
-                    >
-                      <X className="h-4 w-4" />
-                      <span className="sr-only">Clear search</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="absolute inset-0 -z-10 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-gradient-x blur-xl" />
-              </div>
-            </div>
-          </form>
+          <SearchInput
+            value={searchQuery}
+            onChange={onSearchChange}
+            placeholder="Search in titles and instructions..."
+            className="w-full"
+          />
         </div>
       </div>
 

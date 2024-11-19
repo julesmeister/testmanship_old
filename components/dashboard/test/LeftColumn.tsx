@@ -3,6 +3,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle, HiXMark, HiLightBulb, HiClipboardDocument, HiClock, HiDocumentText, HiCheckCircle, HiBookOpen } from 'react-icons/hi2';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -278,19 +279,11 @@ export default function LeftColumn({
             </Tabs>
 
             <div className="bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
-              <div className="flex gap-2">
-                <Input
-                  type="search"
-                  placeholder="Search writing challenges..."
-                  className="flex-1"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Button 
-                  variant="outline" 
-                  className="text-foreground dark:text-white hover:text-foreground dark:hover:text-white"
-                >Search</Button>
-              </div>
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search writing challenges..."
+              />
             </div>
 
             {/* Challenges List */}
