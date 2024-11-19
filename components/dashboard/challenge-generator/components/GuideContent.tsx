@@ -226,14 +226,14 @@ export function GuideContent() {
                 <HoverCardContent 
                   side="right" 
                   align="start" 
-                  className="w-[800px] p-6 backdrop-blur-sm bg-card/95 border-primary/20"
+                  className="w-[calc(100vw-40px)] max-w-[800px] p-4 sm:p-6 backdrop-blur-sm bg-card/95 border-primary/20 overflow-y-auto max-h-[80vh]"
                 >
                   <div className="space-y-6">
                     <div className="flex items-center gap-2 pb-2 border-b">
                       <GraduationCap className="h-5 w-5 text-primary" />
                       <h3 className="text-lg font-semibold text-foreground">Grammar Requirements</h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       {Object.entries(level.grammar).map(([sublevel, points]) => (
                         <div key={sublevel} className="space-y-4">
                           <div className="flex items-center gap-2 bg-primary/5 rounded-md p-2">
