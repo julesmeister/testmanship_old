@@ -82,19 +82,23 @@ export default function MainChart() {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#000000",
+                  backgroundColor: "rgb(24 24 27)",
                   border: "none",
-                  borderRadius: "10px",
-                  fontSize: "12px",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  padding: "8px 12px",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"
                 }}
-                labelStyle={{ color: "#A3AED0" }}
-                itemStyle={{ color: "#A3AED0" }}
+                labelStyle={{ color: "rgb(161 161 170)", marginBottom: "4px" }}
+                itemStyle={{ color: "rgb(244 244 245)" }}
+                cursor={{ fill: "rgb(94 55 255 / 0.08)" }}
               />
               <Bar 
                 dataKey="paragraphs"
                 fill="#5E37FF"
                 radius={[10, 10, 0, 0]}
                 barSize={40}
+                activeBar={{ fill: "#7C5AFF" }}
               />
             </BarChart>
           </ResponsiveContainer>

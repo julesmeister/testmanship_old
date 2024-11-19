@@ -15,21 +15,11 @@ import LeftColumn from './LeftColumn';
 import toast from 'react-hot-toast';
 import { makeAIRequest } from '@/utils/ai';
 import { useAIFeedback } from '@/hooks/useAIFeedback';
+import { Challenge } from '@/types/challenge';
 
 interface Props {
   user: User | null | undefined;
   userDetails: { [x: string]: any } | null;
-}
-
-interface Challenge {
-  id: string;
-  title: string;
-  instructions: string;
-  difficulty_level: string;
-  time_allocation: number;
-  word_count?: number;
-  grammar_focus?: string[];
-  vocabulary_themes?: string[];
 }
 
 interface StatCardProps {

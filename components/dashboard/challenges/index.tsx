@@ -3,8 +3,10 @@
 import { User } from '@supabase/supabase-js';
 import DashboardLayout from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from '@/components/ui/input';
-import { Search, Clock, X, Plus, PenLine, Users, ArrowRight } from 'lucide-react';
+import { Search, Clock, X, Plus, PenLine, Users, ArrowRight, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useChallenges } from '@/hooks/useChallenges';
@@ -13,12 +15,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Challenge } from "@/types/challenge";
 
 interface Props {
   user: User | null | undefined;
@@ -234,16 +231,33 @@ export default function Challenges({ user, userDetails }: Props) {
                     <DialogHeader className="pr-6">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between gap-4">
-                          <span
-                            className={`
-                              inline-flex text-xs font-medium px-2.5 py-1 rounded-full shrink-0
-                              ${selectedChallenge?.difficulty_level
-                                ? `${difficultyLevels.find(l => l.value === selectedChallenge.difficulty_level.toLowerCase())?.bgColor || ''} ${difficultyLevels.find(l => l.value === selectedChallenge.difficulty_level.toLowerCase())?.textColor || ''}`
-                                : 'bg-secondary text-secondary-foreground'}
-                            `}
-                          >
-                            {selectedChallenge?.difficulty_level ? selectedChallenge.difficulty_level.toUpperCase() : 'N/A'}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`
+                                inline-flex text-xs font-medium px-2.5 py-1 rounded-full shrink-0
+                                ${selectedChallenge?.difficulty_level
+                                  ? `${difficultyLevels.find(l => l.value === selectedChallenge.difficulty_level.toLowerCase())?.bgColor || ''} ${difficultyLevels.find(l => l.value === selectedChallenge.difficulty_level.toLowerCase())?.textColor || ''}`
+                                  : 'bg-secondary text-secondary-foreground'}
+                              `}
+                            >
+                              {selectedChallenge?.difficulty_level ? selectedChallenge.difficulty_level.toUpperCase() : 'N/A'}
+                            </span>
+                            {selectedChallenge?.creator_id === user?.id && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // TODO: Add edit functionality
+                                  console.log('Edit challenge:', selectedChallenge);
+                                }}
+                              >
+                                <Pencil className="h-4 w-4" />
+                                <span className="sr-only">Edit challenge</span>
+                              </Button>
+                            )}
+                          </div>
                           <span className="text-sm text-muted-foreground flex items-center gap-1.5 shrink-0">
                             <Clock className="h-4 w-4" />
                             {selectedChallenge?.time_allocation} minutes
@@ -323,20 +337,7 @@ export default function Challenges({ user, userDetails }: Props) {
                         )}
                       </div>
 
-                      {/* Example Section */}
-                      {selectedChallenge?.example && (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium">Example Response</h4>
-                            <div className="h-px flex-1 bg-border"></div>
-                          </div>
-                          <div className="p-4 rounded-lg bg-muted/30 border-muted-foreground/20 border space-y-2">
-                            <p className="text-sm text-foreground/90 italic leading-relaxed">
-                              {selectedChallenge.example}
-                            </p>
-                          </div>
-                        </div>
-                      )}
+            
 
                       {/* Start Challenge Button */}
                       <div className="pt-4">

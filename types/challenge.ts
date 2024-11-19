@@ -11,11 +11,15 @@ export type ChallengeFormat =
 export interface Challenge {
   id: string;
   title: string;
+  description?: string;
   instructions: string;
   difficulty_level: string;
   time_allocation: number;
   word_count?: number;
   grammar_focus?: string[];
   vocabulary_themes?: string[];
+  example_response?: string;
   targetLanguage?: string;
+  created_at?: string;
+  creator_id?: string;
 }
