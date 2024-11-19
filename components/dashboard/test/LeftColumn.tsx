@@ -15,6 +15,7 @@ import { useChallenge } from '@/hooks/useChallenge';
 import { useFeedbackGeneration } from '@/hooks/useFeedbackGeneration';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { difficultyLevels } from '@/utils/constants';
 
 interface Challenge {
   id: string;
@@ -41,52 +42,6 @@ interface LeftColumnProps {
   inputMessage: string;
 }
 
-const difficultyLevels = [
-  { 
-    value: 'a1', 
-    label: 'A1', 
-    activeClass: 'data-[state=active]:bg-emerald-600 data-[state=active]:text-white dark:data-[state=active]:bg-emerald-500',
-    inactiveClass: 'data-[state=inactive]:text-emerald-600 dark:data-[state=inactive]:text-emerald-400',
-    hoverClass: 'hover:text-emerald-800 dark:hover:text-emerald-300'
-  },
-  { 
-    value: 'a2', 
-    label: 'A2', 
-    activeClass: 'data-[state=active]:bg-green-600 data-[state=active]:text-white dark:data-[state=active]:bg-green-500',
-    inactiveClass: 'data-[state=inactive]:text-green-600 dark:data-[state=inactive]:text-green-400',
-    hoverClass: 'hover:text-green-800 dark:hover:text-green-300'
-  },
-  { 
-    value: 'b1', 
-    label: 'B1', 
-    activeClass: 'data-[state=active]:bg-yellow-600 data-[state=active]:text-white dark:data-[state=active]:bg-yellow-500',
-    inactiveClass: 'data-[state=inactive]:text-yellow-600 dark:data-[state=inactive]:text-yellow-400',
-    hoverClass: 'hover:text-yellow-800 dark:hover:text-yellow-300'
-  },
-  { 
-    value: 'b2', 
-    label: 'B2', 
-    activeClass: 'data-[state=active]:bg-orange-600 data-[state=active]:text-white dark:data-[state=active]:bg-orange-500',
-    inactiveClass: 'data-[state=inactive]:text-orange-600 dark:data-[state=inactive]:text-orange-400',
-    hoverClass: 'hover:text-orange-800 dark:hover:text-orange-300'
-  },
-  { 
-    value: 'c1', 
-    label: 'C1', 
-    activeClass: 'data-[state=active]:bg-rose-600 data-[state=active]:text-white dark:data-[state=active]:bg-rose-500',
-    inactiveClass: 'data-[state=inactive]:text-rose-600 dark:data-[state=inactive]:text-rose-400',
-    hoverClass: 'hover:text-rose-800 dark:hover:text-rose-300'
-  },
-  { 
-    value: 'c2', 
-    label: 'C2', 
-    activeClass: 'data-[state=active]:bg-red-600 data-[state=active]:text-white dark:data-[state=active]:bg-red-500',
-    inactiveClass: 'data-[state=inactive]:text-red-600 dark:data-[state=inactive]:text-red-400',
-    hoverClass: 'hover:text-red-800 dark:hover:text-red-300'
-  }
-] as const;
-
-// UI Components
 const TipBox = ({ onClose }: { onClose: () => void }) => (
   <div className="relative mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px]">
     <div className="relative flex items-start gap-3 rounded-lg bg-white/95 px-4 py-3 dark:bg-zinc-900/95">
@@ -120,6 +75,31 @@ const CloseButton = ({ onClick }: { onClick: () => void }) => (
     <HiXMark className="h-4 w-4" />
   </button>
 );
+
+const feedbackIcons = {
+  '✓': { Icon: CheckCircle2, color: 'text-emerald-500 dark:text-emerald-400' },
+  '✗': { Icon: XCircle, color: 'text-red-500 dark:text-red-400' },
+  '!': { Icon: AlertCircle, color: 'text-amber-500 dark:text-amber-400' }
+} as const;
+
+const FeedbackLine = ({ line }: { line: string }) => {
+  const trimmedLine = line.trim();
+  const icon = Object.entries(feedbackIcons).find(([symbol]) => trimmedLine.startsWith(symbol));
+
+  if (!trimmedLine) return null;
+  
+  if (icon) {
+    const [symbol, { Icon, color }] = icon;
+    return (
+      <div className="flex items-start gap-2 mb-2">
+        <Icon className={`w-5 h-5 mt-0.5 ${color} flex-shrink-0`} />
+        <span>{trimmedLine.replace(symbol, '').trim()}</span>
+      </div>
+    );
+  }
+
+  return <p className="mb-2">{line}</p>;
+};
 
 const Pagination = ({ 
   currentPage, 
@@ -245,19 +225,14 @@ export default function LeftColumn({
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-purple-50/60 to-emerald-50/40 dark:from-blue-950/30 dark:via-purple-950/20 dark:to-emerald-950/10 rounded-lg" />
                 <Tabs defaultValue="a1" className="relative" onValueChange={setSelectedLevel}>
-                  <TabsList className="grid w-full grid-cols-6 bg-white/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 rounded-lg p-1">
-                    {difficultyLevels.map(({ value, label, activeClass, inactiveClass, hoverClass }) => (
+                  <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    {difficultyLevels.map((level) => (
                       <TabsTrigger 
-                        key={value}
-                        value={value} 
-                        className={cn(
-                          "text-sm font-medium transition-all",
-                          activeClass, 
-                          inactiveClass, 
-                          hoverClass
-                        )}
+                        key={level.toLowerCase()}
+                        value={level.toLowerCase()} 
+                        className="text-sm font-medium transition-all data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300"
                       >
-                        {label}
+                        {level}
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -543,39 +518,11 @@ export default function LeftColumn({
 
               {/* Output */}
               <div className="flex-1 overflow-y-auto px-3">
-                {outputCodeState ? (
+                {outputCodeState && (
                   <div className="text-zinc-600 dark:text-zinc-400 text-md leading-relaxed">
-                    {outputCodeState.split('\n').map((line, index) => {
-                      if (line.trim().startsWith('✓')) {
-                        return (
-                          <div key={index} className="flex items-start gap-2 mb-2">
-                            <CheckCircle2 className="w-5 h-5 mt-0.5 text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
-                            <span>{line.replace('✓', '').trim()}</span>
-                          </div>
-                        );
-                      } else if (line.trim().startsWith('✗')) {
-                        return (
-                          <div key={index} className="flex items-start gap-2 mb-2">
-                            <XCircle className="w-5 h-5 mt-0.5 text-red-500 dark:text-red-400 flex-shrink-0" />
-                            <span>{line.replace('✗', '').trim()}</span>
-                          </div>
-                        );
-                      } else if (line.trim().startsWith('!')) {
-                        return (
-                          <div key={index} className="flex items-start gap-2 mb-2">
-                            <AlertCircle className="w-5 h-5 mt-0.5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
-                            <span>{line.replace('!', '').trim()}</span>
-                          </div>
-                        );
-                      } else if (line.trim()) {
-                        return <p key={index} className="mb-2">{line}</p>;
-                      }
-                      return null;
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-zinc-500 dark:text-zinc-400">
-                    No feedback generated yet. Click on a paragraph button above to generate feedback.
+                    {outputCodeState.split('\n').map((line, index) => (
+                      <FeedbackLine key={index} line={line} />
+                    ))}
                   </div>
                 )}
               </div>
@@ -592,7 +539,7 @@ export default function LeftColumn({
             >
               <path d="M3 12h2v2H3v-2zm3 0h2v2H6v-2zm3 0h2v2H9v-2zm3 0h2v2h-2V9z" />
               <path d="M6 9h2v2H6V9zm3 0h2v2H9V9zm3 0h2v2h-2V9z" />
-              <path d="M9 6h2v2H9V6zm3 0h2v2h-2V6z" />
+              <path d="M9 6h2v2h-2V6zm3 0h2v2h-2V6z" />
               <path d="M12 3h2v2h-2V3z" />
             </svg>
           </div>
