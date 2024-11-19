@@ -2,6 +2,7 @@
 /*eslint-disable*/
 
 import DashboardLayout from '@/components/layout';
+import { useLanguageStore } from '@/stores/language';
 
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
@@ -74,8 +75,12 @@ export default function Test({ user, userDetails }: Props) {
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const editingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const { selectedLanguageId, languages } = useLanguageStore();
+  const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
+
   const { feedback, generateFeedback, cleanup: cleanupFeedback } = useAIFeedback({
-    challenge: selectedChallenge
+    challenge: selectedChallenge,
+    targetLanguage: selectedLanguage?.code
   });
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -212,7 +217,7 @@ export default function Test({ user, userDetails }: Props) {
           body: JSON.stringify({
             essayContent: text,
             challengeId: selectedChallenge?.id,
-            targetLanguage: selectedChallenge?.difficulty_level
+            targetLanguage: selectedLanguage?.code || 'en'
           }),
         });
 
@@ -446,7 +451,7 @@ export default function Test({ user, userDetails }: Props) {
           {/* Writing Statistics Bar */}
           <div className="mt-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {[
+              {[/* eslint-disable @typescript-eslint/no-use-before-define */
                 { label: 'Words', value: wordCount },
                 { label: 'Paragraphs', value: paragraphCount },
                 { label: 'Characters', value: charCount },

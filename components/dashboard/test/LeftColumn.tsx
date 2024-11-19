@@ -35,7 +35,7 @@ interface LeftColumnProps {
   outputCode: string;
   onStartChallenge: (challenge: Challenge) => void;
   onStopChallenge: () => void;
-  onGenerateFeedback: (paragraph: string, isFullEssay: boolean) => Promise<string>;
+  onGenerateFeedback: (paragraph: string, isFullEssay: boolean, challenge: Challenge) => Promise<string>;
   isGeneratingFeedback: boolean;
   isTimeUp: boolean;
   mode: 'practice' | 'exam';
@@ -151,7 +151,13 @@ export default function LeftColumn({
   const [showFeedback, setShowFeedback] = useState(true);
   const [accordionValue, setAccordionValue] = useState<string | undefined>('item-1');
   const supabase = createClientComponentClient();
-  const [outputCodeState, setOutputCode] = useState(outputCode);
+  const [outputCodeState, setOutputCodeState] = useState<string>('');
+  const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
+  const MIN_FEEDBACK_INTERVAL = 5000; // 5 seconds
+
+  useEffect(() => {
+    setOutputCodeState(outputCode);
+  }, [outputCode]);
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -198,26 +204,67 @@ export default function LeftColumn({
     setSelectedLevel('a1'); // Reset difficulty level
   };
 
-  const handleFinishChallenge = async () => {
-    setShowChallenges(false);
-    setShowFeedback(true);
-    
-    // Generate full essay feedback
-    const promise = onGenerateFeedback(inputMessage, true);
-    toast.promise(promise, {
-      loading: 'Analyzing your complete essay...',
-      success: 'Generated comprehensive feedback',
-      error: 'Failed to generate feedback'
-    });
-
-    try {
-      const newFeedback = await promise;
-      setOutputCode(newFeedback);
-    } catch (error) {
-      console.error('Error updating feedback:', error);
+  const handleGenerateFeedback = async (paragraph: string, isFullEssay: boolean) => {
+    if (!challenge) {
+      console.error('No active challenge found');
+      return;
     }
 
-    onStopChallenge();
+    const now = Date.now();
+    const timeSinceLastFeedback = now - lastFeedbackTime;
+    
+    if (timeSinceLastFeedback < MIN_FEEDBACK_INTERVAL) {
+      const waitTime = MIN_FEEDBACK_INTERVAL - timeSinceLastFeedback;
+      toast.error(`Please wait ${Math.ceil(waitTime / 1000)} seconds before requesting feedback again`);
+      return;
+    }
+
+    try {
+      setLastFeedbackTime(now);
+      const feedback = await onGenerateFeedback(paragraph, isFullEssay, challenge);
+      setOutputCodeState(feedback);
+      return feedback;
+    } catch (error) {
+      console.error('Error generating feedback:', error);
+      throw error; // Let the caller handle the error for toast.promise
+    }
+  };
+
+  const handleParagraphFeedback = async (paragraph: string, index: number) => {
+    try {
+      const promise = handleGenerateFeedback(paragraph, false);
+      toast.promise(promise, {
+        loading: `Analyzing paragraph ${index + 1}...`,
+        success: `Generated feedback for paragraph ${index + 1}`,
+        error: 'Failed to generate feedback'
+      });
+      await promise;
+    } catch (error) {
+      console.error('Error in paragraph feedback:', error);
+    }
+  };
+
+  const handleFinishChallenge = async () => {
+    if (!challenge) {
+      console.error('No active challenge found');
+      return;
+    }
+
+    try {
+      setShowChallenges(false);
+      setShowFeedback(true);
+      
+      const promise = handleGenerateFeedback(inputMessage, true);
+      toast.promise(promise, {
+        loading: 'Analyzing your complete essay...',
+        success: 'Generated comprehensive feedback',
+        error: 'Failed to generate feedback'
+      });
+      await promise;
+      onStopChallenge();
+    } catch (error) {
+      console.error('Error in finish challenge:', error);
+    }
   };
 
   useEffect(() => {
@@ -456,49 +503,50 @@ export default function LeftColumn({
         <DraggableWindow onClose={() => setShowFeedback(false)}>
           <div className="flex flex-col gap-3">
             {/* Feedback Controls */}
-            <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
-              <div className="flex gap-2 overflow-x-auto">
-                <TooltipProvider>
-                  {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
-                    paragraph.trim() && (
-                      <Tooltip key={index}>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={async () => {
-                              const promise = onGenerateFeedback(paragraph, false);
-                              toast.promise(promise, {
-                                loading: `Analyzing paragraph ${index + 1}...`,
-                                success: `Generated feedback for paragraph ${index + 1}`,
-                                error: 'Failed to generate feedback'
-                              });
-                            }}
-                            className="group flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all"
-                          >
-                            <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
-                            <span>P{index + 1}</span>
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Get feedback for paragraph {index + 1}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )
-                  )}
-                </TooltipProvider>
+            {inputMessage.trim() && (
+              <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="flex gap-2 overflow-x-auto">
+                  <TooltipProvider>
+                    {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
+                      paragraph.trim() && (
+                        <Tooltip key={index}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={async () => {
+                                console.log(`Analyzing paragraph ${index + 1}:`, paragraph.slice(0, 50) + '...');
+                                await handleParagraphFeedback(paragraph, index);
+                              }}
+                              className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all overflow-hidden"
+                            >
+                              {/* Animated border */}
+                              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 animate-gradient-x transition-opacity" >
+                                <div className="absolute inset-[1px] bg-white dark:bg-zinc-900 rounded-lg" />
+                              </div>
+                              <MessageSquare className="relative z-10 w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
+                              <span className="relative z-10">P{index + 1}</span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">
+                            <p>Get feedback for paragraph {index + 1}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )
+                    )}
+                  </TooltipProvider>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    setOutputCodeState('');
+                    toast.success('Feedback cleared');
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>Clear</span>
+                </button>
               </div>
-              
-              <button
-                onClick={() => {
-                  setOutputCode('');
-                  toast.success('Feedback cleared');
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-              >
-                <XCircle className="w-4 h-4" />
-                <span>Clear</span>
-              </button>
-            </div>
-
+            )}
             {/* Feedback Content */}
             <div className="p-3 max-h-[40vh] overflow-y-auto">
               <div className="space-y-2">
