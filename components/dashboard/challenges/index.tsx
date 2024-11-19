@@ -132,10 +132,30 @@ export default function Challenges({ user, userDetails }: Props) {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                   {paginatedChallenges.length === 0 ? (
-                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-lg font-medium text-muted-foreground">No challenges found</p>
-                      <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
-                    </div>
+                    <>
+                      <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                        <p className="text-lg font-medium text-muted-foreground">No challenges found</p>
+                        <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
+                      </div>
+                      {/* Placeholder cards to maintain layout */}
+                      {Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="p-4 rounded-lg border bg-card/50 animate-pulse">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="w-12 h-5 bg-muted rounded-full"></div>
+                              <div className="w-16 h-4 bg-muted rounded-md"></div>
+                            </div>
+                            <div>
+                              <div className="w-3/4 h-5 bg-muted rounded-md"></div>
+                              <div className="space-y-2 mt-2">
+                                <div className="w-full h-4 bg-muted rounded-md"></div>
+                                <div className="w-2/3 h-4 bg-muted rounded-md"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
                   ) : (
                     paginatedChallenges.map((challenge) => (
                       <Link 
