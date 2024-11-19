@@ -4,20 +4,15 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle } from 'react-icons/hi2';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useEffect, useState, useCallback, useRef } from 'react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { HiXMark, HiLightBulb } from 'react-icons/hi2';
-import { toast } from 'sonner';
+import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle, HiXMark, HiLightBulb } from 'react-icons/hi2';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
 import { DraggableWindow } from './components/DraggableWindow';
+import { useChallenge } from '@/hooks/useChallenge';
+import { useFeedbackGeneration } from '@/hooks/useFeedbackGeneration';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Challenge {
   id: string;
@@ -89,6 +84,106 @@ const difficultyLevels = [
   }
 ] as const;
 
+// UI Components
+const TipBox = ({ onClose }: { onClose: () => void }) => (
+  <div className="relative mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px]">
+    <div className="relative flex items-start gap-3 rounded-lg bg-white/95 px-4 py-3 dark:bg-zinc-900/95">
+      <HiLightBulb className="h-5 w-5 flex-shrink-0 text-amber-500 mt-1" />
+      <div className="pr-6 space-y-2 text-sm">
+        <p className="text-zinc-600 dark:text-zinc-300">
+          Welcome! Pick a challenge from the list below and follow the instructions carefully. Best of luck on your writing journey! 🚀
+        </p>
+        <div className="flex gap-4 text-xs">
+          <ModeInfo mode="Practice" color="emerald" description="Real-time feedback per paragraph" />
+          <ModeInfo mode="Exam" color="blue" description="Graded feedback after time limit" />
+        </div>
+      </div>
+      <CloseButton onClick={onClose} />
+    </div>
+  </div>
+);
+
+const ModeInfo = ({ mode, color, description }: { mode: string; color: string; description: string }) => (
+  <div>
+    <span className={`font-medium text-${color}-600 dark:text-${color}-400`}>{mode} Mode:</span>
+    <span className="text-zinc-500 dark:text-zinc-400"> {description}</span>
+  </div>
+);
+
+const CloseButton = ({ onClick }: { onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className="absolute right-2 top-2 rounded-full p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+  >
+    <HiXMark className="h-4 w-4" />
+  </button>
+);
+
+const ChallengeCard = ({ 
+  challenge, 
+  onStart 
+}: { 
+  challenge: Challenge; 
+  onStart: (challenge: Challenge) => void;
+}) => (
+  <div className="bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
+    <div className="flex justify-between items-start gap-4">
+      <div>
+        <h3 className="font-semibold text-lg mb-2">{challenge.title}</h3>
+        <p className="text-zinc-600 dark:text-zinc-400 line-clamp-3">
+          {challenge.instructions.split('\n')[0]}
+        </p>
+        <div className="mt-2 text-sm text-zinc-500">
+          Time: {challenge.time_allocation} minutes
+        </div>
+      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={() => onStart(challenge)} className="shimmer-button">
+              <HiPlay className="w-4 h-4 mr-2" />
+              Start
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="bg-black border-black">
+            <p className="text-white">Timer will start when this button is clicked</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  </div>
+);
+
+const Pagination = ({ 
+  currentPage, 
+  totalPages, 
+  onPageChange 
+}: { 
+  currentPage: number; 
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) => (
+  <div className="flex justify-center gap-2 mt-4">
+    <Button
+      variant="outline"
+      onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+      disabled={currentPage === 1}
+    >
+      Previous
+    </Button>
+    <span className="flex items-center px-4">
+      Page {currentPage} of {totalPages}
+    </span>
+    <Button
+      variant="outline"
+      onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+      disabled={currentPage === totalPages}
+    >
+      Next
+    </Button>
+  </div>
+);
+
 export default function LeftColumn({
   challenge,
   outputCode,
@@ -102,48 +197,43 @@ export default function LeftColumn({
   timeAllocation,
   inputMessage,
 }: LeftColumnProps) {
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [selectedLevel, setSelectedLevel] = useState('a1');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showChallenges, setShowChallenges] = useState(true);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [showTip, setShowTip] = useState(true);
+  const {
+    challenges,
+    selectedLevel,
+    searchQuery,
+    showChallenges,
+    showTip,
+    currentPage,
+    itemsPerPage,
+    setSelectedLevel,
+    setSearchQuery,
+    setShowTip,
+    setCurrentPage,
+    setShowChallenges,
+    handleStartChallenge,
+    handleBackToChallenges,
+    fetchChallenges,
+  } = useChallenge(onStartChallenge, onStopChallenge);
+
+  const {
+    outputCodeState,
+    showFeedback,
+    setOutputCodeState,
+    setShowFeedback,
+    handleParagraphFeedback,
+    handleFinishChallenge,
+  } = useFeedbackGeneration(challenge, onGenerateFeedback);
+
   const [accordionValue, setAccordionValue] = useState<string | undefined>('instructions');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const supabase = createClientComponentClient();
-  const [outputCodeState, setOutputCodeState] = useState<string>('');
-  const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
-  const MIN_FEEDBACK_INTERVAL = 5000; // 5 seconds
   const accordionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setOutputCodeState(outputCode);
-  }, [outputCode]);
+  }, [outputCode, setOutputCodeState]);
 
   useEffect(() => {
-    const fetchChallenges = async () => {
-      let query = supabase
-        .from('challenges')
-        .select('*')
-        .eq('difficulty_level', selectedLevel.toUpperCase());
-      
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error fetching challenges:', error);
-        return;
-      }
-
-      setChallenges(data || []);
-    };
-
     fetchChallenges();
-  }, [selectedLevel, searchQuery, supabase]);
+  }, [selectedLevel, searchQuery, fetchChallenges]);
 
   useEffect(() => {
     if (timeAllocation && timeElapsed >= timeAllocation * 60) {
@@ -151,144 +241,23 @@ export default function LeftColumn({
     }
   }, [timeElapsed, timeAllocation]);
 
-  const handleStartChallenge = (challenge: Challenge) => {
-    onStartChallenge(challenge);
-    setOutputCodeState(''); // Clear feedback when starting new challenge
-    setShowTip(false);
-    setShowChallenges(false);
-    // Ensure accordion is expanded when challenge starts
-    setAccordionValue('instructions');
-  };
-
-  const handleBackToChallenges = () => {
-    setShowChallenges(true);
-    setAccordionValue('item-1');
-    onStopChallenge();
-    setShowTip(true);
-    setSelectedLevel('a1'); // Reset difficulty level
-  };
-
-  const handleGenerateFeedback = async (paragraph: string): Promise<string> => {
-    if (!challenge) {
-      throw new Error('No active challenge found. Please select a challenge first.');
-    }
-
-    const now = Date.now();
-    const timeSinceLastFeedback = now - lastFeedbackTime;
-    
-    if (timeSinceLastFeedback < MIN_FEEDBACK_INTERVAL) {
-      const waitTime = MIN_FEEDBACK_INTERVAL - timeSinceLastFeedback;
-      throw new Error(`Please wait ${Math.ceil(waitTime / 1000)} seconds before requesting feedback again`);
-    }
-
-    setLastFeedbackTime(now);
-    return await onGenerateFeedback(paragraph);
-  };
-
-  const handleParagraphFeedback = async (paragraph: string, index: number) => {
-    if (!paragraph?.trim()) {
-      toast.error('No text to analyze in this paragraph');
-      return;
-    }
-
-    const loadingToastId = toast.loading(`Analyzing paragraph ${index + 1}...`);
-    try {
-      const feedback = await handleGenerateFeedback(paragraph);
-      if (!feedback?.trim()) {
-        toast.dismiss(loadingToastId);
-        toast.error('No feedback received');
-        return;
-      }
-      setOutputCodeState(feedback);
-      toast.dismiss(loadingToastId);
-      toast.success(`Generated feedback for paragraph ${index + 1}`);
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      const message = error instanceof Error ? error.message : 'Failed to generate feedback';
-      toast.error(message);
-    }
-  };
-
-  const handleFinishChallenge = async () => {
-    if (!challenge) {
-      console.error('No active challenge found');
-      return;
-    }
-
-    if (!inputMessage?.trim()) {
-      toast.error('No text to analyze. Challenge ended.');
-      onStopChallenge();
-      return;
-    }
-
-    const loadingToastId = toast.loading('Analyzing your complete essay...');
-    try {
-      setShowChallenges(false);
-      setShowFeedback(true);
-      
-      const feedback = await handleGenerateFeedback(inputMessage);
-      
-      if (feedback?.trim()) {
-        toast.dismiss(loadingToastId);
-        toast.success('Generated comprehensive feedback');
-      } else {
-        toast.dismiss(loadingToastId);
-        toast.error('No feedback received');
-      }
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      const message = error instanceof Error ? error.message : 'Failed to generate feedback';
-      toast.error(message);
-    } finally {
-      onStopChallenge();
-    }
-  };
-
   useEffect(() => {
-    // Convert timeAllocation from minutes to seconds for comparison
     const timeAllocationInSeconds = timeAllocation ? timeAllocation * 60 : 0;
     
     if (timeAllocationInSeconds > 0 && timeElapsed >= timeAllocationInSeconds && !isTimeUp) {
-      // Only call handleFinishChallenge if there's actual text to analyze
       if (inputMessage?.trim()) {
-        handleFinishChallenge();
+        handleFinishChallenge(inputMessage, onStopChallenge);
       } else {
-        // If no text, just stop the challenge without generating feedback
         toast.error('Time is up! No text to analyze.');
         onStopChallenge();
       }
     }
-  }, [timeElapsed, timeAllocation, isTimeUp, inputMessage]);
+  }, [timeElapsed, timeAllocation, isTimeUp, inputMessage, handleFinishChallenge, onStopChallenge]);
 
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
       {showTip && (
-        <div className="relative mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px]">
-          <div className="relative flex items-start gap-3 rounded-lg bg-white/95 px-4 py-3 dark:bg-zinc-900/95">
-            <HiLightBulb className="h-5 w-5 flex-shrink-0 text-amber-500 mt-1" />
-            <div className="pr-6 space-y-2 text-sm">
-              <p className="text-zinc-600 dark:text-zinc-300">
-                Welcome! Pick a challenge from the list below and follow the instructions carefully. Best of luck on your writing journey! 🚀
-              </p>
-              <div className="flex gap-4 text-xs">
-                <div>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">Practice Mode:</span>
-                  <span className="text-zinc-500 dark:text-zinc-400"> Real-time feedback per paragraph</span>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-600 dark:text-blue-400">Exam Mode:</span>
-                  <span className="text-zinc-500 dark:text-zinc-400"> Graded feedback after time limit</span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowTip(false)}
-              className="absolute right-2 top-2 rounded-full p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-            >
-              <HiXMark className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        <TipBox onClose={() => setShowTip(false)} />
       )}
       {/* Challenge Selection */}
       <div className={!challenge ? "space-y-4" : ""}>
@@ -329,66 +298,18 @@ export default function LeftColumn({
               {challenges
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                 .map((challenge) => (
-                <div
-                  key={challenge.id}
-                  className="bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700"
-                >
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">{challenge.title}</h3>
-                      <p className="text-zinc-600 dark:text-zinc-400 line-clamp-3">
-                        {challenge.instructions.split('\n')[0]}
-                      </p>
-                      <div className="mt-2 text-sm text-zinc-500">
-                        Time: {challenge.time_allocation} minutes
-                      </div>
-                    </div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            onClick={() => {
-                              handleStartChallenge(challenge);
-                              setShowTip(false);
-                            }}
-                            className="shimmer-button"
-                          >
-                            <HiPlay className="w-4 h-4 mr-2" />
-                            Start
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="bg-black border-black">
-                          <p className="text-white">Timer will start when this button is clicked</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
+                <ChallengeCard key={challenge.id} challenge={challenge} onStart={handleStartChallenge} />
               ))}
 　
 　
 　
               {/* Pagination */}
               {challenges.length > itemsPerPage && (
-                <div className="flex justify-center gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-4">
-                    Page {currentPage} of {Math.ceil(challenges.length / itemsPerPage)}
-                  </span>
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(challenges.length / itemsPerPage), prev + 1))}
-                    disabled={currentPage === Math.ceil(challenges.length / itemsPerPage)}
-                  >
-                    Next
-                  </Button>
-                </div>
+                <Pagination 
+                  currentPage={currentPage} 
+                  totalPages={Math.ceil(challenges.length / itemsPerPage)} 
+                  onPageChange={setCurrentPage} 
+                />
               )}
             </div>
           </>
@@ -543,10 +464,10 @@ export default function LeftColumn({
               {inputMessage.trim() && (
                 <div className="flex items-start justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
                   <div className="grid grid-cols-4 gap-2">
-                    <TooltipProvider>
-                      {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
-                        paragraph.trim() && (
-                          <Tooltip key={index}>
+                    {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
+                      paragraph.trim() && (
+                        <TooltipProvider key={index}>
+                          <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 onClick={async () => {
@@ -567,9 +488,9 @@ export default function LeftColumn({
                               <p>Get feedback for paragraph {index + 1}</p>
                             </TooltipContent>
                           </Tooltip>
-                        )
-                      )}
-                    </TooltipProvider>
+                        </TooltipProvider>
+                      )
+                    )}
                   </div>
                   
                   <button
