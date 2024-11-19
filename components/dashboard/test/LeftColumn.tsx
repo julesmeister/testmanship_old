@@ -501,7 +501,7 @@ export default function LeftColumn({
             {/* Feedback Controls */}
             {inputMessage.trim() && (
               <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
-                <div className="flex gap-2 overflow-x-auto">
+                <div className="grid grid-cols-4 gap-2">
                   <TooltipProvider>
                     {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
                       paragraph.trim() && (
@@ -512,7 +512,7 @@ export default function LeftColumn({
                                 console.log(`Analyzing paragraph ${index + 1}:`, paragraph.slice(0, 50) + '...');
                                 await handleParagraphFeedback(paragraph, index);
                               }}
-                              className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all overflow-hidden"
+                              className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all overflow-hidden w-full"
                             >
                               {/* Animated border */}
                               <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 animate-gradient-x transition-opacity" >
@@ -583,6 +583,20 @@ export default function LeftColumn({
                 )}
               </div>
             </div>
+          </div>
+          {/* Resize handle indicator */}
+          <div className="absolute bottom-1 right-1 w-4 h-4 text-zinc-400 dark:text-zinc-600 pointer-events-none">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path d="M3 12h2v2H3v-2zm3 0h2v2H6v-2zm3 0h2v2H9v-2z" />
+              <path d="M6 9h2v2H6V9zm3 0h2v2H9V9zm3 0h2v2h-2V9z" />
+              <path d="M9 6h2v2H9V6zm3 0h2v2h-2V6z" />
+              <path d="M12 3h2v2h-2V3z" />
+            </svg>
           </div>
         </DraggableWindow>
       )}
