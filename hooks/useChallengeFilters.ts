@@ -46,25 +46,28 @@ export const difficultyLevels = [
   }
 ] as const;
 
-export function useChallengeFilters(challenges: Challenge[]) {
+export function useChallengeFilters(challenges: Challenge[], userId?: string | null) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [showUserChallengesOnly, setShowUserChallengesOnly] = useState(false);
 
   const filteredChallenges = useMemo(() => {
-    return challenges.filter(challenge => {
+    return challenges.filter((challenge) => {
       const matchesSearch = challenge.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           challenge.instructions.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesLevel = !selectedLevel || (challenge.difficulty_level && challenge.difficulty_level.toLowerCase() === selectedLevel);
-      return matchesSearch && matchesLevel;
+        (challenge.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      const matchesLevel = !selectedLevel || challenge.difficulty_level.toLowerCase() === selectedLevel.toLowerCase();
+      const matchesUser = !showUserChallengesOnly || challenge.created_by === userId;
+      return matchesSearch && matchesLevel && matchesUser;
     });
-  }, [challenges, searchQuery, selectedLevel]);
+  }, [challenges, searchQuery, selectedLevel, showUserChallengesOnly, userId]);
 
   return {
     searchQuery,
     setSearchQuery,
     selectedLevel,
     setSelectedLevel,
+    showUserChallengesOnly,
+    setShowUserChallengesOnly,
     filteredChallenges,
-    difficultyLevels
   };
 }
