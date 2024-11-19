@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { CheckCircle } from 'lucide-react';
 
 interface TimerProgressProps {
   timeElapsed: number;
@@ -64,12 +65,23 @@ export default function TimerProgress({ timeElapsed, timeAllocation, mode, onGra
     return (
       <button
         onClick={onGradeChallenge}
-        className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+        className="group relative flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 rounded-lg transition-all overflow-hidden w-full h-12 hover:text-zinc-900 dark:hover:text-zinc-100"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-        </svg>
-        Grade and Record Challenge
+        {/* Subtle background color */}
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-violet-50 dark:from-violet-950/30 dark:via-fuchsia-950/30 dark:to-violet-950/30 opacity-80" />
+        
+        {/* Always visible gradient border */}
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 opacity-100 animate-gradient-x">
+          <div className="absolute inset-[1px] bg-white/80 dark:bg-zinc-900/80 rounded-lg backdrop-blur-sm" />
+        </div>
+        
+        {/* Content with hover effects */}
+        <span className="relative z-10 transform transition-transform duration-200">
+          Grade and Record Challenge
+        </span>
+        <CheckCircle 
+          className="relative z-10 h-5 w-5 transform group-hover:scale-110 transition-all duration-200 text-violet-500 dark:text-violet-400 group-hover:text-violet-600 dark:group-hover:text-violet-300" 
+        />
       </button>
     );
   }

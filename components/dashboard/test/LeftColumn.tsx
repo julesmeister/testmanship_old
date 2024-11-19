@@ -4,7 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle, HiXMark, HiLightBulb } from 'react-icons/hi2';
+import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle, HiXMark, HiLightBulb, HiClipboardDocument, HiClock, HiDocumentText, HiCheckCircle, HiBookOpen } from 'react-icons/hi2';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
@@ -371,69 +371,110 @@ export default function LeftColumn({
                 )}
               </div>
               <AccordionContent className="px-4 pb-4">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-semibold mb-2">Topic</h3>
-                    <p className="text-zinc-600 dark:text-zinc-400">
-                      {challenge.title}
-                    </p>
+                <div className="space-y-4">
+                  {/* Main topic card with gradient border */}
+                  <div className="relative p-4 rounded-lg bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-purple-50/60 to-emerald-50/40 dark:from-blue-950/30 dark:via-purple-950/20 dark:to-emerald-950/10" />
+                    <div className="relative">
+                      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                        {challenge.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                        Writing Challenge
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold mb-2">Instructions</h3>
-                    <div className="text-zinc-600 dark:text-zinc-400 space-y-2">
+                  {/* Instructions card */}
+                  <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                    <h3 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
+                      <HiClipboardDocument className="h-4 w-4 text-zinc-500" />
+                      Instructions
+                    </h3>
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2">
                       {challenge.instructions.split('\n').map((instruction: string, index: number) => (
-                        <p key={index}>{instruction}</p>
+                        <p key={index} className="leading-relaxed">{instruction}</p>
                       ))}
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold mb-2">Time Allocation</h3>
-                    <p className="text-zinc-600 dark:text-zinc-400">
-                      {challenge.time_allocation} minutes
-                    </p>
-                  </div>
-
-                  {challenge.word_count && (
-                    <div>
-                      <h3 className="font-semibold mb-2">Word Count Requirement</h3>
-                      <p className="text-zinc-600 dark:text-zinc-400">
-                        {challenge.word_count}
+                  {/* Requirements grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+                      <h3 className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                        <HiClock className="h-4 w-4" />
+                        Time Allocation
+                      </h3>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        {challenge.time_allocation} minutes
                       </p>
                     </div>
-                  )}
 
-                  {challenge.grammar_focus && challenge.grammar_focus.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2">Grammar Focus</h3>
-                      <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
-                        {challenge.grammar_focus.map((point: string, index: number) => (
-                          <li key={index}>{point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                    {challenge.word_count && (
+                      <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800">
+                        <h3 className="flex items-center gap-2 text-sm font-medium text-purple-900 dark:text-purple-100 mb-1">
+                          <HiDocumentText className="h-4 w-4" />
+                          Word Count
+                        </h3>
+                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                          {challenge.word_count}
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                  {challenge.vocabulary_themes && challenge.vocabulary_themes.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2">Vocabulary Themes</h3>
-                      <ul className="list-disc list-inside text-zinc-600 dark:text-zinc-400 space-y-1">
-                        {challenge.vocabulary_themes.map((theme: string, index: number) => (
-                          <li key={index}>{theme}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {/* Focus areas */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {challenge.grammar_focus && challenge.grammar_focus.length > 0 && (
+                      <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
+                        <h3 className="flex items-center gap-2 font-medium text-emerald-900 dark:text-emerald-100 mb-2">
+                          <HiCheckCircle className="h-4 w-4" />
+                          Grammar Focus
+                        </h3>
+                        <ul className="space-y-1.5">
+                          {challenge.grammar_focus.map((point: string, index: number) => (
+                            <li key={index} className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+                              <span className="mt-1 h-1 w-1 rounded-full bg-emerald-500" />
+                              {point}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
-                  <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                    <div className="flex items-center gap-2">
-                      <HiArrowPath className="h-4 w-4" />
+                    {challenge.vocabulary_themes && challenge.vocabulary_themes.length > 0 && (
+                      <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
+                        <h3 className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-100 mb-2">
+                          <HiBookOpen className="h-4 w-4" />
+                          Vocabulary Themes
+                        </h3>
+                        <ul className="space-y-1.5">
+                          {challenge.vocabulary_themes.map((theme: string, index: number) => (
+                            <li key={index} className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-300">
+                              <span className="mt-1 h-1 w-1 rounded-full bg-amber-500" />
+                              {theme}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer stats */}
+                  <div className="flex items-center justify-between mt-4 px-4 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                      <HiClock className="h-4 w-4" />
                       <span>{challenge.time_allocation} minutes</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <HiStop className="h-4 w-4" />
-                      <span>{challenge.difficulty_level}</span>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className={cn(
+                        "px-2 py-1 rounded-md text-xs font-medium",
+                        challenge.difficulty_level === "Beginner" && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+                        challenge.difficulty_level === "Intermediate" && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+                        challenge.difficulty_level === "Advanced" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                      )}>
+                        {challenge.difficulty_level}
+                      </span>
                     </div>
                   </div>
                 </div>
