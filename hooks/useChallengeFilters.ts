@@ -5,44 +5,44 @@ export const difficultyLevels = [
   { 
     value: 'a1', 
     label: 'A1',
-    bgColor: 'bg-emerald-600 dark:bg-emerald-500',
+    bgColor: 'bg-emerald-500 dark:bg-emerald-600',
     textColor: 'text-white',
-    inactiveTextColor: 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300'
+    inactiveTextColor: 'text-emerald-600 dark:text-emerald-500'
   },
   { 
     value: 'a2', 
     label: 'A2',
-    bgColor: 'bg-green-600 dark:bg-green-500',
+    bgColor: 'bg-teal-500 dark:bg-teal-600',
     textColor: 'text-white',
-    inactiveTextColor: 'text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300'
+    inactiveTextColor: 'text-teal-600 dark:text-teal-500'
   },
   { 
     value: 'b1', 
     label: 'B1',
-    bgColor: 'bg-yellow-900 dark:bg-yellow-500',
+    bgColor: 'bg-amber-500 dark:bg-amber-600',
     textColor: 'text-white',
-    inactiveTextColor: 'text-yellow-800 dark:text-yellow-600 hover:text-yellow-900 dark:hover:text-yellow-500'
+    inactiveTextColor: 'text-amber-600 dark:text-amber-500'
   },
   { 
     value: 'b2', 
     label: 'B2',
-    bgColor: 'bg-orange-600 dark:bg-orange-500',
+    bgColor: 'bg-orange-500 dark:bg-orange-600',
     textColor: 'text-white',
-    inactiveTextColor: 'text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300'
+    inactiveTextColor: 'text-orange-600 dark:text-orange-500'
   },
   { 
     value: 'c1', 
     label: 'C1',
-    bgColor: 'bg-rose-600 dark:bg-rose-500',
+    bgColor: 'bg-rose-500 dark:bg-rose-600',
     textColor: 'text-white',
-    inactiveTextColor: 'text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300'
+    inactiveTextColor: 'text-rose-600 dark:text-rose-500'
   },
   { 
     value: 'c2', 
     label: 'C2',
-    bgColor: 'bg-red-600 dark:bg-red-500',
+    bgColor: 'bg-red-600 dark:bg-red-700',
     textColor: 'text-white',
-    inactiveTextColor: 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
+    inactiveTextColor: 'text-red-600 dark:text-red-500'
   }
 ] as const;
 

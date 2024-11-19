@@ -32,12 +32,13 @@ export default function Challenges({ user, userDetails }: Props) {
   const [showFilters, setShowFilters] = useState(false);
   const [showUserChallengesOnly, setShowUserChallengesOnly] = useState(false);
   const [creatorName, setCreatorName] = useState<string>("");
+
   const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchStats() {
       if (!user?.id) return;
-      
+
       const [userChallenges, totalChallenges] = await Promise.all([
         supabase.from('challenges').select('id', { count: 'exact' }).eq('user_id', user.id),
         supabase.from('challenges').select('id', { count: 'exact' })
@@ -61,12 +62,12 @@ export default function Challenges({ user, userDetails }: Props) {
           .select('full_name')
           .eq('id', selectedChallenge.created_by)
           .single();
-        
+
         if (error) {
           console.error('Error fetching creator details:', error);
           return;
         }
-        
+
         console.log('Creator data:', data);
         if (data?.full_name) {
           console.log('Setting creator name to:', data.full_name);
@@ -76,7 +77,7 @@ export default function Challenges({ user, userDetails }: Props) {
         console.log('No creator_by ID found in selected challenge');
       }
     }
-    
+
     fetchCreatorDetails();
     return () => {
       setCreatorName(""); // Clear creator name when dialog closes
@@ -143,7 +144,7 @@ export default function Challenges({ user, userDetails }: Props) {
                   <p className="text-muted-foreground mt-1">Improve your language skills with our curated challenges</p>
                   <div className="flex gap-8 mt-4">
                     <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors relative group"
-                        onClick={() => setShowUserChallengesOnly(prev => !prev)}>
+                      onClick={() => setShowUserChallengesOnly(prev => !prev)}>
                       <div className="p-2 rounded-md bg-primary/10">
                         <PenLine className="h-5 w-5 text-primary" />
                       </div>
@@ -199,23 +200,33 @@ export default function Challenges({ user, userDetails }: Props) {
                 </div>
 
                 <div className="flex gap-1.5 flex-wrap">
-                  {difficultyLevels.map((level) => (
-                    <button
-                      key={level.value}
-                      onClick={() => setSelectedLevel(selectedLevel === level.value ? null : level.value)}
-                      className={`
-                        px-2.5 py-1 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5
-                        ${selectedLevel === level.value
-                          ? `${level.bgColor} ${level.textColor}`
-                          : 'bg-secondary hover:bg-secondary/80'}
-                      `}
-                    >
-                      {level.label}
-                      {selectedLevel === level.value && (
-                        <X className="h-3.5 w-3.5 opacity-70 hover:opacity-100" />
-                      )}
-                    </button>
-                  ))}
+                  {difficultyLevels.map((level) => {
+                    const levelColors = {
+                      'a1': 'bg-emerald-400 hover:bg-emerald-500 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600',
+                      'a2': 'bg-teal-400 hover:bg-teal-500 text-white dark:bg-teal-500 dark:hover:bg-teal-600',
+                      'b1': 'bg-amber-400 hover:bg-amber-500 text-white dark:bg-amber-500 dark:hover:bg-amber-600',
+                      'b2': 'bg-orange-400 hover:bg-orange-500 text-white dark:bg-orange-500 dark:hover:bg-orange-600',
+                      'c1': 'bg-rose-500 hover:bg-rose-600 text-white dark:bg-rose-600 dark:hover:bg-rose-700',
+                      'c2': 'bg-red-600 hover:bg-red-700 text-white dark:bg-red-700 dark:hover:bg-red-800'
+                    }[level.value];
+
+                    return (
+                      <button
+                        key={level.value}
+                        onClick={() => setSelectedLevel(selectedLevel === level.value ? null : level.value)}
+                        className={`px-2.5 py-1 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                          selectedLevel === level.value
+                          ? levelColors
+                          : 'bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground'
+                        }`}
+                      >
+                        {level.label}
+                        {selectedLevel === level.value && (
+                          <X className="h-3.5 w-3.5 text-current opacity-70 hover:opacity-100" />
+                        )}
+                      </button>
+                    );
+                  })}
                   {selectedLevel && (
                     <button
                       onClick={() => setSelectedLevel(null)}
@@ -240,7 +251,7 @@ export default function Challenges({ user, userDetails }: Props) {
                   {challenges
                     .filter(challenge => !showUserChallengesOnly || challenge.created_by === user?.id)
                     .map((challenge) => (
-                      <div 
+                      <div
                         onClick={() => {
                           console.log('Setting selected challenge:', challenge);
                           setSelectedChallenge(challenge);
@@ -252,12 +263,17 @@ export default function Challenges({ user, userDetails }: Props) {
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <span
-                                className={`
-                                  inline-flex text-xs font-medium px-2 py-0.5 rounded-full
-                                  ${challenge.difficulty_level
-                                    ? `${difficultyLevels.find(l => l.value === challenge.difficulty_level.toLowerCase())?.bgColor || ''} ${difficultyLevels.find(l => l.value === challenge.difficulty_level.toLowerCase())?.textColor || ''}`
-                                    : 'bg-secondary text-secondary-foreground'}
-                                `}
+                                className={`inline-flex text-xs font-medium px-2 py-0.5 rounded-full ${
+                                  challenge.difficulty_level ? {
+                                    'a1': 'bg-emerald-400 text-white dark:bg-emerald-500',
+                                    'a2': 'bg-teal-400 text-white dark:bg-teal-500',
+                                    'b1': 'bg-amber-400 text-white dark:bg-amber-500',
+                                    'b2': 'bg-orange-400 text-white dark:bg-orange-500',
+                                    'c1': 'bg-rose-500 text-white dark:bg-rose-600',
+                                    'c2': 'bg-red-600 text-white dark:bg-red-700'
+                                  }[challenge.difficulty_level.toLowerCase()] || 'bg-secondary text-secondary-foreground'
+                                  : 'bg-secondary text-secondary-foreground'
+                                }`}
                               >
                                 {challenge.difficulty_level ? challenge.difficulty_level.toUpperCase() : 'N/A'}
                               </span>
@@ -288,12 +304,17 @@ export default function Challenges({ user, userDetails }: Props) {
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-2">
                             <span
-                              className={`
-                                inline-flex text-xs font-medium px-2.5 py-1 rounded-full shrink-0
-                                ${selectedChallenge?.difficulty_level
-                                  ? `${difficultyLevels.find(l => l.value === selectedChallenge.difficulty_level.toLowerCase())?.bgColor || ''} ${difficultyLevels.find(l => l.value === selectedChallenge.difficulty_level.toLowerCase())?.textColor || ''}`
-                                  : 'bg-secondary text-secondary-foreground'}
-                              `}
+                              className={`inline-flex text-xs font-medium px-2.5 py-1 rounded-full shrink-0
+                                ${selectedChallenge?.difficulty_level ? {
+                                  'a1': 'bg-emerald-400 text-white dark:bg-emerald-500',
+                                  'a2': 'bg-teal-400 text-white dark:bg-teal-500',
+                                  'b1': 'bg-amber-400 text-white dark:bg-amber-500',
+                                  'b2': 'bg-orange-400 text-white dark:bg-orange-500',
+                                  'c1': 'bg-rose-500 text-white dark:bg-rose-600',
+                                  'c2': 'bg-red-600 text-white dark:bg-red-700'
+                                }[selectedChallenge.difficulty_level.toLowerCase()] || 'bg-secondary text-secondary-foreground'
+                                  : 'bg-secondary text-secondary-foreground'
+                                }`}
                             >
                               {selectedChallenge?.difficulty_level ? selectedChallenge.difficulty_level.toUpperCase() : 'N/A'}
                             </span>
@@ -401,8 +422,6 @@ export default function Challenges({ user, userDetails }: Props) {
                         )}
                       </div>
 
-            
-
                       {/* Start Challenge Button */}
                       <div className="pt-4">
                         <Link href={`/dashboard/test?challenge=${selectedChallenge?.id}`}>
@@ -471,6 +490,7 @@ export default function Challenges({ user, userDetails }: Props) {
                   </div>
                 )}
               </>
+
             )}
           </CardContent>
         </Card>
