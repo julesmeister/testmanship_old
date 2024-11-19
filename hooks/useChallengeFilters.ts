@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Challenge } from '@/types/challenge';
+import { DifficultyLevel } from '@/utils/constants';
 
 export const difficultyLevels = [
   { 
@@ -46,9 +47,11 @@ export const difficultyLevels = [
   }
 ] as const;
 
+export type FilterLevel = DifficultyLevel | 'ALL' | null;
+
 export function useChallengeFilters(challenges: Challenge[], userId?: string | null) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<FilterLevel>(null);
   const [showUserChallengesOnly, setShowUserChallengesOnly] = useState(false);
 
   const filteredChallenges = useMemo(() => {

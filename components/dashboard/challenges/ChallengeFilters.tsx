@@ -2,13 +2,13 @@ import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { difficultyButtonColors } from './constants';
-import { difficultyLevels } from '@/hooks/useChallengeFilters';
+import { difficultyLevels, FilterLevel } from '@/hooks/useChallengeFilters';
 
 interface ChallengeFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  selectedLevel: string | null;
-  onLevelChange: (level: string | null) => void;
+  selectedLevel: FilterLevel;
+  onLevelChange: (level: FilterLevel) => void;
   difficultyLevels: readonly { value: string; label: string }[];
 }
 
@@ -37,15 +37,15 @@ export function ChallengeFilters({
         {difficultyLevels.map((level) => (
           <button
             key={level.value}
-            onClick={() => onLevelChange(selectedLevel === level.value ? null : level.value)}
+            onClick={() => onLevelChange(level.value.toUpperCase() as FilterLevel)}
             className={`px-2.5 py-1 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              selectedLevel === level.value
+              selectedLevel === level.value.toUpperCase()
               ? difficultyButtonColors[level.value as keyof typeof difficultyButtonColors]
               : 'bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground'
             }`}
           >
             {level.label}
-            {selectedLevel === level.value && (
+            {selectedLevel === level.value.toUpperCase() && (
               <X className="h-3.5 w-3.5 text-current opacity-70 hover:opacity-100" />
             )}
           </button>

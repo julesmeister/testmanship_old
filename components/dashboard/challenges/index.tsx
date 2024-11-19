@@ -16,6 +16,7 @@ import { ChallengeStats } from './ChallengeStats';
 import { ChallengeCard } from './ChallengeCard';
 import { ChallengeDialog } from './ChallengeDialog';
 import { startProgress } from '@/components/ui/progress-bar';
+import { EmptyChallengeState } from './EmptyChallengeState';
 
 interface Props {
   user: User | null | undefined;
@@ -131,9 +132,7 @@ export default function Challenges({ user, userDetails }: Props) {
             />
 
             {filteredChallenges.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No challenges found.</p>
-              </div>
+              <EmptyChallengeState selectedLevel={selectedLevel} />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredChallenges.map((challenge) => (
