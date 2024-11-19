@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle } from 'react-icons/hi2';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -106,13 +106,14 @@ export default function LeftColumn({
   const [selectedLevel, setSelectedLevel] = useState('a1');
   const [searchQuery, setSearchQuery] = useState('');
   const [showChallenges, setShowChallenges] = useState(true);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [showTip, setShowTip] = useState(true);
-  const [showFeedback, setShowFeedback] = useState(true);
-  const [accordionValue, setAccordionValue] = useState<string | undefined>('item-1');
+  const [accordionValue, setAccordionValue] = useState<string>('instructions');
   const supabase = createClientComponentClient();
   const [outputCodeState, setOutputCodeState] = useState<string>('');
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const MIN_FEEDBACK_INTERVAL = 5000; // 5 seconds
+  const accordionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setOutputCodeState(outputCode);
@@ -149,10 +150,11 @@ export default function LeftColumn({
   }, [timeElapsed, timeAllocation]);
 
   const handleStartChallenge = (challenge: Challenge) => {
-    setShowChallenges(false);
-    setAccordionValue('instructions');
     onStartChallenge(challenge);
-    toast.success(`${mode === 'exam' ? 'Exam' : 'Practice'} mode challenge started (${challenge.time_allocation} minutes)`, { duration: 3000 });
+    setShowTip(false);
+    setShowChallenges(false);
+    // Ensure accordion is expanded when challenge starts
+    setAccordionValue('instructions');
   };
 
   const handleBackToChallenges = () => {
@@ -343,7 +345,7 @@ export default function LeftColumn({
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{challenge.title}</h3>
-                      <p className="text-zinc-600 dark:text-zinc-400 line-clamp-2">
+                      <p className="text-zinc-600 dark:text-zinc-400">
                         {challenge.instructions.split('\n')[0]}
                       </p>
                       <div className="mt-2 text-sm text-zinc-500">
@@ -379,17 +381,39 @@ export default function LeftColumn({
 
       {/* Instructions & Criteria */}
       {challenge && !showChallenges && (
-        <div>
+        <div className="w-full" ref={accordionRef}>
           <Accordion 
-            type="single" 
-            collapsible 
-            className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700"
+            type="single"
             value={accordionValue}
-            onValueChange={setAccordionValue}
+            defaultValue="instructions"
+            className="w-full"
+            onValueChange={(value) => {
+              // Add a small delay to let the accordion animation complete
+              setTimeout(() => {
+                const accordionEl = accordionRef.current;
+                const footerEl = document.querySelector('.footer-admin') as HTMLElement;
+                if (accordionEl && footerEl) {
+                  const accordionRect = accordionEl.getBoundingClientRect();
+                  const footerRect = footerEl.getBoundingClientRect();
+                  const viewportHeight = window.innerHeight;
+                  
+                  // Check if accordion extends beyond viewport or overlaps footer
+                  if (accordionRect.bottom > footerRect.top || accordionRect.bottom > viewportHeight) {
+                    const overlap = Math.max(
+                      accordionRect.bottom - footerRect.top,
+                      accordionRect.bottom - viewportHeight
+                    );
+                    footerEl.style.marginTop = `${overlap + 40}px`; // Add extra padding
+                  } else {
+                    footerEl.style.marginTop = ''; // Reset if no overlap
+                  }
+                }
+              }, 300); // Wait for accordion animation
+            }}
           >
-            <AccordionItem value="instructions">
+            <AccordionItem value="instructions" className="w-full border rounded-lg bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700">
               <div className="flex justify-between items-center pr-4">
-                <AccordionTrigger className="px-4 flex-grow text-left text-base sm:text-sm [&>svg]:ml-4">Writing Instructions & Criteria</AccordionTrigger>
+                <AccordionTrigger className="px-4 flex-grow text-left text-base sm:text-sm [&>svg]:hidden">Writing Instructions & Criteria</AccordionTrigger>
                 {!showChallenges && (
                   <TooltipProvider>
                     <Tooltip>

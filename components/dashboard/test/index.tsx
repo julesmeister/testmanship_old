@@ -459,7 +459,7 @@ export default function Test({ user, userDetails }: Props) {
       title="Writing Assistant"
       description="Get instant feedback on your writing"
     >
-      <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 w-full">
         <LeftColumn
           challenge={selectedChallenge}
           outputCode={outputCode}
@@ -475,7 +475,7 @@ export default function Test({ user, userDetails }: Props) {
         />
 
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col space-y-4">
+        <div className="flex-1 flex flex-col space-y-4 w-full lg:w-2/3">
           {!selectedChallenge ? (
             <Tabs defaultValue="exam" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
               <TabsList className="grid w-full grid-cols-2">
