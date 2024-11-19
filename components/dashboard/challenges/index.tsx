@@ -31,12 +31,13 @@ export default function Challenges({ user, userDetails }: Props) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showUserChallengesOnly, setShowUserChallengesOnly] = useState(false);
+  const [creatorName, setCreatorName] = useState<string>("");
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchStats() {
       if (!user?.id) return;
       
-      const supabase = createClientComponentClient();
       const [userChallenges, totalChallenges] = await Promise.all([
         supabase.from('challenges').select('id', { count: 'exact' }).eq('user_id', user.id),
         supabase.from('challenges').select('id', { count: 'exact' })
@@ -49,7 +50,38 @@ export default function Challenges({ user, userDetails }: Props) {
     }
 
     fetchStats();
-  }, [user?.id]);
+  }, [user?.id, supabase]);
+
+  useEffect(() => {
+    async function fetchCreatorDetails() {
+      if (selectedChallenge?.created_by) {
+        console.log('Fetching creator details for:', selectedChallenge.created_by);
+        const { data, error } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', selectedChallenge.created_by)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching creator details:', error);
+          return;
+        }
+        
+        console.log('Creator data:', data);
+        if (data?.full_name) {
+          console.log('Setting creator name to:', data.full_name);
+          setCreatorName(data.full_name);
+        }
+      } else {
+        console.log('No creator_by ID found in selected challenge');
+      }
+    }
+    
+    fetchCreatorDetails();
+    return () => {
+      setCreatorName(""); // Clear creator name when dialog closes
+    };
+  }, [selectedChallenge, supabase]);
 
   const {
     searchQuery,
@@ -209,7 +241,10 @@ export default function Challenges({ user, userDetails }: Props) {
                     .filter(challenge => !showUserChallengesOnly || challenge.created_by === user?.id)
                     .map((challenge) => (
                       <div 
-                        onClick={() => setSelectedChallenge(challenge)}
+                        onClick={() => {
+                          console.log('Setting selected challenge:', challenge);
+                          setSelectedChallenge(challenge);
+                        }}
                         key={challenge.id}
                         className="block group cursor-pointer"
                       >
@@ -285,6 +320,15 @@ export default function Challenges({ user, userDetails }: Props) {
                         </div>
                         <DialogTitle className="text-2xl font-semibold pr-6">
                           {selectedChallenge?.title}
+                          {creatorName ? (
+                            <div className="text-sm font-normal text-muted-foreground mt-1">
+                              Created by {creatorName}
+                            </div>
+                          ) : (
+                            <div className="text-sm font-normal text-muted-foreground mt-1">
+                              Loading creator...
+                            </div>
+                          )}
                         </DialogTitle>
                       </div>
                     </DialogHeader>
