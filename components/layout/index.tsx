@@ -43,7 +43,7 @@ const DashboardLayout: React.FC<Props> = (props: Props) => {
               <div className="h-full w-full dark:bg-zinc-950">
                 <main
                   className={cn(
-                    "flex-none transition-all dark:bg-zinc-950",
+                    "flex flex-col min-h-screen dark:bg-zinc-950",
                     // Base padding/margin for mobile and tablet
                     "mx-2.5 md:pr-2",
                     "ml-0", // Always apply ml-0 at mobile/tablet sizes
@@ -55,8 +55,10 @@ const DashboardLayout: React.FC<Props> = (props: Props) => {
                   )}
                 >
                   <Navbar brandText={getActiveRoute(routes, pathname)} />
-                  <div className="mx-auto min-h-screen p-2 md:p-2">
-                    {props.children}
+                  <div className="mx-auto p-2 md:p-2">
+                    <div className="flex-grow">
+                      {props.children}
+                    </div>
                   </div>
                   <div className="p-3">
                     <Footer />
