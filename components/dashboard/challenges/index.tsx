@@ -48,20 +48,32 @@ export default function Challenges({ user, userDetails }: Props) {
 
   const handleChallengeClick = async (challenge: Challenge) => {
     setSelectedChallenge(challenge);
+    console.log('Challenge creator ID:', challenge.created_by);
+    
     if (challenge.created_by) {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('users')
           .select('full_name')
           .eq('id', challenge.created_by)
           .single();
 
-        if (error) throw error;
+        console.log('Creator profile query result:', { data, error });
+
+        if (error) {
+          console.error('Supabase error:', error);
+          setCreatorName('Unknown User');
+          return;
+        }
+        
         setCreatorName(data?.full_name || 'Unknown User');
       } catch (error) {
         console.error('Error fetching creator details:', error);
         setCreatorName('Unknown User');
       }
+    } else {
+      console.log('No creator ID found for challenge');
+      setCreatorName('Unknown User');
     }
   };
 
