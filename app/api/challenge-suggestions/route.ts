@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log('Request body:', body);
     
-    const { difficulty, format, timeAllocation, topics = [], usedTitles = [] } = body;
+    const { difficulty, format, timeAllocation, topics = [], usedTitles = [], title = '' } = body;
 
     if (!difficulty) {
       console.error('Missing difficulty in request');
@@ -38,62 +38,106 @@ export async function POST(req: Request) {
     }
 
     const wordCount = getWordCountRange(difficulty);
-    console.log('Generating suggestions with:', { difficulty, format, timeAllocation, wordCount });
+    console.log('Generating suggestions with:', { difficulty, format, timeAllocation, wordCount, title });
 
-    const prompt = `Generate 3 unique writing challenge suggestions for language learners at ${difficulty} level.
+    // Add a system message for better formatting
+    type Message = {
+      role: 'system' | 'user';
+      content: string;
+    };
 
-    Each challenge should be formatted as a JSON object with these properties:
-    - title: A unique, engaging title for the challenge (30-60 characters)
-    - instructions: Clear, detailed writing instructions (100-150 words)
-    - word_count: Target word count (${wordCount} words)
-    - time_allocation: Time limit in minutes (${timeAllocation} minutes)
-    - difficulty_level: "${difficulty}"
-    - grammar_focus: Array of 2-3 grammar points to focus on
-    - vocabulary_themes: Array of 2-3 vocabulary themes relevant to the topic
+    const messages: Message[] = [
+      {
+        role: 'system',
+        content: 'You are a writing challenge generator for language learners. Always respond with valid JSON.'
+      }
+    ];
 
-    ${topics.length > 0 ? `Focus on these topics:\n${topics.join('\n')}\n` : ''}
-    ${usedTitles.length > 0 ? `\n\nIMPORTANT: Do NOT use any of these previously used titles:\n${usedTitles.join('\n')}\n` : ''}
-    
-    Return ONLY the JSON object, no additional text or explanation.`;
+    if (title) {
+      // Instruction generation mode
+      messages.push({
+        role: 'user',
+        content: `Generate clear and concise writing instructions for a ${difficulty} level challenge titled "${title}".
+
+Format the response as a JSON object with these properties:
+{
+  "instructions": "Brief, clear instructions focusing on the task and requirements. Do not mention time allocation or word count in the instructions.",
+  "keyPoints": ["3-4 key points to focus on"],
+  "grammarFocus": ["2-3 grammar points to practice"],
+  "vocabularyThemes": ["2-3 vocabulary themes relevant to the topic"]
+}
+
+Return ONLY the JSON object, no additional text.`
+      });
+    } else {
+      // Challenge suggestion mode
+      messages.push({
+        role: 'user',
+        content: `Generate 3 unique writing challenge suggestions for language learners at ${difficulty} level.
+
+Format each suggestion as a JSON object within an array like this:
+{
+  "suggestions": [
+    {
+      "title": "Unique, engaging title (30-60 characters)",
+      "instructions": "Clear, detailed writing instructions (100-150 words)",
+      "word_count": ${wordCount},
+      "time_allocation": ${timeAllocation},
+      "difficulty_level": "${difficulty}",
+      "grammar_focus": ["2-3 grammar points"],
+      "vocabulary_themes": ["2-3 vocabulary themes"]
+    }
+  ]
+}
+
+${topics.length > 0 ? `Focus on these topics:\n${topics.join('\n')}\n` : ''}
+${usedTitles.length > 0 ? `\n\nDo NOT use any of these titles:\n${usedTitles.join('\n')}\n` : ''}
+
+Return ONLY the JSON object, no additional text.`
+      });
+    }
 
     console.log('Sending prompt to AI');
-    const aiResponse = await makeAIRequest([
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ]);
+    const aiResponse = await makeAIRequest(messages);
     console.log('Received AI response:', aiResponse);
 
     try {
-      const parsedSuggestions = JSON.parse(aiResponse);
-      console.log('Parsed suggestions:', parsedSuggestions);
-      
-      // Transform response to camelCase format
-      const transformSuggestion = (suggestion: any) => ({
-        title: suggestion.title,
-        instructions: suggestion.instructions,
-        wordCount: suggestion.word_count,
-        timeAllocation: suggestion.time_allocation,
-        difficultyLevel: suggestion.difficulty_level,
-        grammarFocus: suggestion.grammar_focus,
-        vocabularyThemes: suggestion.vocabulary_themes
-      });
+      const parsedResponse = JSON.parse(aiResponse);
+      console.log('Parsed response:', parsedResponse);
 
-      // Ensure we have an array of suggestions
-      const suggestionsArray = Array.isArray(parsedSuggestions) ? parsedSuggestions : parsedSuggestions.suggestions;
-      
-      if (!Array.isArray(suggestionsArray)) {
-        console.error('Invalid suggestions format:', parsedSuggestions);
-        return NextResponse.json(
-          { error: 'Invalid suggestions format from AI' },
-          { status: 500 }
-        );
+      if (title) {
+        // For instruction generation, wrap the response in a suggestions array
+        return NextResponse.json({
+          suggestions: [{
+            title,
+            instructions: parsedResponse.instructions,
+            keyPoints: parsedResponse.keyPoints || [],
+            grammarFocus: parsedResponse.grammarFocus || [],
+            vocabularyThemes: parsedResponse.vocabularyThemes || [],
+            word_count: wordCount,
+            time_allocation: timeAllocation,
+            difficulty_level: difficulty
+          }]
+        });
+      } else {
+        // For challenge suggestions, ensure we have an array
+        const suggestions = Array.isArray(parsedResponse.suggestions) 
+          ? parsedResponse.suggestions 
+          : [parsedResponse];
+
+        // Transform suggestions to use camelCase
+        const transformedSuggestions = suggestions.map(suggestion => ({
+          title: suggestion.title,
+          instructions: suggestion.instructions,
+          wordCount: suggestion.word_count,
+          timeAllocation: suggestion.time_allocation,
+          difficultyLevel: suggestion.difficulty_level,
+          grammarFocus: suggestion.grammar_focus,
+          vocabularyThemes: suggestion.vocabulary_themes
+        }));
+
+        return NextResponse.json({ suggestions: transformedSuggestions });
       }
-
-      // Transform and return the suggestions
-      const transformedSuggestions = suggestionsArray.map(transformSuggestion);
-      return NextResponse.json({ suggestions: transformedSuggestions });
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError, 'Raw response:', aiResponse);
       return NextResponse.json(
@@ -102,9 +146,9 @@ export async function POST(req: Request) {
       );
     }
   } catch (error) {
-    console.error('Error generating suggestions:', error);
+    console.error('API Error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate suggestions' },
+      { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

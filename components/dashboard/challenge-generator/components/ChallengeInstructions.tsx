@@ -70,6 +70,7 @@ export function ChallengeInstructions({
                       const formValues = form.getValues();
                       console.log('Current form values:', formValues);
                       
+
                       // Validate required fields for API request
                       if (!formValues.difficulty) {
                         toast.error("Please select a difficulty level first");
@@ -84,6 +85,7 @@ export function ChallengeInstructions({
                         topics: formValues.vocabularyThemes || []
                       };
                       
+
                       console.log('Sending API request with payload:', payload);
 
                       const response = await fetch("/api/challenge-suggestions", {
@@ -94,6 +96,7 @@ export function ChallengeInstructions({
                         body: JSON.stringify(payload),
                       });
                       
+
                       if (!response.ok) {
                         const errorText = await response.text();
                         console.error('API Error:', {
@@ -107,6 +110,7 @@ export function ChallengeInstructions({
                       const result = await response.json();
                       console.log('Raw API Response:', result);
                       
+
                       if (!result || !result.suggestions) {
                         throw new Error('Invalid API response: missing suggestions');
                       }
@@ -120,6 +124,7 @@ export function ChallengeInstructions({
                       const suggestion = suggestions[0];
                       console.log('Selected suggestion:', suggestion);
                       
+
                       // Validate suggestion structure
                       if (!suggestion.grammarFocus || !suggestion.vocabularyThemes) {
                         throw new Error('Suggestion missing required fields');
@@ -128,11 +133,13 @@ export function ChallengeInstructions({
                       // Map the fields from the suggestion to the form fields
                       const updates: Partial<typeof formValues> = {};
                       
+
                       if (!formValues.grammarFocus?.length && Array.isArray(suggestion.grammarFocus)) {
                         updates.grammarFocus = suggestion.grammarFocus;
                         console.log('Will update grammar focus to:', updates.grammarFocus);
                       }
                       
+
                       if (!formValues.vocabularyThemes?.length && Array.isArray(suggestion.vocabularyThemes)) {
                         updates.vocabularyThemes = suggestion.vocabularyThemes;
                         console.log('Will update vocabulary themes to:', updates.vocabularyThemes);
@@ -155,6 +162,7 @@ export function ChallengeInstructions({
                         grammar_focus: updates.grammarFocus
                       });
                       
+
                       setShowPreview(true);
                       toast.success("AI suggestions have been applied to your form.");
                     } catch (error) {
@@ -203,15 +211,15 @@ export function ChallengeInstructions({
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <BrainCircuit className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-                <span>Use AI-generated suggestions as inspiration</span>
+                <span>Use AI-generated suggestions to craft engaging and level-appropriate writing prompts</span>
               </li>
               <li className="flex items-start gap-2">
                 <List className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-                <span>Include specific requirements or constraints</span>
+                <span>Include specific requirements that align with the student's learning goals and proficiency level</span>
               </li>
               <li className="flex items-start gap-2">
                 <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-                <span>Consider the allocated time frame</span>
+                <span>Set an appropriate time limit that allows students to complete the task effectively</span>
               </li>
             </ul>
           </CardDescription>
@@ -274,7 +282,7 @@ export function ChallengeInstructions({
                       </FormDescription>
                       <FormMessage className="text-sm font-medium" />
                     </FormItem>
-                  )}
+                  )} 
                 />
 
                 <FormField
@@ -301,7 +309,7 @@ export function ChallengeInstructions({
                       </FormDescription>
                       <FormMessage className="text-sm font-medium" />
                     </FormItem>
-                  )}
+                  )} 
                 />
               </div>
 
@@ -327,7 +335,7 @@ export function ChallengeInstructions({
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  )} 
                 />
 
                 <FormField
@@ -351,7 +359,7 @@ export function ChallengeInstructions({
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  )} 
                 />
               </div>
 
@@ -384,7 +392,7 @@ export function ChallengeInstructions({
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  )} 
                 />
               </div>
 

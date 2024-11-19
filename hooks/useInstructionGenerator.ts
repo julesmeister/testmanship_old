@@ -40,22 +40,35 @@ export function useInstructionGenerator() {
           title,
           difficulty,
           format: format.name,
-          timeAllocation
+          timeAllocation,
+          topics: [],
+          usedTitles: []
         }),
       });
 
-      const data = await response.json();
-      
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate instructions');
+        const errorData = await response.text();
+        console.error('API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorData
+        });
+        throw new Error(`Failed to generate instructions: ${response.statusText}`);
       }
 
+      const data = await response.json();
+      
       if (!data.suggestions || !data.suggestions.length) {
-        throw new Error('No suggestions received');
+        throw new Error('No suggestions received from the API');
       }
 
       const suggestion = data.suggestions[0];
-      const formattedInstructions = `${suggestion.description}\n\nKey Points:\n${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}\n• Time Allocation: ${timeAllocation} minutes`;
+      
+      if (!suggestion.instructions || !suggestion.keyPoints) {
+        throw new Error('Invalid suggestion format received from the API');
+      }
+
+      const formattedInstructions = `${suggestion.instructions}\n\nKey Points:\n${suggestion.keyPoints.map(point => `• ${point}`).join('\n')}\n• Time Allocation: ${timeAllocation} minutes`;
 
       toast.success('Instructions generated', {
         id: 'generating-instructions',

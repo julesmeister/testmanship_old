@@ -1,7 +1,7 @@
 import { getUserDetails, getUser } from '@/utils/supabase/queries';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
-import ChallengeGeneratorView from '@/components/dashboard/challenge-generator/ChallengeGeneratorView';
+import { ChallengeGeneratorView } from '@/components/dashboard/challenge-generator';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {

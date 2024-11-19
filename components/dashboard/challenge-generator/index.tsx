@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function ChallengeGeneratorView({ user, userDetails }: ChallengeGeneratorViewProps) {
+export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGeneratorViewProps) => {
   const { supabase } = useSupabase();
   const typedSupabase = supabase as SupabaseClient;
   const router = useRouter();
@@ -72,16 +72,24 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
   const handleGenerateInstructions = async (title: string) => {
     const difficulty = form.getValues('difficulty');
     const formatId = form.getValues('format');
-    const format = formats.find(f => f.id === formatId);
-    const timeAllocation = form.getValues('timeAllocation');
 
     if (!formatId) {
       toast.error('Please select a format');
       return;
     }
 
+    if (!formats || formats.length === 0) {
+      // Load formats if they're not available
+      await loadFormats(difficulty);
+    }
+
+    const format = formats.find(f => f.id === formatId);
+    const timeAllocation = form.getValues('timeAllocation');
+
     if (!format) {
-      toast.error(`Format not found (ID: ${formatId})`);
+      toast.error('Format not found. Please try selecting the format again.');
+      // Reset the format selection
+      form.setValue('format', '');
       return;
     }
 
@@ -134,8 +142,8 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
             <TabsTrigger value="guide" className="w-full">Guide</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="generator" className="space-y-6 w-full">
-            <div className="w-full">
+          <TabsContent value="generator" className="w-full">
+            <div className="flex flex-col w-full space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Challenge Generator</h2>
@@ -143,17 +151,19 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                 </div>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <ChallengeSettings
-                  form={form}
-                  formats={formats}
-                  groupedFormats={groupedFormats}
-                  loadFormats={loadFormats}
-                  isGenerating={isGenerating}
-                  generateSuggestions={generateSuggestions}
-                />
+              <div className="grid gap-6 md:grid-cols-2 w-full">
+                <div className="w-full">
+                  <ChallengeSettings
+                    form={form}
+                    formats={formats}
+                    groupedFormats={groupedFormats}
+                    loadFormats={loadFormats}
+                    isGenerating={isGenerating}
+                    generateSuggestions={generateSuggestions}
+                  />
+                </div>
 
-                <div className="space-y-6">
+                <div className="w-full space-y-6">
                   <ChallengeInstructions
                     form={form}
                     isGeneratingInstructions={isGeneratingInstructions}
@@ -178,7 +188,7 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
                     </div>
                   )}
 
-                  <div ref={suggestionsRef}>
+                  <div ref={suggestionsRef} className="w-full">
                     <ChallengeSuggestions
                       suggestions={suggestions}
                       setSuggestions={setSuggestions}
@@ -197,4 +207,4 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
       </div>
     </DashboardLayout>
   );
-}
+};
