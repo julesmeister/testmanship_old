@@ -8,7 +8,8 @@ import {
   HiOutlineCog8Tooth,
   HiOutlineCreditCard,
   HiOutlineDocumentText,
-  HiOutlineCurrencyDollar
+  HiOutlineCurrencyDollar,
+  HiOutlineClipboard
 } from 'react-icons/hi2';
 
 export const routes: IRoute[] = [
@@ -51,13 +52,13 @@ export const routes: IRoute[] = [
     disabled: true
   },
   {
-    name: 'Landing Page',
-    path: '/home',
+    name: 'Challenges List',
+    path: '/dashboard/challenges',
     icon: (
-      <HiOutlineDocumentText className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
+      <HiOutlineClipboard className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
     ),
     collapse: false,
-    disabled: true
+    disabled: false
   },
   {
     name: 'Pricing Page',

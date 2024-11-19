@@ -190,10 +190,10 @@ export default function Performance({ user, userDetails }: Props) {
       title="Performance Analytics"
       description="Track your writing progress and skill development"
     >
-      <div className="flex flex-col gap-6">
-        {/* Overview Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-white">
+      <div className="min-h-screen w-full space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full">
+          {/* Performance Overview Cards */}
+          <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-foreground">
                 Total Challenges
@@ -207,7 +207,7 @@ export default function Performance({ user, userDetails }: Props) {
             </CardContent>
           </Card>
 
-          <Card className="bg-white">
+          <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-foreground">
                 Words Written
@@ -221,7 +221,7 @@ export default function Performance({ user, userDetails }: Props) {
             </CardContent>
           </Card>
 
-          <Card className="bg-white">
+          <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-foreground">
                 Time Spent
@@ -235,7 +235,7 @@ export default function Performance({ user, userDetails }: Props) {
             </CardContent>
           </Card>
 
-          <Card className="bg-white">
+          <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-foreground">
                 Average Score

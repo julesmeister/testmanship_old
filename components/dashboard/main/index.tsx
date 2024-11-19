@@ -19,12 +19,11 @@ export default function Settings(props: Props) {
       title="Writing Dashboard"
       description="Track your writing progress and feedback"
     >
-      <div className="h-full w-full">
+      <div className="min-h-screen w-full">
         <div className="mb-5 flex gap-5 flex-col xl:flex-row w-full">
           <MainChart />
         </div>
-        {/* Conversion and talbes*/}
-        <div className="h-full w-full rounded-lg ">
+        <div className="w-full rounded-lg">
           <MainDashboardTable tableData={tableDataUserReports} />
         </div>
       </div>

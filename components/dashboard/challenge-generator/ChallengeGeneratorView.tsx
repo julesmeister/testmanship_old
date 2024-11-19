@@ -127,74 +127,64 @@ export default function ChallengeGeneratorView({ user, userDetails }: ChallengeG
       title="Challenge Generator"
       description="Create writing challenges based on difficulty levels"
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Challenge Generator</h2>
-            <p className="text-muted-foreground">Create and customize writing challenges for different proficiency levels.</p>
-          </div>
-        </div>
-
-        <Tabs defaultValue="create" className="space-y-6">
-          <TabsList className="bg-gray-100 dark:bg-gray-800">
-            <TabsTrigger 
-              value="create" 
-              className="flex items-center gap-2 data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300"
-            >
-              <PenTool className="h-4 w-4" />
-              Create Challenge
-            </TabsTrigger>
-            <TabsTrigger 
-              value="guide" 
-              className="flex items-center gap-2 data-[state=inactive]:text-gray-600 data-[state=inactive]:dark:text-gray-300"
-            >
-              <BookOpen className="h-4 w-4" />
-              Guide
-            </TabsTrigger>
+      <div className="min-h-screen w-full">
+        <Tabs defaultValue="generator" className="w-full">
+          <TabsList className="w-full max-w-md mx-auto mb-8">
+            <TabsTrigger value="generator" className="w-full">Generator</TabsTrigger>
+            <TabsTrigger value="guide" className="w-full">Guide</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="create" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <ChallengeSettings
-                form={form}
-                formats={formats}
-                groupedFormats={groupedFormats}
-                loadFormats={loadFormats}
-                isGenerating={isGenerating}
-                generateSuggestions={generateSuggestions}
-              />
+          <TabsContent value="generator" className="space-y-6 w-full">
+            <div className="w-full">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Challenge Generator</h2>
+                  <p className="text-muted-foreground">Create and customize writing challenges for different proficiency levels.</p>
+                </div>
+              </div>
 
-              <div className="space-y-6">
-                <ChallengeInstructions
+              <div className="grid gap-6 md:grid-cols-2">
+                <ChallengeSettings
                   form={form}
-                  isGeneratingInstructions={isGeneratingInstructions}
-                  isSaving={isSaving}
-                  onSubmit={handleSubmit}
-                  handleGenerateInstructions={handleGenerateInstructions}
+                  formats={formats}
+                  groupedFormats={groupedFormats}
+                  loadFormats={loadFormats}
+                  isGenerating={isGenerating}
+                  generateSuggestions={generateSuggestions}
                 />
 
-                {suggestions.length > 0 && (
-                  <div
-                    className="fixed bottom-8 right-8 z-50"
-                    onClick={scrollToSuggestions}
-                  >
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="default"
-                      className="rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      <ArrowDown className="h-5 w-5" />
-                    </Button>
-                  </div>
-                )}
-
-                <div ref={suggestionsRef}>
-                  <ChallengeSuggestions
-                    suggestions={suggestions}
-                    setSuggestions={setSuggestions}
+                <div className="space-y-6">
+                  <ChallengeInstructions
                     form={form}
+                    isGeneratingInstructions={isGeneratingInstructions}
+                    isSaving={isSaving}
+                    onSubmit={handleSubmit}
+                    handleGenerateInstructions={handleGenerateInstructions}
                   />
+
+                  {suggestions.length > 0 && (
+                    <div
+                      className="fixed bottom-8 right-8 z-50"
+                      onClick={scrollToSuggestions}
+                    >
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="default"
+                        className="rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        <ArrowDown className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  )}
+
+                  <div ref={suggestionsRef}>
+                    <ChallengeSuggestions
+                      suggestions={suggestions}
+                      setSuggestions={setSuggestions}
+                      form={form}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
