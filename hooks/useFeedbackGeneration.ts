@@ -27,12 +27,6 @@ export const useFeedbackGeneration = (
     return true;
   }, [challenge]);
 
-  const handleToast = useCallback((type: 'success' | 'error' | 'loading', message: string, loadingToastId?: string) => {
-    if (loadingToastId) toast.dismiss(loadingToastId);
-    toast[type](message);
-    return type === 'loading' ? message : undefined;
-  }, []);
-
   const handleGenerateFeedback = useCallback(async (paragraph: string): Promise<string> => {
     validateFeedbackRequest(paragraph);
     
@@ -50,46 +44,79 @@ export const useFeedbackGeneration = (
 
   const handleParagraphFeedback = useCallback(async (paragraph: string, index: number) => {
     if (!paragraph?.trim()) {
-      handleToast('error', 'No text to analyze in this paragraph');
+      toast.error('No text to analyze in this paragraph');
       return;
     }
 
-    const loadingToastId = handleToast('loading', `Analyzing paragraph ${index + 1}...`);
+    const toastId = toast.loading(`Analyzing paragraph ${index + 1}...`);
     try {
       const feedback = await handleGenerateFeedback(paragraph);
       if (!feedback?.trim()) {
-        handleToast('error', 'No feedback received', loadingToastId);
+        toast.dismiss(toastId);
+        toast.error('No feedback received');
         return;
       }
       setOutputCodeState(feedback);
-      handleToast('success', `Generated feedback for paragraph ${index + 1}`, loadingToastId);
+      toast.dismiss(toastId);
+      toast.success(`Generated feedback for paragraph ${index + 1}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to generate feedback';
-      handleToast('error', message, loadingToastId);
+      toast.dismiss(toastId);
+      let errorMessage = 'Failed to generate feedback';
+      
+      if (error instanceof Error) {
+        // Check for rate limit error
+        if (error.message.toLowerCase().includes('rate limit')) {
+          errorMessage = 'Too many requests. Please wait a moment before trying again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
+      // Log error details without throwing
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Feedback generation error:', error);
+      }
     }
-  }, [handleGenerateFeedback, handleToast]);
+  }, [handleGenerateFeedback]);
 
   const handleFinishChallenge = useCallback(async (inputMessage: string, onStopChallenge: () => void) => {
     try {
       validateFeedbackRequest(inputMessage);
       
-      const loadingToastId = handleToast('loading', 'Analyzing your complete essay...');
+      const toastId = toast.loading('Analyzing your complete essay...');
       setShowFeedback(true);
       
       const feedback = await handleGenerateFeedback(inputMessage);
       
       if (feedback?.trim()) {
-        handleToast('success', 'Generated comprehensive feedback', loadingToastId);
+        toast.dismiss(toastId);
+        toast.success('Generated comprehensive feedback');
       } else {
-        handleToast('error', 'No feedback received', loadingToastId);
+        toast.dismiss(toastId);
+        toast.error('No feedback received');
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to generate feedback';
-      handleToast('error', message);
+      let errorMessage = 'Failed to generate feedback';
+      
+      if (error instanceof Error) {
+        // Check for rate limit error
+        if (error.message.toLowerCase().includes('rate limit')) {
+          errorMessage = 'Too many requests. Please wait a moment before trying again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
+      // Log error details without throwing
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Feedback generation error:', error);
+      }
     } finally {
       onStopChallenge();
     }
-  }, [handleGenerateFeedback, handleToast, validateFeedbackRequest]);
+  }, [handleGenerateFeedback, validateFeedbackRequest]);
 
   return {
     outputCodeState,

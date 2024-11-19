@@ -32,16 +32,37 @@ export async function makeAIRequest(messages: Message[]) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('AI API Error Response:', errorData);
+      
+      // Handle rate limit errors
+      if (response.status === 429 || (errorData.error?.type === 'rate_limit_exceeded')) {
+        throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+      }
+      
       throw new Error(errorData.error?.message || `AI request failed with status ${response.status}`);
     }
 
     const completion = await response.json();
     console.log('AI API Response:', JSON.stringify(completion, null, 2));
     
+    // Handle empty or malformed responses
+    if (!completion) {
+      console.error('Empty AI response');
+      throw new Error('No response received from AI service');
+    }
+
+    // Handle SambaNova specific response format
+    if (completion.error) {
+      console.error('AI service error:', completion.error);
+      if (completion.error.type === 'rate_limit_exceeded') {
+        throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+      }
+      throw new Error(completion.error.message || 'AI service error');
+    }
+    
     // Validate the response structure
-    if (!completion || !completion.choices || !Array.isArray(completion.choices) || completion.choices.length === 0) {
+    if (!completion.choices || !Array.isArray(completion.choices) || completion.choices.length === 0) {
       console.error('Invalid AI response structure:', completion);
-      throw new Error('Invalid response from AI service');
+      throw new Error('Invalid response format from AI service');
     }
 
     const firstChoice = completion.choices[0];

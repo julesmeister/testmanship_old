@@ -300,9 +300,7 @@ export default function LeftColumn({
                 .map((challenge) => (
                 <ChallengeCard key={challenge.id} challenge={challenge} onStart={handleStartChallenge} />
               ))}
-　
-　
-　
+
               {/* Pagination */}
               {challenges.length > itemsPerPage && (
                 <Pagination 
