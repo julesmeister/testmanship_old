@@ -135,13 +135,19 @@ export default function Challenges({ user, userDetails }: Props) {
               onClearFilter={() => setShowUserChallengesOnly(false)}
             />
 
-            <ChallengeFilters
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              selectedLevel={selectedLevel}
-              onLevelChange={setSelectedLevel}
-              difficultyLevels={difficultyLevels}
-            />
+            <div className="space-y-6">
+              <ChallengeFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedLevel={selectedLevel}
+                onLevelChange={setSelectedLevel}
+                showUserChallengesOnly={showUserChallengesOnly}
+                onShowUserChallengesChange={setShowUserChallengesOnly}
+                userChallengesCount={userChallengesCount}
+                totalChallengesCount={totalChallengesCount}
+                difficultyLevels={difficultyLevels}
+              />
+            </div>
 
             {filteredChallenges.length === 0 ? (
               <EmptyChallengeState selectedLevel={selectedLevel} />

@@ -56,8 +56,11 @@ export function useChallengeFilters(challenges: Challenge[], userId?: string | n
 
   const filteredChallenges = useMemo(() => {
     return challenges.filter((challenge) => {
-      const matchesSearch = challenge.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (challenge.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      const searchTerms = searchQuery.toLowerCase();
+      const matchesSearch = 
+        challenge.title.toLowerCase().includes(searchTerms) ||
+        challenge.instructions.toLowerCase().includes(searchTerms) ||
+        (challenge.description?.toLowerCase().includes(searchTerms) ?? false);
       const matchesLevel = !selectedLevel || challenge.difficulty_level.toLowerCase() === selectedLevel.toLowerCase();
       const matchesUser = !showUserChallengesOnly || challenge.created_by === userId;
       return matchesSearch && matchesLevel && matchesUser;

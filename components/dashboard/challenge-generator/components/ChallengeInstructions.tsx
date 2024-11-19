@@ -201,12 +201,12 @@ export function ChallengeInstructions({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-zinc-900 dark:text-white">
             <PenTool className="h-5 w-5" />
             Challenge Instructions
           </CardTitle>
-          <CardDescription className="space-y-2">
+          <CardDescription className="mt-2.5 space-y-2">
             <p>Create clear and engaging instructions for your challenge:</p>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
@@ -224,7 +224,7 @@ export function ChallengeInstructions({
             </ul>
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="pt-4 px-6 pb-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               <div className="grid gap-6">
