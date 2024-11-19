@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HiXMark, HiLightBulb } from 'react-icons/hi2';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { useDraggable } from '@/hooks/useDraggable';
 import { CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
@@ -228,27 +228,6 @@ export default function LeftColumn({
 
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
-      {/* Add keyframes for shimmer animation */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% {
-            background-position: -200% center;
-          }
-          100% {
-            background-position: 200% center;
-          }
-        }
-        .shimmer-button {
-          background: linear-gradient(110deg, #4f46e5, #7c3aed, #2563eb, #4f46e5);
-          background-size: 200% auto;
-          animation: shimmer 4s linear infinite;
-          transition: all 0.3s ease;
-        }
-        .shimmer-button:hover {
-          background-size: 150% auto;
-          animation-duration: 2s;
-        }
-      `}</style>
       {showTip && (
         <div className="relative mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px]">
           <div className="relative flex items-start gap-3 rounded-lg bg-white/95 px-4 py-3 dark:bg-zinc-900/95">
@@ -336,9 +315,10 @@ export default function LeftColumn({
                               handleStartChallenge(challenge);
                               setShowTip(false);
                             }}
-                            className="shrink-0 flex items-center gap-2 shimmer-button text-white hover:opacity-90"
+                            className="shimmer-button"
                           >
-                            <HiPlay className="w-4 h-4" />
+                            <HiPlay className="w-4 h-4 mr-2" />
+                            Start
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left" className="bg-black border-black">
@@ -478,31 +458,33 @@ export default function LeftColumn({
             {/* Feedback Controls */}
             <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
               <div className="flex gap-2 overflow-x-auto">
-                {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
-                  paragraph.trim() && (
-                    <button
-                      key={index}
-                      onClick={async () => {
-                        const promise = onGenerateFeedback(paragraph, false);
-                        toast.promise(promise, {
-                          loading: `Analyzing paragraph ${index + 1}...`,
-                          success: `Generated feedback for paragraph ${index + 1}`,
-                          error: 'Failed to generate feedback'
-                        });
-                        try {
-                          const newFeedback = await promise;
-                          setOutputCode(newFeedback);
-                        } catch (error) {
-                          console.error('Error updating feedback:', error);
-                        }
-                      }}
-                      className="group flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700/70 transition-all hover:shadow-sm active:scale-95"
-                    >
-                      <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
-                      <span>P{index + 1}</span>
-                    </button>
-                  )
-                )}
+                <TooltipProvider>
+                  {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
+                    paragraph.trim() && (
+                      <Tooltip key={index}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={async () => {
+                              const promise = onGenerateFeedback(paragraph, false);
+                              toast.promise(promise, {
+                                loading: `Analyzing paragraph ${index + 1}...`,
+                                success: `Generated feedback for paragraph ${index + 1}`,
+                                error: 'Failed to generate feedback'
+                              });
+                            }}
+                            className="group flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all"
+                          >
+                            <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
+                            <span>P{index + 1}</span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Get feedback for paragraph {index + 1}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  )}
+                </TooltipProvider>
               </div>
               
               <button
@@ -551,8 +533,8 @@ export default function LeftColumn({
                     })}
                   </div>
                 ) : (
-                  <div className="text-zinc-500/80 dark:text-zinc-400/80 text-xs italic">
-                    Select a paragraph or start writing to receive real-time feedback on your essay.
+                  <div className="text-zinc-500 dark:text-zinc-400">
+                    No feedback generated yet. Click on a paragraph button above to generate feedback.
                   </div>
                 )}
               </div>
