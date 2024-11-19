@@ -7,7 +7,7 @@ import { useLanguageStore } from '@/stores/language';
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TimerProgress from './TimerProgress';
 import { Card, CardContent } from '@/components/ui/card';
@@ -102,44 +102,7 @@ export default function Test({ user, userDetails }: Props) {
     // Start timer if this is the first keystroke and time isn't up
     if (!isWriting && text.length > 0 && !isTimeUp) {
       setIsWriting(true);
-      
-      // Clear any existing timer before starting a new one
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      
-      // Only set start time if it's not already set
-      if (!startTimeRef.current) {
-        startTimeRef.current = Date.now();
-      }
-      
-      // Create a new timer interval
-      timerRef.current = setInterval(() => {
-        if (!startTimeRef.current || !selectedChallenge) return; // Safety check
-        
-        const now = Date.now();
-        const newElapsedTime = Math.floor((now - startTimeRef.current) / 1000);
-        const timeAllocationInSeconds = selectedChallenge.time_allocation * 60;
-        
-        // Check time limit before updating
-        if (newElapsedTime >= timeAllocationInSeconds) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          setIsTimeUp(true);
-          setIsWriting(false);
-          // Ensure we set exactly to the time limit
-          setElapsedTime(timeAllocationInSeconds);
-          toast("Time's up! Challenge completed.", { 
-            duration: 3000,
-            className: 'bg-blue-500'
-          });
-        } else {
-          setElapsedTime(newElapsedTime);
-        }
-      }, 1000);
+      startTimer();
     }
     
     // Clear any pending feedback requests
@@ -200,24 +163,33 @@ export default function Test({ user, userDetails }: Props) {
     setCharCount(text.length);
   };
 
-  const handleStartChallenge = (challenge: Challenge) => {
-    // Clean up any existing timer state
+  const startTimer = useCallback(() => {
+    console.log('startTimer called', { selectedChallenge, isTimeUp });
+    
+    // Clear any existing timer before starting a new one
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
     
-    setSelectedChallenge(challenge);
-    startTimeRef.current = Date.now(); // Set start time immediately
+    // Only set start time if it's not already set
+    if (!startTimeRef.current) {
+      startTimeRef.current = Date.now();
+    }
     
-    // Start a fresh timer
+    // Create a new timer interval
     timerRef.current = setInterval(() => {
-      if (!startTimeRef.current || !selectedChallenge) return; // Safety check
-        
+      if (!startTimeRef.current || !selectedChallenge) {
+        console.log('Timer check failed', { startTimeRef: startTimeRef.current, selectedChallenge });
+        return;
+      }
+      
       const now = Date.now();
       const newElapsedTime = Math.floor((now - startTimeRef.current) / 1000);
       const timeAllocationInSeconds = selectedChallenge.time_allocation * 60;
-        
+      
+      console.log('Timer tick', { newElapsedTime, timeAllocationInSeconds });
+      
       // Check time limit before updating
       if (newElapsedTime >= timeAllocationInSeconds) {
         if (timerRef.current) {
@@ -237,11 +209,56 @@ export default function Test({ user, userDetails }: Props) {
       }
     }, 1000);
     
+    console.log('Timer started', { timerId: timerRef.current });
+  }, [selectedChallenge, isTimeUp]);
+
+  // Keep timer running when challenge is active
+  useEffect(() => {
+    console.log('Timer effect triggered', { selectedChallenge, isTimeUp, isWriting });
+    
+    if (selectedChallenge && !isTimeUp) {
+      console.log('Starting timer from effect');
+      startTimer();
+    }
+    
+    return () => {
+      console.log('Cleaning up timer');
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [selectedChallenge, isTimeUp, startTimer]);
+
+  const handleStartChallenge = (challenge: Challenge) => {
+    console.log('handleStartChallenge called', { challenge });
+    
+    // Clean up any existing timer state
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Reset all states first
     setIsTimeUp(false);
     setElapsedTime(0);
     setInputMessage('');
-    setIsWriting(false); // Reset writing state
-    toast("Challenge started.", { 
+    setOutputCode('');
+    setIsWriting(false);
+    
+    // Reset timer ref
+    startTimeRef.current = Date.now();
+    
+    // Set challenge
+    setSelectedChallenge(challenge);
+    
+    // Start timer in next tick to ensure state updates are processed
+    Promise.resolve().then(() => {
+      console.log('Starting timer after state updates');
+      startTimer();
+    });
+    
+    toast("Challenge started!", { 
       duration: 3000,
       className: 'bg-blue-500'
     });
@@ -421,15 +438,6 @@ export default function Test({ user, userDetails }: Props) {
       cleanupFeedback();
     };
   }, [cleanupFeedback]);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, []);
 
   // Check for time up
   useEffect(() => {

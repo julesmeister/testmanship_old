@@ -497,55 +497,56 @@ export default function LeftColumn({
       {/* AI Feedback Window */}
       {challenge && showFeedback && (
         <DraggableWindow onClose={() => setShowFeedback(false)}>
-          <div className="flex flex-col gap-3">
-            {/* Feedback Controls */}
-            {inputMessage.trim() && (
-              <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
-                <div className="grid grid-cols-4 gap-2">
-                  <TooltipProvider>
-                    {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
-                      paragraph.trim() && (
-                        <Tooltip key={index}>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={async () => {
-                                console.log(`Analyzing paragraph ${index + 1}:`, paragraph.slice(0, 50) + '...');
-                                await handleParagraphFeedback(paragraph, index);
-                              }}
-                              className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all overflow-hidden w-full"
-                            >
-                              {/* Animated border */}
-                              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 animate-gradient-x transition-opacity" >
-                                <div className="absolute inset-[1px] bg-white dark:bg-zinc-900 rounded-lg" />
-                              </div>
-                              <MessageSquare className="relative z-10 w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
-                              <span className="relative z-10">P{index + 1}</span>
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">
-                            <p>Get feedback for paragraph {index + 1}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )
-                    )}
-                  </TooltipProvider>
+          <div className="flex flex-col h-full">
+            <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
+              {/* Feedback Controls */}
+              {inputMessage.trim() && (
+                <div className="flex items-start justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
+                  <div className="grid grid-cols-4 gap-2">
+                    <TooltipProvider>
+                      {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
+                        paragraph.trim() && (
+                          <Tooltip key={index}>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={async () => {
+                                  console.log(`Analyzing paragraph ${index + 1}:`, paragraph.slice(0, 50) + '...');
+                                  await handleParagraphFeedback(paragraph, index);
+                                }}
+                                className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all overflow-hidden w-full"
+                              >
+                                {/* Animated border */}
+                                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 animate-gradient-x transition-opacity" >
+                                  <div className="absolute inset-[1px] bg-white dark:bg-zinc-900 rounded-lg" />
+                                </div>
+                                <MessageSquare className="relative z-10 w-4 h-4 text-zinc-400 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-400" />
+                                <span className="relative z-10">P{index + 1}</span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">
+                              <p>Get feedback for paragraph {index + 1}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      )}
+                    </TooltipProvider>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setOutputCodeState('');
+                      toast.success('Feedback cleared');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    <span>Clear</span>
+                  </button>
                 </div>
-                
-                <button
-                  onClick={() => {
-                    setOutputCodeState('');
-                    toast.success('Feedback cleared');
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                >
-                  <XCircle className="w-4 h-4" />
-                  <span>Clear</span>
-                </button>
-              </div>
-            )}
-            {/* Feedback Content */}
-            <div className="p-3 max-h-[40vh] overflow-y-auto">
-              <div className="space-y-2">
+              )}
+
+              {/* Output */}
+              <div className="flex-1 overflow-y-auto px-3">
                 {outputCodeState ? (
                   <div className="text-zinc-600 dark:text-zinc-400 text-md leading-relaxed">
                     {outputCodeState.split('\n').map((line, index) => {
@@ -584,6 +585,7 @@ export default function LeftColumn({
               </div>
             </div>
           </div>
+
           {/* Resize handle indicator */}
           <div className="absolute bottom-1 right-1 w-4 h-4 text-zinc-400 dark:text-zinc-600 pointer-events-none">
             <svg
@@ -592,7 +594,7 @@ export default function LeftColumn({
               viewBox="0 0 16 16"
               fill="currentColor"
             >
-              <path d="M3 12h2v2H3v-2zm3 0h2v2H6v-2zm3 0h2v2H9v-2z" />
+              <path d="M3 12h2v2H3v-2zm3 0h2v2H6v-2zm3 0h2v2H9v-2zm3 0h2v2h-2V9z" />
               <path d="M6 9h2v2H6V9zm3 0h2v2H9V9zm3 0h2v2h-2V9z" />
               <path d="M9 6h2v2H9V6zm3 0h2v2h-2V6z" />
               <path d="M12 3h2v2h-2V3z" />
