@@ -108,7 +108,9 @@ export default function LeftColumn({
   const [showChallenges, setShowChallenges] = useState(true);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showTip, setShowTip] = useState(true);
-  const [accordionValue, setAccordionValue] = useState<string>('instructions');
+  const [accordionValue, setAccordionValue] = useState<string | undefined>('instructions');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const supabase = createClientComponentClient();
   const [outputCodeState, setOutputCodeState] = useState<string>('');
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
@@ -337,7 +339,9 @@ export default function LeftColumn({
 
             {/* Challenges List */}
             <div className="space-y-4">
-              {challenges.map((challenge) => (
+              {challenges
+                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                .map((challenge) => (
                 <div
                   key={challenge.id}
                   className="bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700"
@@ -345,7 +349,7 @@ export default function LeftColumn({
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{challenge.title}</h3>
-                      <p className="text-zinc-600 dark:text-zinc-400">
+                      <p className="text-zinc-600 dark:text-zinc-400 line-clamp-3">
                         {challenge.instructions.split('\n')[0]}
                       </p>
                       <div className="mt-2 text-sm text-zinc-500">
@@ -374,6 +378,29 @@ export default function LeftColumn({
                   </div>
                 </div>
               ))}
+              
+              {/* Pagination */}
+              {challenges.length > itemsPerPage && (
+                <div className="flex justify-center gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="flex items-center px-4">
+                    Page {currentPage} of {Math.ceil(challenges.length / itemsPerPage)}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(challenges.length / itemsPerPage), prev + 1))}
+                    disabled={currentPage === Math.ceil(challenges.length / itemsPerPage)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
             </div>
           </>
         )}

@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
+import Main from '@/components/dashboard/main';
+import { getUserDetails } from '@/utils/supabase/queries';
 
 async function ensureUserRecord(supabase: any, authUser: any) {
   try {
@@ -78,9 +80,13 @@ export default async function Dashboard() {
       return redirect('/dashboard/signin?error=user_creation_failed');
     }
 
+    // Get user details
+    const userDetails = await getUserDetails(supabase);
+    
     console.log('=== Dashboard Page End ===');
-    // Return redirect to main dashboard
-    return redirect('/dashboard/main');
+    
+    // Render the main component directly instead of redirecting
+    return <Main user={authUser} userDetails={userDetails} />;
   } catch (error) {
     console.error('Dashboard page error:', error);
     return redirect('/dashboard/signin?error=unexpected_error');
