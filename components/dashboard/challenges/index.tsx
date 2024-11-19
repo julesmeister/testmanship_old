@@ -28,6 +28,9 @@ export default function Challenges({ user, userDetails }: Props) {
   const { challenges, isLoading, error } = useChallenges();
   const [userStats, setUserStats] = useState<{ userCount: number; totalCount: number }>({ userCount: 0, totalCount: 0 });
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showUserChallengesOnly, setShowUserChallengesOnly] = useState(false);
 
   useEffect(() => {
     async function fetchStats() {
@@ -107,7 +110,8 @@ export default function Challenges({ user, userDetails }: Props) {
                   <CardTitle className="text-2xl font-semibold text-foreground">Writing Challenges</CardTitle>
                   <p className="text-muted-foreground mt-1">Improve your language skills with our curated challenges</p>
                   <div className="flex gap-8 mt-4">
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-secondary/50">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors relative group"
+                        onClick={() => setShowUserChallengesOnly(prev => !prev)}>
                       <div className="p-2 rounded-md bg-primary/10">
                         <PenLine className="h-5 w-5 text-primary" />
                       </div>
@@ -115,6 +119,20 @@ export default function Challenges({ user, userDetails }: Props) {
                         <span className="text-2xl font-bold text-foreground">{userStats.userCount}</span>
                         <span className="text-sm font-medium text-muted-foreground">Your challenges</span>
                       </div>
+                      {showUserChallengesOnly && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-background shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowUserChallengesOnly(false);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                          <span className="sr-only">Clear filter</span>
+                        </Button>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-secondary/50">
                       <div className="p-2 rounded-md bg-primary/10">
@@ -186,44 +204,46 @@ export default function Challenges({ user, userDetails }: Props) {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                  {filteredChallenges.slice(startIndex, endIndex).map((challenge) => (
-                    <div 
-                      onClick={() => setSelectedChallenge(challenge)}
-                      key={challenge.id}
-                      className="block group cursor-pointer"
-                    >
-                      <div className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={`
-                                inline-flex text-xs font-medium px-2 py-0.5 rounded-full
-                                ${challenge.difficulty_level
-                                  ? `${difficultyLevels.find(l => l.value === challenge.difficulty_level.toLowerCase())?.bgColor || ''} ${difficultyLevels.find(l => l.value === challenge.difficulty_level.toLowerCase())?.textColor || ''}`
-                                  : 'bg-secondary text-secondary-foreground'}
-                              `}
-                            >
-                              {challenge.difficulty_level ? challenge.difficulty_level.toUpperCase() : 'N/A'}
-                            </span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5" />
-                              {challenge.time_allocation} min
-                            </span>
-                          </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  {challenges
+                    .filter(challenge => !showUserChallengesOnly || challenge.created_by === user?.id)
+                    .map((challenge) => (
+                      <div 
+                        onClick={() => setSelectedChallenge(challenge)}
+                        key={challenge.id}
+                        className="block group cursor-pointer"
+                      >
+                        <div className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span
+                                className={`
+                                  inline-flex text-xs font-medium px-2 py-0.5 rounded-full
+                                  ${challenge.difficulty_level
+                                    ? `${difficultyLevels.find(l => l.value === challenge.difficulty_level.toLowerCase())?.bgColor || ''} ${difficultyLevels.find(l => l.value === challenge.difficulty_level.toLowerCase())?.textColor || ''}`
+                                    : 'bg-secondary text-secondary-foreground'}
+                                `}
+                              >
+                                {challenge.difficulty_level ? challenge.difficulty_level.toUpperCase() : 'N/A'}
+                              </span>
+                              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5" />
+                                {challenge.time_allocation} min
+                              </span>
+                            </div>
 
-                          <div>
-                            <h3 className="font-medium text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                              {challenge.title}
-                            </h3>
-                            <p className="text-muted-foreground text-sm mt-1 line-clamp-2">
-                              {challenge.instructions}
-                            </p>
+                            <div>
+                              <h3 className="font-medium text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                                {challenge.title}
+                              </h3>
+                              <p className="text-muted-foreground text-sm mt-1 line-clamp-2">
+                                {challenge.instructions}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
 
                 <Dialog open={!!selectedChallenge} onOpenChange={() => setSelectedChallenge(null)}>
@@ -242,7 +262,7 @@ export default function Challenges({ user, userDetails }: Props) {
                             >
                               {selectedChallenge?.difficulty_level ? selectedChallenge.difficulty_level.toUpperCase() : 'N/A'}
                             </span>
-                            {selectedChallenge?.creator_id === user?.id && (
+                            {selectedChallenge?.created_by === user?.id && (
                               <Button
                                 variant="ghost"
                                 size="icon"

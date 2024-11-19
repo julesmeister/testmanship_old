@@ -21,5 +21,5 @@ export interface Challenge {
   example_response?: string;
   targetLanguage?: string;
   created_at?: string;
-  creator_id?: string;
+  created_by: string;
 }
