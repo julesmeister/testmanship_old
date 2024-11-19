@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useChallengeFilters } from '@/hooks/useChallengeFilters';
 import { usePagination } from '@/hooks/usePagination';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Badge } from '@/components/ui/badge';
 import { Challenge } from "@/types/challenge";
@@ -32,6 +32,10 @@ export default function Challenges({ user, userDetails }: Props) {
   const [showFilters, setShowFilters] = useState(false);
   const [showUserChallengesOnly, setShowUserChallengesOnly] = useState(false);
   const [creatorName, setCreatorName] = useState<string>("");
+
+  const userChallengesCount = useMemo(() => 
+    challenges.filter(challenge => challenge.created_by === user?.id).length
+  , [challenges, user?.id]);
 
   const supabase = createClientComponentClient();
 
@@ -149,7 +153,7 @@ export default function Challenges({ user, userDetails }: Props) {
                         <PenLine className="h-5 w-5 text-primary" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-2xl font-bold text-foreground">{userStats.userCount}</span>
+                        <span className="text-2xl font-bold text-foreground">{userChallengesCount}</span>
                         <span className="text-sm font-medium text-muted-foreground">Your challenges</span>
                       </div>
                       {showUserChallengesOnly && (
