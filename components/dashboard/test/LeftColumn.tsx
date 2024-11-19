@@ -153,6 +153,7 @@ export default function LeftColumn({
 
   const handleStartChallenge = (challenge: Challenge) => {
     onStartChallenge(challenge);
+    setOutputCodeState(''); // Clear feedback when starting new challenge
     setShowTip(false);
     setShowChallenges(false);
     // Ensure accordion is expanded when challenge starts
@@ -167,11 +168,9 @@ export default function LeftColumn({
     setSelectedLevel('a1'); // Reset difficulty level
   };
 
-  const handleGenerateFeedback = async (paragraph: string) => {
+  const handleGenerateFeedback = async (paragraph: string): Promise<string> => {
     if (!challenge) {
-      const error = new Error('No active challenge found. Please select a challenge first.');
-      console.error(error);
-      throw error;
+      throw new Error('No active challenge found. Please select a challenge first.');
     }
 
     const now = Date.now();
@@ -179,51 +178,34 @@ export default function LeftColumn({
     
     if (timeSinceLastFeedback < MIN_FEEDBACK_INTERVAL) {
       const waitTime = MIN_FEEDBACK_INTERVAL - timeSinceLastFeedback;
-      const error = new Error(`Please wait ${Math.ceil(waitTime / 1000)} seconds before requesting feedback again`);
-      console.error(error);
-      throw error;
+      throw new Error(`Please wait ${Math.ceil(waitTime / 1000)} seconds before requesting feedback again`);
     }
 
-    if (!paragraph.trim()) {
-      const error = new Error('Cannot generate feedback for empty paragraph');
-      console.error(error);
-      throw error;
-    }
-
-    try {
-      setLastFeedbackTime(now);
-      const feedback = await onGenerateFeedback(paragraph);
-      
-      if (!feedback) {
-        throw new Error('No feedback received from the server');
-      }
-      
-      setOutputCodeState(feedback);
-      return feedback;
-    } catch (error) {
-      console.error('Error generating feedback:', error);
-      throw error instanceof Error ? error : new Error('Failed to generate feedback');
-    }
+    setLastFeedbackTime(now);
+    return await onGenerateFeedback(paragraph);
   };
 
   const handleParagraphFeedback = async (paragraph: string, index: number) => {
+    if (!paragraph?.trim()) {
+      toast.error('No text to analyze in this paragraph');
+      return;
+    }
+
+    const loadingToastId = toast.loading(`Analyzing paragraph ${index + 1}...`);
     try {
-      const promise = handleGenerateFeedback(paragraph);
-      await toast.promise(promise, {
-        loading: `Analyzing paragraph ${index + 1}...`,
-        success: (data) => {
-          if (!data) throw new Error('No feedback received');
-          return `Generated feedback for paragraph ${index + 1}`;
-        },
-        error: (err) => {
-          const message = err instanceof Error ? err.message : 'Failed to generate feedback';
-          console.error('Feedback generation error:', err);
-          return message;
-        }
-      });
+      const feedback = await handleGenerateFeedback(paragraph);
+      if (!feedback?.trim()) {
+        toast.dismiss(loadingToastId);
+        toast.error('No feedback received');
+        return;
+      }
+      setOutputCodeState(feedback);
+      toast.dismiss(loadingToastId);
+      toast.success(`Generated feedback for paragraph ${index + 1}`);
     } catch (error) {
-      // Error is already handled by toast.promise
-      console.error('Error in handleParagraphFeedback:', error);
+      toast.dismiss(loadingToastId);
+      const message = error instanceof Error ? error.message : 'Failed to generate feedback';
+      toast.error(message);
     }
   };
 
@@ -233,26 +215,31 @@ export default function LeftColumn({
       return;
     }
 
-    // Don't generate feedback if there's no text
     if (!inputMessage?.trim()) {
       toast.error('No text to analyze. Challenge ended.');
       onStopChallenge();
       return;
     }
 
+    const loadingToastId = toast.loading('Analyzing your complete essay...');
     try {
       setShowChallenges(false);
       setShowFeedback(true);
       
-      const promise = handleGenerateFeedback(inputMessage);
-      await toast.promise(promise, {
-        loading: 'Analyzing your complete essay...',
-        success: 'Generated comprehensive feedback',
-        error: 'Failed to generate feedback'
-      });
-      onStopChallenge();
+      const feedback = await handleGenerateFeedback(inputMessage);
+      
+      if (feedback?.trim()) {
+        toast.dismiss(loadingToastId);
+        toast.success('Generated comprehensive feedback');
+      } else {
+        toast.dismiss(loadingToastId);
+        toast.error('No feedback received');
+      }
     } catch (error) {
-      console.error('Error in finish challenge:', error);
+      toast.dismiss(loadingToastId);
+      const message = error instanceof Error ? error.message : 'Failed to generate feedback';
+      toast.error(message);
+    } finally {
       onStopChallenge();
     }
   };
@@ -378,7 +365,9 @@ export default function LeftColumn({
                   </div>
                 </div>
               ))}
-              
+　
+　
+　
               {/* Pagination */}
               {challenges.length > itemsPerPage && (
                 <div className="flex justify-center gap-2 mt-4">

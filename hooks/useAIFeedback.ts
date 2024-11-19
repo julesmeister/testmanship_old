@@ -12,8 +12,16 @@ export const useAIFeedback = ({ challenge, minInterval = 5000, targetLanguage }:
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const queuedFeedbackRef = useRef<NodeJS.Timeout | null>(null);
 
-  const generateFeedback = useCallback(async (paragraphText: string) => {
+  const generateFeedback = useCallback(async (paragraphText: string): Promise<string> => {
     try {
+      if (!paragraphText?.trim()) {
+        throw new Error('No text provided for feedback');
+      }
+
+      if (!challenge?.id) {
+        throw new Error('No active challenge found');
+      }
+
       const response = await fetch('/api/challenge-feedback', {
         method: 'POST',
         headers: {
@@ -21,20 +29,38 @@ export const useAIFeedback = ({ challenge, minInterval = 5000, targetLanguage }:
         },
         body: JSON.stringify({
           essayContent: paragraphText,
-          challenge,
+          challengeId: challenge.id,
           targetLanguage: targetLanguage || 'English',
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate feedback');
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        if (!response.ok) {
+          throw new Error(`Failed to generate feedback: ${response.status}`);
+        }
+        throw new Error('Invalid response from server');
       }
 
-      const data = await response.json();
-      setFeedback(data.feedback);
+      if (!response.ok) {
+        throw new Error(errorData.message || `Failed to generate feedback: ${response.status}`);
+      }
+
+      if (!errorData?.feedback) {
+        throw new Error('No feedback received from server');
+      }
+
+      const feedbackText = errorData.feedback;
+      setFeedback(feedbackText);
       setLastFeedbackTime(Date.now());
+      return feedbackText;
     } catch (error) {
-      console.error('Error generating feedback:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to generate feedback');
     }
   }, [challenge, targetLanguage]);
 
