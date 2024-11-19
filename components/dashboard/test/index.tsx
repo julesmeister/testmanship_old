@@ -78,9 +78,19 @@ export default function Test({ user, userDetails }: Props) {
   const { selectedLanguageId, languages } = useLanguageStore();
   const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
 
+  // Debug logging for language selection
+  useEffect(() => {
+    console.log('Current Language State:', {
+      selectedLanguageId,
+      languages,
+      selectedLanguage,
+      targetLanguageCode: selectedLanguage?.code?.toUpperCase()
+    });
+  }, [selectedLanguageId, languages, selectedLanguage]);
+
   const { feedback, generateFeedback, cleanup: cleanupFeedback } = useAIFeedback({
     challenge: selectedChallenge,
-    targetLanguage: selectedLanguage?.code
+    targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
   });
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -143,7 +153,7 @@ export default function Test({ user, userDetails }: Props) {
       const lastCompletedParagraph = paragraphs[paragraphs.length - 2];
       if (lastCompletedParagraph?.trim().length > 0) {
         feedbackTimeoutRef.current = setTimeout(() => {
-          generateFeedback(lastCompletedParagraph, true);
+          generateFeedback(lastCompletedParagraph);
         }, 1000);
       }
     }
@@ -204,56 +214,47 @@ export default function Test({ user, userDetails }: Props) {
     setCharCount(0); // Reset character count
   };
 
-  const handleGenerateFeedback = async (text: string, isFullEssay: boolean) => {
+  const handleGenerateFeedback = async (text: string) => {
+    if (!selectedChallenge) {
+      throw new Error('No challenge selected. Please select a challenge first.');
+    }
+
+    if (!text.trim()) {
+      throw new Error('Cannot generate feedback for empty text');
+    }
+
     setIsGeneratingFeedback(true);
     try {
-      if (isFullEssay) {
-        // Use the dedicated API endpoint for full essay analysis
-        const response = await fetch('/api/challenge-suggestions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            essayContent: text,
-            challengeId: selectedChallenge?.id,
-            targetLanguage: selectedLanguage?.code || 'en'
-          }),
-        });
+      const response = await fetch('/api/challenge-feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          essayContent: text,
+          challengeId: selectedChallenge?.id,
+          targetLanguage: selectedLanguage?.code || 'en'
+        }),
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to generate feedback');
-        }
-
-        const data = await response.json();
-        setOutputCode(data.feedback);
-        return data.feedback;
-      } else {
-        // For individual paragraphs, use the existing prompt-based approach
-        const prompt = `Analyze this paragraph. Format your response using these prefixes:
-        ✓ for positive points and strengths
-        ✗ for errors or issues that need correction
-        ! for suggestions and improvements
-
-        Paragraph:
-        ${text}`;
-
-        const suggestions = await makeAIRequest([
-          {
-            role: 'system',
-            content: 'You are a writing tutor providing paragraph-level feedback. Use ✓ for positive points, ✗ for errors, and ! for suggestions. Each point should be on a new line.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]);
-        setOutputCode(suggestions);
-        return suggestions;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', errorData);
+        throw new Error(errorData.error || `Failed to generate feedback: ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('API Success Response:', data);
+      
+      if (!data.feedback) {
+        throw new Error('No feedback received from the server');
+      }
+      
+      setOutputCode(data.feedback);
+      return data.feedback;
     } catch (error) {
       console.error('Error generating feedback:', error);
-      throw error;
+      throw error instanceof Error ? error : new Error('Failed to generate feedback');
     } finally {
       setIsGeneratingFeedback(false);
     }
@@ -392,7 +393,7 @@ export default function Test({ user, userDetails }: Props) {
       <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row gap-6">
         <LeftColumn
           challenge={selectedChallenge}
-          outputCode={feedback}
+          outputCode={outputCode}
           onStartChallenge={handleStartChallenge}
           onStopChallenge={handleStopChallenge}
           onGenerateFeedback={handleGenerateFeedback}

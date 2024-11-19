@@ -10,25 +10,49 @@ export async function makeAIRequest(messages: Message[]) {
     throw new Error('API configuration error - Missing API key');
   }
 
-  const response = await fetch(AI_CONFIG.apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${AI_CONFIG.apiKey}`,
-      ...AI_CONFIG.headers,
-    },
-    body: JSON.stringify({
+  try {
+    const requestBody = {
       model: AI_CONFIG.model,
       messages,
       temperature: AI_CONFIG.temperature,
       max_tokens: AI_CONFIG.max_tokens,
-    }),
-  });
+    };
+    console.log('AI API Request:', JSON.stringify(requestBody, null, 2));
 
-  if (!response.ok) {
-    throw new Error('Failed to get AI response');
+    const response = await fetch(AI_CONFIG.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AI_CONFIG.apiKey}`,
+        ...AI_CONFIG.headers,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('AI API Error Response:', errorData);
+      throw new Error(errorData.error?.message || `AI request failed with status ${response.status}`);
+    }
+
+    const completion = await response.json();
+    console.log('AI API Response:', JSON.stringify(completion, null, 2));
+    
+    // Validate the response structure
+    if (!completion || !completion.choices || !Array.isArray(completion.choices) || completion.choices.length === 0) {
+      console.error('Invalid AI response structure:', completion);
+      throw new Error('Invalid response from AI service');
+    }
+
+    const firstChoice = completion.choices[0];
+    if (!firstChoice || !firstChoice.message || typeof firstChoice.message.content !== 'string') {
+      console.error('Invalid choice structure:', firstChoice);
+      throw new Error('Invalid message format in AI response');
+    }
+
+    return firstChoice.message.content;
+  } catch (error) {
+    console.error('AI request error:', error);
+    throw error instanceof Error ? error : new Error('Failed to process AI request');
   }
-
-  const completion = await response.json();
-  return completion.choices[0].message.content;
 }

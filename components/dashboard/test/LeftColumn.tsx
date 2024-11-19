@@ -35,7 +35,7 @@ interface LeftColumnProps {
   outputCode: string;
   onStartChallenge: (challenge: Challenge) => void;
   onStopChallenge: () => void;
-  onGenerateFeedback: (paragraph: string, isFullEssay: boolean, challenge: Challenge) => Promise<string>;
+  onGenerateFeedback: (paragraph: string) => Promise<string>;
   isGeneratingFeedback: boolean;
   isTimeUp: boolean;
   mode: 'practice' | 'exam';
@@ -163,10 +163,11 @@ export default function LeftColumn({
     setSelectedLevel('a1'); // Reset difficulty level
   };
 
-  const handleGenerateFeedback = async (paragraph: string, isFullEssay: boolean) => {
+  const handleGenerateFeedback = async (paragraph: string) => {
     if (!challenge) {
-      console.error('No active challenge found');
-      return;
+      const error = new Error('No active challenge found. Please select a challenge first.');
+      console.error(error);
+      throw error;
     }
 
     const now = Date.now();
@@ -174,32 +175,51 @@ export default function LeftColumn({
     
     if (timeSinceLastFeedback < MIN_FEEDBACK_INTERVAL) {
       const waitTime = MIN_FEEDBACK_INTERVAL - timeSinceLastFeedback;
-      toast.error(`Please wait ${Math.ceil(waitTime / 1000)} seconds before requesting feedback again`);
-      return;
+      const error = new Error(`Please wait ${Math.ceil(waitTime / 1000)} seconds before requesting feedback again`);
+      console.error(error);
+      throw error;
+    }
+
+    if (!paragraph.trim()) {
+      const error = new Error('Cannot generate feedback for empty paragraph');
+      console.error(error);
+      throw error;
     }
 
     try {
       setLastFeedbackTime(now);
-      const feedback = await onGenerateFeedback(paragraph, isFullEssay, challenge);
+      const feedback = await onGenerateFeedback(paragraph);
+      
+      if (!feedback) {
+        throw new Error('No feedback received from the server');
+      }
+      
       setOutputCodeState(feedback);
       return feedback;
     } catch (error) {
       console.error('Error generating feedback:', error);
-      throw error; // Let the caller handle the error for toast.promise
+      throw error instanceof Error ? error : new Error('Failed to generate feedback');
     }
   };
 
   const handleParagraphFeedback = async (paragraph: string, index: number) => {
     try {
-      const promise = handleGenerateFeedback(paragraph, false);
-      toast.promise(promise, {
+      const promise = handleGenerateFeedback(paragraph);
+      await toast.promise(promise, {
         loading: `Analyzing paragraph ${index + 1}...`,
-        success: `Generated feedback for paragraph ${index + 1}`,
-        error: 'Failed to generate feedback'
+        success: (data) => {
+          if (!data) throw new Error('No feedback received');
+          return `Generated feedback for paragraph ${index + 1}`;
+        },
+        error: (err) => {
+          const message = err instanceof Error ? err.message : 'Failed to generate feedback';
+          console.error('Feedback generation error:', err);
+          return message;
+        }
       });
-      await promise;
     } catch (error) {
-      console.error('Error in paragraph feedback:', error);
+      // Error is already handled by toast.promise
+      console.error('Error in handleParagraphFeedback:', error);
     }
   };
 
@@ -213,7 +233,7 @@ export default function LeftColumn({
       setShowChallenges(false);
       setShowFeedback(true);
       
-      const promise = handleGenerateFeedback(inputMessage, true);
+      const promise = handleGenerateFeedback(inputMessage);
       toast.promise(promise, {
         loading: 'Analyzing your complete essay...',
         success: 'Generated comprehensive feedback',

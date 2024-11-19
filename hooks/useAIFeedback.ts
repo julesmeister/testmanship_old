@@ -12,7 +12,7 @@ export const useAIFeedback = ({ challenge, minInterval = 5000, targetLanguage }:
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const queuedFeedbackRef = useRef<NodeJS.Timeout | null>(null);
 
-  const generateFeedback = useCallback(async (paragraphText: string, isNewParagraph: boolean = false) => {
+  const generateFeedback = useCallback(async (paragraphText: string) => {
     try {
       const response = await fetch('/api/challenge-feedback', {
         method: 'POST',
@@ -23,7 +23,6 @@ export const useAIFeedback = ({ challenge, minInterval = 5000, targetLanguage }:
           essayContent: paragraphText,
           challenge,
           targetLanguage: targetLanguage || 'English',
-          isNewParagraph
         }),
       });
 

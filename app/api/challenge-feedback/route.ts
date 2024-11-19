@@ -3,63 +3,94 @@ import { makeAIRequest } from '@/utils/ai';
 
 export async function POST(request: Request) {
   try {
-    const { essayContent, challenge, targetLanguage, isNewParagraph = false } = await request.json();
+    const { essayContent, challengeId, targetLanguage } = await request.json();
 
-    if (!essayContent || !challenge || !targetLanguage) {
+    if (!essayContent?.trim()) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Essay content cannot be empty' },
         { status: 400 }
       );
     }
 
-    const prompt = `Analyze the following paragraph from an essay on "${challenge?.title}". Consider these requirements:
-    - Grammar focus: ${challenge?.grammar_focus?.length ? challenge.grammar_focus.join(', ') : 'Not specified'}
-    - Vocabulary themes: ${challenge?.vocabulary_themes?.length ? challenge.vocabulary_themes.join(', ') : 'Not specified'}
-    - Target language level: ${targetLanguage}
-    
-    Language Guidelines:
-    1. Identify any words or phrases that are above the ${targetLanguage} level
-    2. For advanced vocabulary, suggest simpler alternatives appropriate for ${targetLanguage}
-    3. If non-${targetLanguage} words are used, provide translations and suggest appropriate replacements
-    4. Check if idiomatic expressions are suitable for ${targetLanguage} level learners
+    if (!challengeId) {
+      return NextResponse.json(
+        { error: 'Challenge ID is required' },
+        { status: 400 }
+      );
+    }
 
-    Paragraph:
-    ${essayContent}
-    
-    Provide:
-    1. Brief feedback on this paragraph's grammar and vocabulary usage (2-3 sentences)
-    2. Mark feedback points using:
-       for correct usage and good points
-       for errors or inappropriate language level
-       ! for suggestions and translations
-    ${isNewParagraph ? '3. One concise suggestion for what could be discussed in the next paragraph (1 sentence)' : ''}`;
+    if (!targetLanguage) {
+      return NextResponse.json(
+        { error: 'Target language is required' },
+        { status: 400 }
+      );
+    }
 
-    const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-      {
-        role: 'system',
-        content: `You are a language learning expert providing detailed feedback on writing challenges. 
-        
-        Focus on:
-        1. Matching vocabulary and expressions to the student's target language level
-        2. Identifying and translating words that are too advanced or non-target language
-        3. Suggesting simpler alternatives when vocabulary is above level
-        4. Providing constructive, actionable feedback
-        
-        Use these markers consistently:
-        ✓ for correct usage and good points
-        ✗ for errors or inappropriate language level
-        ! for suggestions, improvements, and translations`,
-      },
-      { role: 'user', content: prompt }
-    ];
+    // Map language codes to full names
+    const languageMap: { [key: string]: string } = {
+      'DE': 'German',
+      'EN': 'English',
+      'ES': 'Spanish',
+      'FR': 'French',
+      'IT': 'Italian',
+      'PT': 'Portuguese',
+      'NL': 'Dutch',
+      'RU': 'Russian',
+      'ZH': 'Chinese',
+      'JA': 'Japanese',
+      'KO': 'Korean'
+    };
 
-    const response = await makeAIRequest(messages);
-    return NextResponse.json({ feedback: response });
+    const languageName = languageMap[targetLanguage.toUpperCase()] || 'English';
 
+    try {
+      const messages = [
+        {
+          role: 'system' as const,
+          content: `You are a language learning expert providing concise feedback. Follow these rules strictly:
+
+1. ONLY use these markers, one per line:
+   ✓ [point] - for correct usage
+   ✗ [point] - for errors
+   ! [suggestion] - for translations or improvements, do not make any sentences that don't start with one of the markers. All three markers must be used.
+
+2. Focus ONLY on the provided text and give only one feedback about what can be improved
+3. Keep feedback brief and specific
+4. Do not add any extra explanations or suggestions
+5. Do not ask questions
+6. Do not provide alternative scenarios`
+        },
+        {
+          role: 'user' as const,
+          content: `Analyze this ${languageName} text:\n\n${essayContent}`
+        }
+      ];
+
+      console.log('Making AI request with messages:', JSON.stringify(messages, null, 2));
+      const feedback = await makeAIRequest(messages);
+      console.log('Received AI feedback:', feedback);
+
+      if (!feedback?.trim()) {
+        console.error('Empty feedback received from AI');
+        return NextResponse.json(
+          { error: 'Failed to generate meaningful feedback' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ feedback });
+    } catch (error) {
+      console.error('Error generating AI feedback:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate AI feedback';
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error('Error generating feedback:', error);
+    console.error('API route error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate feedback' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

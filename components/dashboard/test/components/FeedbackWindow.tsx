@@ -7,7 +7,7 @@ import { ParagraphFeedback } from './ParagraphFeedback';
 interface FeedbackWindowProps {
   inputMessage: string;
   onClose: () => void;
-  onGenerateFeedback: (paragraph: string, isFullEssay: boolean) => Promise<string>;
+  onGenerateFeedback: (paragraph: string) => Promise<string>;
   children?: React.ReactNode;
 }
 
@@ -28,14 +28,17 @@ export function FeedbackWindow({ inputMessage, onClose, onGenerateFeedback, chil
                       <button
                         onClick={async () => {
                           try {
-                            const promise = onGenerateFeedback(paragraph, false); // Set to false for paragraph feedback
-                            toast.promise(promise, {
-                              loading: 'Analyzing paragraph...',
-                              success: (data) => `Generated feedback for paragraph ${index + 1}`,
-                              error: (err) => err.message || 'Failed to generate feedback'
-                            });
-                            const newFeedback = await promise;
-                            setOutputCodeState(newFeedback);
+                            toast.promise(
+                              onGenerateFeedback(paragraph).then(feedback => {
+                                setOutputCodeState(feedback);
+                                return feedback;
+                              }), 
+                              {
+                                loading: 'Analyzing paragraph...',
+                                success: (data) => `Generated feedback for paragraph ${index + 1}`,
+                                error: (err) => err.message || 'Failed to generate feedback'
+                              }
+                            );
                           } catch (error) {
                             console.error('Error updating feedback:', error);
                           }
