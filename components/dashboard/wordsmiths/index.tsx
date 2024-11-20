@@ -97,42 +97,42 @@ export default function Wordsmiths({ user, userDetails }: Props) {
       </div>
 
       {/* Stats Section */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <Users className="h-8 w-8 text-primary" />
+          <CardContent className="flex items-center gap-4 p-4 sm:p-6">
+            <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold text-foreground">{users.length}</p>
-              <p className="text-sm text-muted-foreground">Total Wordsmiths</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{users.length}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Wordsmiths</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <Star className="h-8 w-8 text-primary" />
+          <CardContent className="flex items-center gap-4 p-4 sm:p-6">
+            <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xl sm:text-2xl font-bold text-foreground">
                 {users.reduce((sum, user) => sum + user.credits, 0)}
               </p>
-              <p className="text-sm text-muted-foreground">Total Credits</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Credits</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <Clock className="h-8 w-8 text-primary" />
+        <Card className="sm:col-span-2 md:col-span-1">
+          <CardContent className="flex items-center gap-4 p-4 sm:p-6">
+            <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xl sm:text-2xl font-bold text-foreground">
                 {users.filter(u => new Date(u.updated_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}
               </p>
-              <p className="text-sm text-muted-foreground">Active This Week</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Active This Week</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Search Bar */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 px-2 sm:px-0">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -146,46 +146,46 @@ export default function Wordsmiths({ user, userDetails }: Props) {
 
       {/* Users Grid */}
       {filteredUsers.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {filteredUsers.map((user) => (
             <Card key={user.id} className="group overflow-hidden transition-colors hover:border-primary">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-14 w-14 ring-2 ring-background">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <Avatar className="h-12 w-12 sm:h-14 sm:w-14 ring-2 ring-background">
                     <AvatarImage src={user.avatar_url} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-base sm:text-lg">
                       {user.full_name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1 space-y-1.5 sm:space-y-2">
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground">{user.full_name}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground line-clamp-1">{user.full_name}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Last active {formatDistanceToNow(new Date(user.updated_at))} ago
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {user.target_language && (
-                        <Badge variant="secondary" className="group-hover:bg-primary/10">
+                        <Badge variant="secondary" className="group-hover:bg-primary/10 text-xs sm:text-sm">
                           Learning: {user.target_language.name}
                         </Badge>
                       )}
                       {user.native_language && (
-                        <Badge variant="outline" className="group-hover:border-primary/30">
+                        <Badge variant="outline" className="group-hover:border-primary/30 text-xs sm:text-sm">
                           Native: {user.native_language.name}
                         </Badge>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="mt-6 flex items-center gap-6 text-sm">
+                <div className="mt-4 sm:mt-6 flex items-center gap-4 sm:gap-6 text-xs sm:text-sm">
                   <div>
                     <Label className="font-normal text-muted-foreground">Credits</Label>
-                    <p className="mt-1 text-xl font-semibold text-foreground">{user.credits}</p>
+                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-semibold text-foreground">{user.credits}</p>
                   </div>
                   <div>
                     <Label className="font-normal text-muted-foreground">Trial Credits</Label>
-                    <p className="mt-1 text-xl font-semibold text-foreground">{user.trial_credits}</p>
+                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-semibold text-foreground">{user.trial_credits}</p>
                   </div>
                 </div>
               </CardContent>
@@ -193,48 +193,47 @@ export default function Wordsmiths({ user, userDetails }: Props) {
           ))}
         </div>
       ) : (
-        <Card className="flex flex-col items-center justify-center px-6 py-16 text-center">
+        <Card className="flex flex-col items-center justify-center px-4 sm:px-6 py-12 sm:py-16 text-center mx-2 sm:mx-0">
           <div className="relative">
-            <Users className="h-20 w-20 text-muted-foreground/20" />
-            
+            <Users className="h-16 w-16 sm:h-20 sm:w-20 text-muted-foreground/20" />
           </div>
-          <h3 className="mt-6 text-2xl font-semibold text-foreground">No Wordsmiths Found</h3>
+          <h3 className="mt-4 sm:mt-6 text-xl sm:text-2xl font-semibold text-foreground">No Wordsmiths Found</h3>
           {searchQuery ? (
             <>
-              <p className="mt-3 max-w-[500px] text-muted-foreground">
+              <p className="mt-2 sm:mt-3 max-w-[500px] text-sm sm:text-base text-muted-foreground">
                 No users match your search criteria. Try adjusting your search terms or clearing the search to see all Wordsmiths.
               </p>
-              <div className="mt-6 grid grid-cols-3 gap-6 text-sm [&_svg]:mx-auto [&_svg]:mb-2">
+              <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-xs sm:text-sm [&_svg]:mx-auto [&_svg]:mb-2">
                 <div className="space-y-1 text-muted-foreground">
-                  <Search className="h-5 w-5" />
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5" />
                   <p className="font-medium">Search Tips</p>
-                  <p>Try searching by name, native language, or target language</p>
+                  <p className="text-xs">Try searching by name, native language, or target language</p>
                 </div>
                 <div className="space-y-1 text-muted-foreground">
-                  <Users className="h-5 w-5" />
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                   <p className="font-medium">About Wordsmiths</p>
-                  <p>Connect with language learners who share your learning goals</p>
+                  <p className="text-xs">Connect with language learners who share your learning goals</p>
                 </div>
                 <div className="space-y-1 text-muted-foreground">
-                  <Star className="h-5 w-5" />
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5" />
                   <p className="font-medium">Why Connect?</p>
-                  <p>Exchange language knowledge and earn credits through helping others</p>
+                  <p className="text-xs">Exchange language knowledge and earn credits through helping others</p>
                 </div>
               </div>
             </>
           ) : (
             <>
-              <p className="mt-3 max-w-[500px] text-muted-foreground">
+              <p className="mt-2 sm:mt-3 max-w-[500px] text-sm sm:text-base text-muted-foreground">
                 Wordsmiths are passionate language learners in our community. They earn credits by helping others learn their native language
                 and spend them to receive help with their target language.
               </p>
-              <div className="mt-6 grid grid-cols-2 gap-4 text-sm [&_svg]:mx-auto [&_svg]:mb-2">
+              <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm [&_svg]:mx-auto [&_svg]:mb-2">
                 <div className="space-y-1 text-muted-foreground">
-                  <Star className="h-5 w-5" />
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5" />
                   <p>Earn credits by helping others</p>
                 </div>
                 <div className="space-y-1 text-muted-foreground">
-                  <Clock className="h-5 w-5" />
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                   <p>Track learning progress</p>
                 </div>
               </div>

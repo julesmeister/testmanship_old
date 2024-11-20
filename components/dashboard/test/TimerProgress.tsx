@@ -3,16 +3,28 @@ import { CheckCircle } from 'lucide-react';
 
 interface TimerProgressProps {
   timeElapsed: number;
-  timeAllocation: number;
+  timeAllocation?: number;
   mode: 'practice' | 'exam';
-  onGradeChallenge?: () => void;
+  onGradeChallenge: () => void;
+  wordCount?: number;
+  requiredWordCount?: number;
+  showGradeButton?: boolean;
 }
 
-export default function TimerProgress({ timeElapsed, timeAllocation, mode, onGradeChallenge }: TimerProgressProps) {
+export default function TimerProgress({ 
+  timeElapsed, 
+  timeAllocation, 
+  mode,
+  onGradeChallenge,
+  wordCount = 0,
+  requiredWordCount = 0,
+  showGradeButton = false
+}: TimerProgressProps) {
   const [fillWidth, setFillWidth] = useState(0);
   const animationFrameRef = useRef<number>();
   const startTimeRef = useRef<number>();
-  const isTimeUp = timeElapsed >= timeAllocation * 60;
+  const isTimeUp = timeAllocation ? timeElapsed >= timeAllocation * 60 : false;
+  const [isHovered, setIsHovered] = useState(false);
 
   // Handle initial fill animation
   useEffect(() => {
@@ -48,13 +60,14 @@ export default function TimerProgress({ timeElapsed, timeAllocation, mode, onGra
   }, [timeElapsed]);
 
   // Calculate progress percentage (inverted since we want it to drain)
-  const progress = Math.max(0, 100 - (timeElapsed / (timeAllocation * 60)) * 100);
+  const progress = timeAllocation ? Math.max(0, 100 - (timeElapsed / (timeAllocation * 60)) * 100) : 0;
   
   // Format time remaining
   const formatTimeRemaining = (seconds: number) => {
+    if (!timeAllocation) return "∞";
     const remainingSeconds = Math.max(0, (timeAllocation * 60) - seconds);
     const minutes = Math.floor(remainingSeconds / 60);
-    const secs = remainingSeconds % 60;
+    const secs = Math.floor(remainingSeconds % 60);
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -86,8 +99,38 @@ export default function TimerProgress({ timeElapsed, timeAllocation, mode, onGra
     );
   }
 
+  if (isHovered && showGradeButton) {
+    return (
+      <button
+        onClick={onGradeChallenge}
+        onMouseLeave={() => setIsHovered(false)}
+        className="group relative flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 rounded-lg transition-all overflow-hidden w-full h-12 hover:text-zinc-900 dark:hover:text-zinc-100"
+      >
+        {/* Subtle background color */}
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-violet-50 dark:from-violet-950/30 dark:via-fuchsia-950/30 dark:to-violet-950/30 opacity-80" />
+        
+        {/* Always visible gradient border */}
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 opacity-100 animate-gradient-x">
+          <div className="absolute inset-[1px] bg-white/80 dark:bg-zinc-900/80 rounded-lg backdrop-blur-sm" />
+        </div>
+        
+        {/* Content with hover effects */}
+        <span className="relative z-10 transform transition-transform duration-200">
+          Grade and Record Challenge ({wordCount}/{requiredWordCount} words)
+        </span>
+        <CheckCircle 
+          className="relative z-10 h-5 w-5 transform group-hover:scale-110 transition-all duration-200 text-violet-500 dark:text-violet-400 group-hover:text-violet-600 dark:group-hover:text-violet-300" 
+        />
+      </button>
+    );
+  }
+
   return (
-    <div className="relative w-full h-12 bg-white dark:bg-zinc-900 rounded-lg overflow-hidden shadow-inner border border-zinc-200 dark:border-zinc-700">
+    <div 
+      className="relative w-full h-12 bg-white dark:bg-zinc-900 rounded-lg overflow-hidden shadow-inner border border-zinc-200 dark:border-zinc-700"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Progress bar */}
       <div 
         className="absolute inset-0 transition-[width] duration-1000"

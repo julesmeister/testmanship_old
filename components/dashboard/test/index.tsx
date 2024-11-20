@@ -419,6 +419,9 @@ export default function Test({ user, userDetails }: Props) {
               timeAllocation={selectedChallenge.time_allocation}
               mode={mode}
               onGradeChallenge={handleGradeChallenge}
+              wordCount={wordCount}
+              requiredWordCount={selectedChallenge.word_count}
+              showGradeButton={wordCount >= (selectedChallenge.word_count || 0)}
             />
           )}
           <textarea
