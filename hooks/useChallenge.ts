@@ -1,17 +1,7 @@
 import { useState, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'sonner';
-
-interface Challenge {
-  id: string;
-  title: string;
-  instructions: string;
-  difficulty_level: string;
-  time_allocation: number;
-  word_count?: number;
-  grammar_focus?: string[];
-  vocabulary_themes?: string[];
-}
+import { type Challenge } from '@/types/challenge';
 
 export const useChallenge = (
   onStartChallenge: (challenge: Challenge) => void,
@@ -28,6 +18,14 @@ export const useChallenge = (
   const [outputCodeState, setOutputCodeState] = useState('');
 
   const fetchChallenges = useCallback(async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+
+    if (!userId) {
+      toast.error('User not authenticated');
+      return;
+    }
+
     let query = supabase
       .from('challenges')
       .select('*')
@@ -41,10 +39,17 @@ export const useChallenge = (
     
     if (error) {
       console.error('Error fetching challenges:', error);
+      toast.error('Failed to fetch challenges');
       return;
     }
 
-    setChallenges(data || []);
+    // Ensure all challenges have the created_by field
+    const challengesWithCreator = data?.map(challenge => ({
+      ...challenge,
+      created_by: challenge.created_by || userId // Use current user ID as fallback
+    })) || [];
+
+    setChallenges(challengesWithCreator);
   }, [selectedLevel, searchQuery, supabase]);
 
   const handleStartChallenge = useCallback((challenge: Challenge) => {

@@ -1,25 +1,21 @@
+/**
+ * ⚠️ DOCUMENTATION NOTICE
+ * Before making any changes to this API endpoint, please review the DOCUMENTATION.md in this directory.
+ * Key areas to review and update:
+ * 1. Request validation
+ * 2. AI prompt templates
+ * 3. Response formatting
+ * 4. Error handling
+ * 
+ * After making changes:
+ * 1. Update DOCUMENTATION.md
+ * 2. Update tests
+ * 3. Verify AI integration
+ */
+
 import { NextResponse } from 'next/server';
 import { makeAIRequest } from '@/utils/ai';
-
-// Helper function to get word count range based on difficulty
-function getWordCountRange(difficulty: string): number {
-  switch (difficulty.toUpperCase()) {
-    case 'A1':
-      return 50;
-    case 'A2':
-      return 100;
-    case 'B1':
-      return 150;
-    case 'B2':
-      return 200;
-    case 'C1':
-      return 250;
-    case 'C2':
-      return 300;
-    default:
-      return 150;
-  }
-}
+import { getWordCountRange, isValidDifficulty } from '@/types/difficulty';
 
 export async function POST(req: Request) {
   console.log('API Route started');
@@ -29,10 +25,10 @@ export async function POST(req: Request) {
     
     const { difficulty, format, timeAllocation, topics = [], usedTitles = [], title = '' } = body;
 
-    if (!difficulty) {
-      console.error('Missing difficulty in request');
+    if (!isValidDifficulty(difficulty)) {
+      console.error('Invalid difficulty in request');
       return NextResponse.json(
-        { error: 'Missing required field: difficulty' },
+        { error: 'Invalid difficulty level' },
         { status: 400 }
       );
     }

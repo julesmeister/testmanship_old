@@ -21,7 +21,7 @@ import DashboardLayout from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChallengeFilters } from './ChallengeFilters';
 import { ChallengeStats } from './ChallengeStats';
-import { ChallengeCard } from './ChallengeCard';
+import { ChallengeCard } from "./ChallengeCard";
 import { ChallengeDialog } from './ChallengeDialog';
 import { startProgress } from '@/components/ui/progress-bar';
 import { EmptyChallengeState } from './EmptyChallengeState';
@@ -165,7 +165,7 @@ export default function Challenges({ user, userDetails }: Props) {
                   <ChallengeCard
                     key={challenge.id}
                     challenge={challenge}
-                    onClick={() => handleChallengeClick(challenge)}
+                    onStart={() => handleChallengeClick(challenge)}
                   />
                 ))}
               </div>

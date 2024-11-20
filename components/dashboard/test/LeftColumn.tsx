@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChallengeCard } from './components/ChallengeCard';
+import { ChallengeCard } from "@/components/dashboard/challenges/ChallengeCard";
 import { useChallenge } from '@/hooks/useChallenge';
 import { useFeedbackGeneration } from '@/hooks/useFeedbackGeneration';
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -28,7 +28,7 @@ import {
   InfoCard,
   FocusCard,
   FooterStats,
-} from './components/cards';
+} from '../../card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

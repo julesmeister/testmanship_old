@@ -1,9 +1,26 @@
+/**
+ * ⚠️ DOCUMENTATION NOTICE
+ * Before making any changes to this API endpoint, please review the DOCUMENTATION.md in this directory.
+ * Key areas to review and update:
+ * 1. Request/Response formats
+ * 2. Error handling
+ * 3. Rate limiting
+ * 4. Security considerations
+ * 
+ * After making changes:
+ * 1. Update DOCUMENTATION.md
+ * 2. Update tests
+ * 3. Update related components
+ */
+
 import { NextResponse } from 'next/server';
 import { makeAIRequest } from '@/utils/ai';
+import { getLanguageName } from '@/types/language';
 
 export async function POST(request: Request) {
   try {
-    const { essayContent, challengeId, targetLanguage } = await request.json();
+    const { essayContent, challengeId, targetLanguage = 'EN' } = await request.json();
+    const languageName = getLanguageName(targetLanguage);
 
     if (!essayContent?.trim()) {
       return NextResponse.json(
@@ -18,30 +35,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    if (!targetLanguage) {
-      return NextResponse.json(
-        { error: 'Target language is required' },
-        { status: 400 }
-      );
-    }
-
-    // Map language codes to full names
-    const languageMap: { [key: string]: string } = {
-      'DE': 'German',
-      'EN': 'English',
-      'ES': 'Spanish',
-      'FR': 'French',
-      'IT': 'Italian',
-      'PT': 'Portuguese',
-      'NL': 'Dutch',
-      'RU': 'Russian',
-      'ZH': 'Chinese',
-      'JA': 'Japanese',
-      'KO': 'Korean'
-    };
-
-    const languageName = languageMap[targetLanguage.toUpperCase()] || 'English';
 
     try {
       const messages = [

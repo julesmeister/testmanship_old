@@ -1,7 +1,6 @@
 /**
  * ⚠️ DOCUMENTATION NOTICE
- * Before making any changes to these components, please review the DOCUMENTATION.md in the parent directory.
- * See the "Reusable Components > Card Components" section for guidelines and requirements.
+ * Before making any changes to these components, please review the DOCUMENTATION.md in this directory.
  * After making changes, update the documentation accordingly.
  */
 

@@ -13,7 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { BookOpen, PenTool, ArrowDown } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,7 +36,6 @@ type FormValues = z.infer<typeof formSchema>;
 export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGeneratorViewProps) => {
   const { supabase } = useSupabase();
   const typedSupabase = supabase as SupabaseClient;
-  const router = useRouter();
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({

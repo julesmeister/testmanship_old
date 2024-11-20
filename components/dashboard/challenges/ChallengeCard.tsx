@@ -4,13 +4,13 @@ import { DifficultyBadge } from './DifficultyBadge';
 
 interface ChallengeCardProps {
   challenge: Challenge;
-  onClick: () => void;
+  onStart: (challenge: Challenge) => void;
 }
 
-export function ChallengeCard({ challenge, onClick }: ChallengeCardProps) {
+export function ChallengeCard({ challenge, onStart }: ChallengeCardProps) {
   return (
     <div
-      onClick={onClick}
+      onClick={() => onStart(challenge)}
       className="block group cursor-pointer"
     >
       <div className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">

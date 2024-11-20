@@ -47,7 +47,7 @@ The writing challenge feature is a complex system that allows users to practice 
 
 ### 2. LeftColumn.tsx (Challenge Management)
 
-#### Props Interface (LeftColumnProps)
+#### Props Interface
 ```typescript
 interface LeftColumnProps {
   challenge: Challenge | null;
@@ -70,83 +70,177 @@ interface LeftColumnProps {
 
 #### Key Components
 
-##### DraggableWindow
-- Purpose: Displays AI feedback in a movable window
-- Features:
-  - Draggable interface
-  - Close button
-  - Feedback content display
-  - Position persistence
-  - Responsive layout
-
 ##### ChallengeCard
 - Purpose: Displays individual challenge information
+- Props:
+  ```typescript
+  interface ChallengeCardProps {
+    challenge: Challenge;
+    onStart: (challenge: Challenge) => void;
+  }
+  ```
 - Features:
-  - Challenge title and description
-  - Difficulty level
-  - Time allocation
-  - Start/Stop buttons
-  - Progress indicators
+  - Displays challenge title and instructions
+  - Shows difficulty level badge
+  - Shows time allocation
+  - Handles challenge start action
 
-#### State Management
-- Uses `localOutputCode` for local feedback display
-- Syncs with parent feedback state via props
-- Maintains clear feedback functionality
-- Uses `useFeedbackGeneration` hook for feedback generation logic
+##### InfoCard
+- Purpose: Displays challenge metadata
+- Props:
+  ```typescript
+  interface InfoCardProps {
+    title: string;
+    content?: string | ReactNode;
+    value?: string | number;
+    icon?: IconComponent;
+    colorScheme?: 'blue' | 'purple' | 'emerald' | 'amber';
+  }
+  ```
+- Usage: Displays time allocation, word count, etc.
 
-### 3. Feedback State Management
+##### FocusCard
+- Purpose: Displays focused information with visual emphasis
+- Props:
+  ```typescript
+  interface FocusCardProps {
+    title: string;
+    content?: string | ReactNode;
+    items?: string[];
+    highlight?: boolean;
+    icon?: IconComponent;
+    colorScheme?: 'emerald' | 'amber';
+  }
+  ```
+- Usage: Displays grammar focus points and vocabulary themes
 
-#### useAIFeedback Hook
-- Purpose: Centralized feedback state management
+##### FooterStats
+- Purpose: Shows challenge statistics
+- Props:
+  ```typescript
+  interface FooterStatsProps {
+    timeAllocation?: number;
+    difficultyLevel?: string;
+    completionRate?: number;
+    attempts?: number;
+    stats?: Stats;
+    className?: string;
+  }
+  ```
 - Features:
-  - Manages feedback content
-  - Handles API interactions
-  - Provides feedback generation logic
-  - Exposes feedback state controls
+  - Shows time allocation
+  - Displays difficulty level badge
+  - Shows completion rate (if available)
+  - Shows attempt count (if available)
 
-#### useFeedbackGeneration Hook
-- Purpose: Feedback generation and rate limiting
-- Features:
-  - Rate limit handling
-  - Error management
-  - Toast notifications
-  - Paragraph-level feedback
+### 3. useChallenge Hook
 
-## Component Interactions
+#### Purpose
+Manages challenge data fetching and state
 
-### Feedback Flow
-1. User types in textarea (`handleTextChange`)
-2. Feedback window shows automatically (if not manually closed)
-3. User clicks paragraph feedback button
-4. `handleParagraphFeedback` triggers feedback generation
-5. Feedback flows through hooks:
-   ```mermaid
-   graph TD
-      A[useAIFeedback] -->|state| B[index.tsx]
-      B -->|props| C[LeftColumn.tsx]
-      C -->|local state| D[Feedback Display]
-   ```
+#### Features
+- Fetches challenges from Supabase
+- Handles challenge filtering by difficulty level
+- Manages challenge search functionality
+- Ensures proper challenge data structure with required fields
+- Handles authentication state
 
-### Challenge Flow
-1. User selects challenge from ChallengeCard
-2. `handleStartChallenge` initializes challenge state
-3. Timer starts and writing area becomes active
-4. User can receive feedback while writing
-5. Challenge ends via manual stop or timer completion
-6. Final feedback is generated on completion
-
-### State Dependencies
-```mermaid
-graph TD
-    A[useAIFeedback] -->|feedback state| B[index.tsx]
-    B -->|props| C[LeftColumn.tsx]
-    C -->|local state| D[FeedbackDisplay]
-    E[useFeedbackGeneration] -->|generation logic| C
+#### Implementation Details
+```typescript
+const useChallenge = (
+  onStartChallenge: (challenge: Challenge) => void,
+  onStopChallenge: () => void,
+) => {
+  // State management for challenges
+  // Pagination handling
+  // Search and filtering
+  // Data fetching with proper error handling
+  // Authentication checks
+}
 ```
+
+## Type Definitions
+
+### Challenge Interface
+```typescript
+interface Challenge {
+  id: string;
+  title: string;
+  description?: string;
+  instructions: string;
+  difficulty_level: string;
+  time_allocation: number;
+  word_count?: number;
+  grammar_focus?: string[];
+  vocabulary_themes?: string[];
+  example_response?: string;
+  targetLanguage?: string;
+  created_at?: string;
+  created_by: string;
+}
+```
+
+## Best Practices
+
+1. **Type Safety**
+   - Always use proper type definitions
+   - Avoid type assertions unless absolutely necessary
+   - Keep interfaces up-to-date with database schema
+
+2. **Component Props**
+   - Use descriptive prop names that reflect purpose
+   - Make props optional when appropriate
+   - Provide default values for optional props
+
+3. **State Management**
+   - Use appropriate state management hooks
+   - Handle loading and error states
+   - Implement proper cleanup in useEffect
+
+4. **Error Handling**
+   - Implement proper error boundaries
+   - Show user-friendly error messages
+   - Log errors for debugging
+
+5. **Performance**
+   - Implement proper pagination
+   - Use memoization where appropriate
+   - Optimize re-renders
+
+## Common Issues and Solutions
+
+1. **Challenge Type Mismatches**
+   - Ensure all required fields are present
+   - Use the proper Challenge type from @/types/challenge
+   - Handle optional fields appropriately
+
+2. **Component Prop Changes**
+   - Update all component instances when changing prop interfaces
+   - Maintain backward compatibility when possible
+   - Document breaking changes
+
+3. **Authentication Issues**
+   - Always check user authentication state
+   - Handle unauthenticated states gracefully
+   - Provide clear user feedback
+
+## Components
+
+### Card Components
+⚠️ **Migration Notice**: Card components have been moved to `/components/card` for better reusability.
+Please refer to the [Card Components Documentation](/components/card/DOCUMENTATION.md) for details.
+
+Import cards from the new location:
+```typescript
+import { GradientCard, InfoCard, DifficultyBadge } from '@/components/card';
+```
+
+### Test Interface Components
+{{ ... }}
 
 ## Reusable Components
 
-### Card Components (`/components/cards/`)
+### Card Components (`/components/card/`)
 A collection of reusable card components designed for consistent UI presentation across the test interface.
 
 #### Available Cards
@@ -196,7 +290,7 @@ interface Stats {
 #### Usage Guidelines
 1. Import cards from the barrel file:
    ```typescript
-   import { GradientCard, InfoCard, FocusCard } from './components/cards';
+   import { GradientCard, InfoCard, FocusCard } from './components/card';
    ```
 
 2. Maintain consistency:
