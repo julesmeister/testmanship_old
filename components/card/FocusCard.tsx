@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { type FocusCardProps } from './types';
 import { IconType } from 'react-icons';
+import { HiChevronRight } from 'react-icons/hi';
 
 interface FocusCardProps {
   title: string;
@@ -38,7 +39,7 @@ export function FocusCard({ title, items, icon: Icon, colorScheme }: FocusCardPr
       <ul className="space-y-1.5">
         {items.map((item, index) => (
           <li key={index} className={`flex items-start gap-2 text-sm ${colors.text}`}>
-            <span className={`mt-1 h-1 w-1 rounded-full ${colors.dot}`} />
+            <HiChevronRight className={`h-4 w-4 mt-0.5 flex-shrink-0 ${colors.text}`} />
             {item}
           </li>
         ))}
