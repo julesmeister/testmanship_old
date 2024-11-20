@@ -16,6 +16,7 @@ interface ChallengeDialogProps {
   creatorName: string;
   isCurrentUser: boolean;
   onClose: () => void;
+  onEdit?: () => void;
 }
 
 export function ChallengeDialog({
@@ -23,6 +24,7 @@ export function ChallengeDialog({
   creatorName,
   isCurrentUser,
   onClose,
+  onEdit,
 }: ChallengeDialogProps) {
   const router = useRouter();
 

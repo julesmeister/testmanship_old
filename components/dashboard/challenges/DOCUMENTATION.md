@@ -256,6 +256,32 @@ CREATE TABLE challenges (
 5. `/hooks/useChallenges.ts`
 6. `/hooks/useChallengeFilters.ts`
 
+## Recent Changes
+
+### 2024 Updates
+
+#### ChallengeDialog Component Updates
+- Added optional `onEdit` prop to `ChallengeDialogProps` interface
+- Updated edit functionality to use callback pattern instead of direct navigation
+- Improved type safety with proper TypeScript prop definitions
+
+```typescript
+// Updated ChallengeDialogProps interface
+interface ChallengeDialogProps {
+  challenge: Challenge | null;
+  creatorName: string;
+  isCurrentUser: boolean;
+  onClose: () => void;
+  onEdit?: () => void;  // New optional callback prop
+}
+```
+
+This change improves component reusability by:
+1. Making the edit behavior configurable through props
+2. Allowing parent components to control navigation logic
+3. Maintaining better separation of concerns
+4. Improving type safety with explicit prop definitions
+
 ## Future Improvements
 1. Challenge templates
 2. Batch challenge creation
