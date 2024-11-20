@@ -34,7 +34,7 @@ export const useFeedbackGeneration = (
     
     if (timeSinceLastFeedback < MIN_FEEDBACK_INTERVAL) {
       const waitTime = Math.ceil((MIN_FEEDBACK_INTERVAL - timeSinceLastFeedback) / 1000);
-      throw new Error(`rate limit exceeded. Please wait ${waitTime} seconds.`);
+      throw new Error(`Taking a brief pause to ensure quality feedback. Ready in ${waitTime} seconds! ⏳`);
     }
 
     try {
@@ -43,7 +43,7 @@ export const useFeedbackGeneration = (
       return result;
     } catch (error) {
       if (error instanceof Error && error.message.toLowerCase().includes('rate limit')) {
-        throw new Error(`rate limit exceeded. Please wait a moment.`);
+        throw new Error(`Our writing assistant needs a quick breather. We'll be back with fresh insights shortly! 🎨`);
       }
       throw error;
     }

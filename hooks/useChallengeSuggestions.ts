@@ -50,7 +50,7 @@ export function useChallengeSuggestions(
       if (!response.ok) {
         // Check for rate limit error specifically
         if (response.status === 429 || data.error?.code === 429) {
-          throw new Error('Rate limit exceeded. Please wait a moment before generating more suggestions.');
+          throw new Error('Our challenge generator is cooling down. We\'ll be ready with fresh suggestions in just a moment! 🎯');
         }
         throw new Error(`Failed to generate suggestions: ${data.error || 'Unknown error'}`);
       }

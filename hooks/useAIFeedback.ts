@@ -42,7 +42,7 @@ export const useAIFeedback = ({ challenge, targetLanguage }: AIFeedbackOptions) 
       if (!response.ok) {
         // Check for rate limit error from the API
         if (response.status === 429) {
-          throw new Error('rate limit exceeded');
+          throw new Error('Our AI is taking a quick break. Please try again in a few moments for more feedback! 🧠✨');
         }
         throw new Error(responseData.message || `Failed to generate feedback: ${response.status}`);
       }
