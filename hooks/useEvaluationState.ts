@@ -6,32 +6,26 @@ interface PerformanceMetrics {
   paragraphCount: number;
   timeSpent: number;
   performanceScore: number;
-  feedback?: string;
+  improvedEssay?: string;
+  metrics: {
+    grammar: number;
+    vocabulary: number;
+    fluency: number;
+    overall: number;
+  };
 }
 
 interface SkillMetrics {
-  category: string;
-  skillName: string;
-  proficiencyLevel: number;
-  improvementRate?: number;
-}
-
-interface UserProgress {
-  totalChallengesCompleted: number;
-  totalWordsWritten: number;
-  totalTimeSpent: number;
-  averagePerformance: number;
-  strongestSkills: string[];
-  weakestSkills: string[];
-  preferredTopics: string[];
-  lastActiveLevel: string;
+  writingComplexity: number;
+  accuracy: number;
+  coherence: number;
+  style: number;
 }
 
 export interface EvaluationState {
   showEvaluation: boolean;
   performanceMetrics: PerformanceMetrics;
-  skillMetrics: SkillMetrics[];
-  userProgress: UserProgress;
+  skillMetrics: SkillMetrics;
   isLoading: boolean;
   error: string | null;
 }
@@ -43,18 +37,19 @@ const defaultState: EvaluationState = {
     paragraphCount: 0,
     timeSpent: 0,
     performanceScore: 0,
-    feedback: ''
+    improvedEssay: '',
+    metrics: {
+      grammar: 0,
+      vocabulary: 0,
+      fluency: 0,
+      overall: 0
+    }
   },
-  skillMetrics: [],
-  userProgress: {
-    totalChallengesCompleted: 0,
-    totalWordsWritten: 0,
-    totalTimeSpent: 0,
-    averagePerformance: 0,
-    strongestSkills: [],
-    weakestSkills: [],
-    preferredTopics: [],
-    lastActiveLevel: ''
+  skillMetrics: {
+    writingComplexity: 0,
+    accuracy: 0,
+    coherence: 0,
+    style: 0
   },
   isLoading: false,
   error: null
@@ -81,7 +76,7 @@ export const useEvaluationState = (
         body: JSON.stringify({
           challengeId: challenge.id,
           content: content,
-          timeSpent: challenge.timeAllocation || 1800 // default to 30 minutes
+          timeSpent: challenge.time_allocation || 1800 // default to 30 minutes
         })
       });
 
@@ -92,65 +87,13 @@ export const useEvaluationState = (
 
       const data = await response.json();
       
-      // Transform API response to match component expectations
-      const transformedData: Partial<EvaluationState> = {
+      setState({
         showEvaluation: true,
-        performanceMetrics: {
-          wordCount: data.performanceMetrics.wordCount,
-          paragraphCount: data.performanceMetrics.paragraphCount,
-          timeSpent: data.performanceMetrics.timeSpent,
-          performanceScore: data.performanceMetrics.performanceScore,
-          feedback: data.performanceMetrics.feedback
-        },
-        skillMetrics: [
-          {
-            category: 'Writing',
-            skillName: 'Grammar',
-            proficiencyLevel: data.skillMetrics.grammar,
-            improvementRate: 0
-          },
-          {
-            category: 'Writing',
-            skillName: 'Vocabulary',
-            proficiencyLevel: data.skillMetrics.vocabulary,
-            improvementRate: 0
-          },
-          {
-            category: 'Writing',
-            skillName: 'Structure',
-            proficiencyLevel: data.skillMetrics.structure,
-            improvementRate: 0
-          },
-          {
-            category: 'Writing',
-            skillName: 'Creativity',
-            proficiencyLevel: data.skillMetrics.creativity,
-            improvementRate: 0
-          },
-          {
-            category: 'Writing',
-            skillName: 'Clarity',
-            proficiencyLevel: data.skillMetrics.clarity,
-            improvementRate: 0
-          }
-        ],
-        userProgress: {
-          totalChallengesCompleted: data.userProgress.totalChallenges,
-          totalWordsWritten: data.userProgress.totalWords,
-          totalTimeSpent: data.performanceMetrics.timeSpent,
-          averagePerformance: data.userProgress.averageScore,
-          strongestSkills: ['Grammar', 'Structure'],
-          weakestSkills: ['Creativity'],
-          preferredTopics: ['Writing'],
-          lastActiveLevel: challenge.difficulty
-        }
-      };
-
-      setState(prev => ({
-        ...prev,
-        ...transformedData,
-        isLoading: false
-      }));
+        performanceMetrics: data.performanceMetrics,
+        skillMetrics: data.skillMetrics,
+        isLoading: false,
+        error: null
+      });
 
     } catch (error) {
       setState(prev => ({
@@ -161,7 +104,6 @@ export const useEvaluationState = (
     }
   }, [challenge, content]);
 
-  // Fetch evaluation when time is up
   useEffect(() => {
     if (challenge && isTimeUp && content) {
       fetchEvaluation();

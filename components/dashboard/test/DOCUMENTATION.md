@@ -540,6 +540,38 @@ The writing challenge feature is a complex system that allows users to practice 
       - Efficient data updates
       - Smooth animations
 
+   ## Toast Notifications
+
+   ### Evaluation Loading Toast
+   The system shows a loading toast when evaluating the user's writing. This toast:
+   - Is dismissible by the user at any time
+   - Automatically dismisses when evaluation is complete
+   - Shows a helpful message about the evaluation process
+   - Prevents multiple toasts from stacking up
+
+   Implementation details:
+   ```typescript
+   useEffect(() => {
+     if (evaluationLoading) {
+       const toastId = toast.loading('Evaluating your writing...', {
+         description: 'This may take a few moments',
+         dismissible: true,
+       });
+
+       // Cleanup when loading is done
+       return () => {
+         toast.dismiss(toastId);
+       };
+     }
+   }, [evaluationLoading]);
+   ```
+
+   Best Practices:
+   - Always store toast IDs when showing loading states
+   - Clean up toasts in useEffect cleanup functions
+   - Make loading toasts dismissible
+   - Provide clear progress information to users
+
    ## Reusable Components
 
    ### Card Components (`/components/card/`)
@@ -622,66 +654,148 @@ The writing challenge feature is a complex system that allows users to practice 
    - [ ] Test responsive behavior
    - [ ] Verify accessibility
 
-   ## Recent Updates (2024)
+   ## Writing Challenge Evaluation System
 
-   ### Component Refactoring
+   ### Overview
+   The writing challenge evaluation system provides AI-powered analysis of user submissions, offering detailed metrics and feedback. The system is designed to be modular, extensible, and user-friendly.
 
-   #### New Components
-   - `InstructionsAccordion`: A reusable component that displays writing instructions and criteria in an accordion format
-     - Handles footer overlap adjustment
-     - Manages accordion state and animations
-     - Displays challenge details including title, instructions, time allocation, word count, grammar focus, and vocabulary themes
-     - Supports dark mode and responsive layout
+   ### Components and Files
 
-   #### Modified Components
-   - `LeftColumn`: Refactored to use the new `InstructionsAccordion` component
-     - Improved code organization and reusability
-     - Maintained existing functionality and behavior
-     - Prepared for future evaluation accordion implementation
+   #### 1. API Route (`/app/api/challenge-evaluation/route.ts`)
+   - **Purpose**: Handles evaluation requests and AI integration
+   - **Key Features**:
+     - AI-powered writing evaluation
+     - JSON response parsing with error handling
+     - Retry logic for AI requests
+     - Rate limiting protection
+   - **Response Format**:
+   ```typescript
+   interface EvaluationResponse {
+     performanceMetrics: {
+       wordCount: number;
+       paragraphCount: number;
+       timeSpent: number;
+       performanceScore: number;
+       improvedEssay: string;
+       metrics: {
+         grammar: number;
+         vocabulary: number;
+         fluency: number;
+         overall: number;
+       }
+     };
+     skillMetrics: {
+       writingComplexity: number;
+       accuracy: number;
+       coherence: number;
+       style: number;
+     }
+   }
+   ```
 
-   ### Card Components Refactoring
-   1. **FocusCard**
-      - Simplified props interface
-      - Added specific color schemes for emerald and amber
-      - Improved dark mode support
-      - Enhanced accessibility with semantic HTML
+   #### 2. State Management (`/hooks/useEvaluationState.ts`)
+   - **Purpose**: Manages evaluation state and UI updates
+   - **Key Features**:
+     - Handles loading states
+     - Error management
+     - Metrics state updates
+     - Automatic evaluation triggers
+   - **Usage**:
+   ```typescript
+   const {
+     showEvaluation,
+     performanceMetrics,
+     skillMetrics,
+     isLoading,
+     error
+   } = useEvaluationState(challenge, isTimeUp, content);
+   ```
 
-   2. **GradientCard**
-      - Streamlined props to essential fields
-      - Updated gradient styling
-      - Improved dark mode compatibility
-      - Better responsive design
+   #### 3. UI Components
 
-   3. **InstructionsCard**
-      - Migrated to HiClipboardDocument icon
-      - Enhanced readability with better text formatting
-      - Improved dark mode support
-      - Added line-by-line instruction rendering
+   ##### EvaluationAccordion (`/components/dashboard/test/components/EvaluationAccordion.tsx`)
+   - **Purpose**: Displays evaluation results
+   - **Sections**:
+     - Performance Analysis
+     - Improved Essay
+     - Metrics Display
+     - Time Statistics
+   - **Features**:
+     - Collapsible sections
+     - Visual metrics representation
+     - Responsive layout
 
-   4. **InfoCard**
-      - Simplified color scheme options (blue/purple)
-      - Enhanced dark mode support
-      - Improved typography and spacing
-      - Better icon integration
+   ##### LeftColumn (`/components/dashboard/test/LeftColumn.tsx`)
+   - **Purpose**: Main container for evaluation UI
+   - **Features**:
+     - Evaluation trigger management
+     - Toast notifications
+     - Loading states
+     - Error handling
 
-   5. **FooterStats**
-      - Added dynamic minute/minutes text based on time allocation
-      - Enhanced difficulty level badge styling
-      - Improved dark mode support
-      - Better responsive layout
+   #### 4. Dashboard Integration (`/components/dashboard/test/index.tsx`)
+   - **Purpose**: Integrates evaluation into main dashboard
+   - **Features**:
+     - User session management
+     - Challenge state coordination
+     - Timer integration
+     - Feedback system coordination
 
-   ### LeftColumn Component Updates
-   1. **Pagination Improvements**
-      - Added conditional rendering (only shows when totalPages > 1)
-      - Enhanced spacing and layout
-      - Centered pagination controls
-      - Improved dark mode border colors
+   ### Metrics System
 
-   2. **Time Display Enhancement**
-      - Added grammatically correct singular/plural form for time allocation
-      - Example: "1 minute" vs "2 minutes"
+   #### Performance Metrics
+   - **Grammar**: Language correctness (0-100)
+   - **Vocabulary**: Word choice and variety (0-100)
+   - **Fluency**: Flow and naturalness (0-100)
+   - **Overall**: Combined performance score (0-100)
 
-   These updates focus on maintaining visual consistency, improving dark mode support, and enhancing user experience across all components.
+   #### Skill Metrics
+   - **Writing Complexity**: Sentence structure and sophistication
+   - **Accuracy**: Content precision and correctness
+   - **Coherence**: Logical flow and organization
+   - **Style**: Writing style and tone
+
+   ### Error Handling
+   1. **API Errors**:
+      - Rate limiting protection
+      - Retry mechanism for transient errors
+      - User-friendly error messages
+      - Detailed error logging
+
+   2. **UI Error States**:
+      - Loading indicators
+      - Error message display
+      - Fallback content
+      - Recovery mechanisms
+
+   ### Future Improvements
+   1. **Metrics Customization**:
+      - Configurable scoring weights
+      - Custom metric definitions
+      - Domain-specific evaluations
+
+   2. **UI Enhancements**:
+      - Advanced visualization options
+      - Detailed feedback breakdown
+      - Historical comparison
+      - Progress tracking
+
+   3. **Performance Optimization**:
+      - Caching strategies
+      - Batch processing
+      - Response optimization
+
+   ### Security Considerations
+   1. Input sanitization
+   2. Rate limiting
+   3. Error message obfuscation
+   4. API key protection
+
+   ### Related Files
+   - `/utils/ai.ts`: AI request utilities
+   - `/types/challenge.ts`: Type definitions
+   - `/components/card/MetricsCard.tsx`: Metrics display component
+   - `/hooks/useFeedbackManager.ts`: Feedback management
 
    ## Important Notes
 
@@ -756,6 +870,180 @@ The writing challenge feature is a complex system that allows users to practice 
       - Error tracking
       - Performance metrics
       - Security alerts
+
+   ## Evaluation Mechanism
+
+   ### Overview
+   The evaluation mechanism is a comprehensive system that provides AI-powered assessment of user's writing submissions. It consists of several interconnected components that work together to provide real-time feedback and performance metrics.
+
+   ### Components
+
+   #### 1. useEvaluationState Hook
+   - **Purpose**: Manages the evaluation state and API communication
+   - **Location**: `hooks/useEvaluationState.ts`
+   - **Key Features**:
+     - Maintains evaluation state (performance metrics, skill metrics, user progress)
+     - Handles API communication with error handling
+     - Provides loading and error states
+     - Manages evaluation visibility
+
+   #### 2. EvaluationAccordion Component
+   - **Location**: `components/dashboard/test/components/EvaluationAccordion.tsx`
+   - **Features**:
+     - Displays evaluation results in an expandable accordion
+     - Shows improved essay suggestions
+     - Provides exit challenge functionality
+     - Matches layout with InstructionsAccordion for consistency
+
+   ### API Integration
+
+   #### Challenge Evaluation API
+   - **Endpoint**: `/api/challenge-evaluation`
+   - **Location**: `app/api/challenge-evaluation/route.ts`
+   - **Request Format**:
+     ```typescript
+     {
+       challengeId: string;
+       content: string;
+       timeSpent: number;
+     }
+     ```
+   - **Response Format**:
+     ```typescript
+     {
+       performanceMetrics: {
+         wordCount: number;
+         paragraphCount: number;
+         timeSpent: number;
+         performanceScore: number;
+         feedback: string;
+       };
+       skillMetrics: {
+         grammar: number;
+         vocabulary: number;
+         structure: number;
+         creativity: number;
+         clarity: number;
+       };
+       userProgress: {
+         totalChallenges: number;
+         totalWords: number;
+         averageScore: number;
+         skillImprovements: Array<{
+           skill: string;
+           improvement: number;
+         }>;
+       };
+     }
+     ```
+
+   ### Integration Flow
+
+   1. **Trigger Points**:
+      - When time is up (`isTimeUp` becomes true)
+      - When user manually requests evaluation
+      - When challenge is completed
+
+   2. **Data Flow**:
+     ```
+     User Submission → useEvaluationState → API → AI Processing → Response → UI Update
+     ```
+
+   3. **Error Handling**:
+     - Rate limiting with friendly messages
+     - Network error recovery
+     - Invalid response handling
+     - Empty content validation
+
+   ### AI Integration
+
+   #### makeAIRequest Utility
+   - **Location**: `utils/ai.ts`
+   - **Features**:
+     - Handles API communication with OpenAI/SambaNova
+     - Provides user-friendly error messages
+     - Implements rate limiting
+     - Manages API key validation
+
+   ### Usage in LeftColumn
+
+   The LeftColumn component (`components/dashboard/test/LeftColumn.tsx`) integrates the evaluation mechanism through:
+
+   1. **State Management**:
+     ```typescript
+     const {
+       showEvaluation,
+       performanceMetrics,
+       isLoading,
+       error
+     } = useEvaluationState(challenge, isTimeUp, content);
+     ```
+
+   2. **UI Integration**:
+     - Renders EvaluationAccordion when evaluation is available
+     - Shows loading states during evaluation
+     - Displays error messages when needed
+     - Manages visibility of evaluation results
+
+   ### Best Practices
+
+   1. **Error Handling**:
+     - Always provide user-friendly error messages
+     - Log technical details for debugging
+     - Implement proper rate limiting
+     - Handle network issues gracefully
+
+   2. **Performance**:
+     - Minimize unnecessary API calls
+     - Cache results when appropriate
+     - Implement proper loading states
+     - Handle large responses efficiently
+
+   3. **User Experience**:
+     - Show clear loading indicators
+     - Provide helpful error messages
+     - Maintain consistent UI during evaluation
+     - Allow easy navigation between instructions and evaluation
+
+   4. **Security**:
+     - Validate all inputs
+     - Sanitize user content
+     - Protect API keys
+     - Implement proper rate limiting
+
+   ### Known Limitations
+
+   1. **Rate Limiting**:
+     - AI service has request limits
+     - Implement proper queuing if needed
+     - Consider fallback options
+
+   2. **Response Time**:
+     - AI processing can take time
+     - Show appropriate loading states
+     - Consider partial results display
+
+   3. **Content Size**:
+     - Large submissions may need chunking
+     - Consider implementing progress indicators
+     - Handle timeout scenarios
+
+   ### Future Improvements
+
+   1. **Metrics Enhancement**:
+     - Add more detailed writing metrics
+     - Implement historical comparison
+     - Add peer comparison features
+
+   2. **UI Improvements**:
+     - Add visual metrics representation
+     - Implement progress tracking
+     - Add export functionality
+
+   3. **Performance Optimization**:
+     - Implement response caching
+     - Add offline support
+     - Optimize large content handling
 
    ## Future Considerations
    1. Add feedback history

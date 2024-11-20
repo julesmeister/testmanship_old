@@ -5,9 +5,17 @@ type Message = {
   content: string;
 };
 
-export async function makeAIRequest(messages: Message[]) {
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const isRateLimitError = (response: Response, errorData: any) => {
+  return response.status === 429 || 
+         errorData?.error?.type === 'rate_limit_exceeded' ||
+         errorData?.error?.message?.toLowerCase().includes('rate limit');
+};
+
+export async function makeAIRequest(messages: Message[], retryCount = 0) {
   if (!AI_CONFIG.apiKey) {
-    throw new Error('API configuration error - Missing API key');
+    throw new Error('Oops! Looks like we need to set up our AI connection. Please contact support for assistance! 🔧');
   }
 
   try {
@@ -29,51 +37,55 @@ export async function makeAIRequest(messages: Message[]) {
       body: JSON.stringify(requestBody),
     });
 
+    const errorData = await response.json().catch(() => ({}));
+    
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
       console.error('AI API Error Response:', errorData);
       
-      // Handle rate limit errors
-      if (response.status === 429 || (errorData.error?.type === 'rate_limit_exceeded')) {
-        throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+      // Handle rate limit errors with retry logic
+      if (isRateLimitError(response, errorData)) {
+        if (retryCount < 3) {
+          console.log(`Rate limit hit, retrying in ${(retryCount + 1) * 2} seconds...`);
+          await delay((retryCount + 1) * 2000); // Exponential backoff
+          return makeAIRequest(messages, retryCount + 1);
+        }
+        throw new Error('Our AI is taking a quick break. Please try again in a few moments! 🧠✨');
       }
       
-      throw new Error(errorData.error?.message || `AI request failed with status ${response.status}`);
+      throw new Error(errorData.error?.message || 'Something unexpected happened with our AI. We\'re looking into it! 🔍');
     }
 
-    const completion = await response.json();
+    // For successful responses, the response is already parsed
+    const completion = errorData;
     console.log('AI API Response:', JSON.stringify(completion, null, 2));
     
     // Handle empty or malformed responses
     if (!completion) {
       console.error('Empty AI response');
-      throw new Error('No response received from AI service');
+      throw new Error('Hmm, our AI seems to be a bit quiet. Let\'s try that again! 🎯');
     }
 
-    // Handle SambaNova specific response format
-    if (completion.error) {
-      console.error('AI service error:', completion.error);
-      if (completion.error.type === 'rate_limit_exceeded') {
-        throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+    if (!completion.choices?.[0]?.message?.content) {
+      console.error('Malformed AI response:', completion);
+      if (retryCount < 3) {
+        console.log(`Malformed response, retrying in ${(retryCount + 1) * 2} seconds...`);
+        await delay((retryCount + 1) * 2000);
+        return makeAIRequest(messages, retryCount + 1);
       }
-      throw new Error(completion.error.message || 'AI service error');
+      throw new Error('Our AI\'s response wasn\'t quite what we expected. Give it another shot! 🎲');
+    }
+
+    return completion.choices[0].message.content;
+  } catch (error: any) {
+    // Log the error for debugging
+    console.error('AI Request Error:', error);
+    
+    // If it's already a handled error, rethrow it
+    if (error.message.includes('Our AI')) {
+      throw error;
     }
     
-    // Validate the response structure
-    if (!completion.choices || !Array.isArray(completion.choices) || completion.choices.length === 0) {
-      console.error('Invalid AI response structure:', completion);
-      throw new Error('Invalid response format from AI service');
-    }
-
-    const firstChoice = completion.choices[0];
-    if (!firstChoice || !firstChoice.message || typeof firstChoice.message.content !== 'string') {
-      console.error('Invalid choice structure:', firstChoice);
-      throw new Error('Invalid message format in AI response');
-    }
-
-    return firstChoice.message.content;
-  } catch (error) {
-    console.error('AI request error:', error);
-    throw error instanceof Error ? error : new Error('Failed to process AI request');
+    // For unexpected errors
+    throw new Error('We encountered an unexpected issue. Please try again! 🔄');
   }
 }

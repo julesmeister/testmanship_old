@@ -201,7 +201,6 @@ export default function LeftColumn({
     showEvaluation,
     performanceMetrics,
     skillMetrics,
-    userProgress,
     isLoading: evaluationLoading,
     error: evaluationError
   } = useEvaluationState(challenge, isTimeUp, inputMessage);
@@ -214,9 +213,15 @@ export default function LeftColumn({
 
   useEffect(() => {
     if (evaluationLoading) {
-      toast.loading('Evaluating your writing...', {
-        description: 'This may take a few moments'
+      const toastId = toast.loading('Evaluating your writing...', {
+        description: 'This may take a few moments',
+        dismissible: true,
       });
+
+      // Cleanup the toast when loading is done
+      return () => {
+        toast.dismiss(toastId);
+      };
     }
   }, [evaluationLoading]);
 
@@ -290,14 +295,18 @@ export default function LeftColumn({
       )}
 
       {/* Evaluation Accordion - Show when evaluation is complete */}
-      {challenge && !showChallenges && showEvaluation && !evaluationLoading && (
+      {showEvaluation && challenge && (
         <EvaluationAccordion
           challenge={challenge}
           performanceMetrics={performanceMetrics}
           skillMetrics={skillMetrics}
-          userProgress={userProgress}
+          showChallenges={showChallenges}
           accordionValue={accordionValue}
           onAccordionValueChange={setAccordionValue}
+          onBackToChallenges={() => {
+            onStopChallenge();
+            setShowChallenges(true);
+          }}
         />
       )}
 
