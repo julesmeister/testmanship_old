@@ -1,31 +1,32 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 interface SubmitChallengeParams {
-  title: string;
-  instructions: string;
-  difficulty: string;
-  formatId: string;
-  timeAllocation: number;
-  wordCount: number;
-  grammarFocus: string[];
-  vocabularyThemes: string[];
+  supabase: SupabaseClient;
+  data: {
+    title: string;
+    instructions: string;
+    creator_id: string;
+    difficulty_level: string;
+    time_allocation: number;
+    word_count: number;
+    grammar_focus: string[];
+    vocabulary_themes: string[];
+    [key: string]: any;
+  };
+  isEditMode?: boolean;
+  challengeId?: string;
 }
 
-export function useChallengeSubmission(supabase: SupabaseClient) {
+export const useChallengeSubmission = () => {
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
-  const submitChallenge = async (data: SubmitChallengeParams) => {
-    console.log('Starting save process...');
+  const submitChallenge = async ({ supabase, data, isEditMode, challengeId }: SubmitChallengeParams) => {
+    setIsSaving(true);
     try {
-      setIsSaving(true);
-      toast.loading('Saving challenge...', {
-        id: 'saving-challenge',
-      });
-
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -34,66 +35,68 @@ export function useChallengeSubmission(supabase: SupabaseClient) {
           id: 'saving-challenge',
         });
         router.push('/signin');
-        return false;
+        return { success: false };
       }
 
-      // Validate required fields
-      console.log('Validating form data:', data);
-      if (!data.title || !data.instructions || !data.difficulty || !data.formatId) {
-        throw new Error('Please fill in all required fields');
-      }
+      if (isEditMode && challengeId) {
+        const { error } = await supabase
+          .from('challenges')
+          .update({
+            title: data.title,
+            instructions: data.instructions,
+            difficulty_level: data.difficulty_level,
+            time_allocation: data.time_allocation,
+            word_count: data.word_count,
+            grammar_focus: data.grammar_focus,
+            vocabulary_themes: data.vocabulary_themes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', challengeId);
 
-      const challengeData = {
-        title: data.title,
-        instructions: data.instructions,
-        difficulty_level: data.difficulty,
-        format_id: data.formatId,
-        created_by: session.user.id,
-        time_allocation: data.timeAllocation,
-        word_count: data.wordCount,
-        grammar_focus: data.grammarFocus,
-        vocabulary_themes: data.vocabularyThemes
-      };
+        if (error) throw error;
+      } else {
+        const challengeData = {
+          title: data.title,
+          instructions: data.instructions,
+          difficulty_level: data.difficulty_level,
+          format_id: data.format_id,
+          created_by: session.user.id,
+          time_allocation: data.time_allocation,
+          word_count: data.word_count,
+          grammar_focus: data.grammar_focus,
+          vocabulary_themes: data.vocabulary_themes
+        };
 
-      // Log the data being saved
-      console.log('Attempting to save challenge to Supabase:', challengeData);
+        const { error } = await supabase
+          .from('challenges')
+          .insert([{
+            ...challengeData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }]);
 
-      const { data: savedData, error } = await supabase
-        .from('challenges')
-        .insert(challengeData)
-        .select()
-        .single();
-
-      console.log('Supabase response:', { savedData, error });
-
-      if (error) {
-        console.error('Error saving challenge:', error);
-        throw new Error(`Failed to save challenge: ${error.message}`);
-      }
-
-      if (!savedData) {
-        throw new Error('No data returned from save operation');
+        if (error) throw error;
       }
 
       toast.success('Challenge saved successfully!', {
         id: 'saving-challenge',
       });
 
-      return true;
+      return { success: true };
     } catch (error) {
       console.error('Save process error:', error);
       toast.error('Failed to save challenge', {
         id: 'saving-challenge',
         description: error instanceof Error ? error.message : 'Please try again later.',
       });
-      return false;
+      return { success: false };
     } finally {
       setIsSaving(false);
     }
   };
 
   return {
-    isSaving,
-    submitChallenge
+    submitChallenge,
+    isSaving
   };
-}
+};

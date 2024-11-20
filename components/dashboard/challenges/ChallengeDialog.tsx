@@ -2,6 +2,7 @@ import { Clock, PenLine, Pencil, ArrowRight } from 'lucide-react';
 import { Challenge } from '@/types/challenge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,6 @@ interface ChallengeDialogProps {
   creatorName: string;
   isCurrentUser: boolean;
   onClose: () => void;
-  onEdit?: () => void;
 }
 
 export function ChallengeDialog({
@@ -23,8 +23,9 @@ export function ChallengeDialog({
   creatorName,
   isCurrentUser,
   onClose,
-  onEdit
 }: ChallengeDialogProps) {
+  const router = useRouter();
+
   if (!challenge) return null;
 
   return (
@@ -45,11 +46,10 @@ export function ChallengeDialog({
                     className="h-8 w-8"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onEdit?.();
+                      router.push(`/dashboard/challenge-generator?mode=edit&id=${challenge.id}`);
                     }}
                   >
                     <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit challenge</span>
                   </Button>
                 )}
               </div>

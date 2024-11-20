@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   description: 'Generate writing challenges based on difficulty levels'
 };
 
-export default async function ChallengeGeneratorPage() {
+interface Props {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function ChallengeGeneratorPage({ searchParams }: Props) {
   const supabase = await createClient();
   const [user, userDetails] = await Promise.all([
     getUser(supabase),
@@ -20,5 +24,36 @@ export default async function ChallengeGeneratorPage() {
     return redirect('/dashboard/signin');
   }
 
-  return <ChallengeGeneratorView user={user} userDetails={userDetails} />;
+  // Handle edit mode
+  const mode = String(searchParams?.mode || '');
+  const challengeId = String(searchParams?.id || '');
+  
+  let challengeToEdit = null;
+  if (mode === 'edit' && challengeId) {
+    const { data: challenge, error } = await supabase
+      .from('challenges')
+      .select('*')
+      .eq('id', challengeId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching challenge:', error);
+      return redirect('/dashboard/challenges');
+    }
+
+    // Verify ownership
+    if (challenge.created_by !== user.id) {
+      return redirect('/dashboard/challenges');
+    }
+
+    challengeToEdit = challenge;
+  }
+
+  return (
+    <ChallengeGeneratorView 
+      user={user} 
+      userDetails={userDetails} 
+      challengeToEdit={challengeToEdit}
+    />
+  );
 }

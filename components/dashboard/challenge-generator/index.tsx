@@ -30,41 +30,52 @@ import { ChallengeSuggestions } from './components/ChallengeSuggestions';
 import { GuideContent } from './components/GuideContent';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import { Challenge } from '@/types/challenge';
 
 type FormValues = z.infer<typeof formSchema>;
 
-export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGeneratorViewProps) => {
+interface ChallengeGeneratorProps extends ChallengeGeneratorViewProps {
+  challengeToEdit?: Challenge;
+}
+
+export const ChallengeGeneratorView = ({ 
+  user, 
+  userDetails, 
+  challengeToEdit
+}: ChallengeGeneratorProps) => {
   const { supabase } = useSupabase();
   const typedSupabase = supabase as SupabaseClient;
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const isEditMode = !!challengeToEdit;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      instructions: '',
-      format: '',
-      difficulty: 'A1',
-      timeAllocation: 30,
-      wordCount: 150,
-      grammarFocus: [],
-      vocabularyThemes: []
+      title: challengeToEdit?.title || '',
+      instructions: challengeToEdit?.instructions || '',
+      format: challengeToEdit?.format_id || '',
+      difficulty: (challengeToEdit?.difficulty_level as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2') || 'A1',
+      timeAllocation: challengeToEdit?.time_allocation || 30,
+      wordCount: challengeToEdit?.word_count || 150,
+      grammarFocus: challengeToEdit?.grammar_focus || [],
+      vocabularyThemes: challengeToEdit?.vocabulary_themes || []
     }
   });
 
   // Use custom hooks
   useAuthCheck({ user, userDetails, supabase });
   const { formats, groupedFormats, loadFormats } = useChallengeFormats(typedSupabase);
-  const { suggestions, setSuggestions, isGenerating, generateSuggestions, resetUsedTitles } = useChallengeSuggestions(
+  const { suggestions, setSuggestions, isGenerating: isGeneratingSuggestions, generateSuggestions } = useChallengeSuggestions(
     form.getValues,
     formats
   );
-  const { isSaving, submitChallenge } = useChallengeSubmission(typedSupabase);
   const { isGenerating: isGeneratingInstructions, generateInstructions } = useInstructionGenerator();
+  const { isSaving, submitChallenge } = useChallengeSubmission();
 
   // Reset used titles when difficulty or format changes
   useEffect(() => {
-    resetUsedTitles();
+    // Removed resetUsedTitles() call
   }, [form.watch('difficulty'), form.watch('format')]);
 
   // Update formats when difficulty changes
@@ -73,7 +84,7 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
     if (difficulty) {
       loadFormats(difficulty);
     }
-  }, [form.watch('difficulty')]);
+  }, [form.watch('difficulty'), loadFormats]);
 
   const handleGenerateInstructions = async (title: string) => {
     const difficulty = form.getValues('difficulty');
@@ -85,7 +96,6 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
     }
 
     if (!formats || formats.length === 0) {
-      // Load formats if they're not available
       await loadFormats(difficulty);
     }
 
@@ -94,8 +104,6 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
 
     if (!format) {
       toast.error('Format not found. Please try selecting the format again.');
-      // Reset the format selection
-      form.setValue('format', '');
       return;
     }
 
@@ -103,7 +111,7 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
       title,
       difficulty,
       format,
-      timeAllocation,
+      timeAllocation
     });
 
     if (instructions) {
@@ -112,21 +120,26 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
     }
   };
 
-  const handleSubmit = async (values: FormValues) => {
-    const success = await submitChallenge({
-      title: values.title,
-      instructions: values.instructions,
-      difficulty: values.difficulty,
-      formatId: values.format,
-      timeAllocation: values.timeAllocation,
-      wordCount: values.wordCount,
-      grammarFocus: values.grammarFocus,
-      vocabularyThemes: values.vocabularyThemes
+  const onSubmit = async (data: FormValues) => {
+    const { success } = await submitChallenge({
+      supabase: typedSupabase,
+      data: {
+        ...data,
+        creator_id: user?.id,
+        difficulty_level: data.difficulty,
+        time_allocation: data.timeAllocation,
+        word_count: data.wordCount,
+        grammar_focus: data.grammarFocus,
+        vocabulary_themes: data.vocabularyThemes,
+        format_id: data.format
+      },
+      isEditMode,
+      challengeId: challengeToEdit?.id
     });
 
     if (success) {
-      form.reset();
-      setSuggestions([]);
+      toast.success(isEditMode ? 'Challenge updated successfully!' : 'Challenge created successfully!');
+      router.push('/dashboard/challenges');
     }
   };
 
@@ -152,7 +165,7 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
             <div className="flex flex-col w-full space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Challenge Generator</h2>
+                  <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">{isEditMode ? 'Edit Challenge' : 'Challenge Generator'}</h2>
                   <p className="text-muted-foreground">Create and customize writing challenges for different proficiency levels.</p>
                 </div>
               </div>
@@ -164,7 +177,7 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
                     formats={formats}
                     groupedFormats={groupedFormats}
                     loadFormats={loadFormats}
-                    isGenerating={isGenerating}
+                    isGenerating={isGeneratingSuggestions}
                     generateSuggestions={generateSuggestions}
                   />
                 </div>
@@ -174,7 +187,7 @@ export const ChallengeGeneratorView = ({ user, userDetails }: ChallengeGenerator
                     form={form}
                     isGeneratingInstructions={isGeneratingInstructions}
                     isSaving={isSaving}
-                    onSubmit={handleSubmit}
+                    onSubmit={onSubmit}
                     handleGenerateInstructions={handleGenerateInstructions}
                   />
 

@@ -14,6 +14,7 @@ export interface Challenge {
   description?: string;
   instructions: string;
   difficulty_level: string;
+  format_id: string;
   time_allocation: number;
   word_count?: number;
   grammar_focus?: string[];
