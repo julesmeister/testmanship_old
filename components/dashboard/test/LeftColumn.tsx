@@ -198,6 +198,8 @@ export default function LeftColumn({
     isLoading
   } = useChallenge(onStartChallenge, onStopChallenge);
 
+  const [accordionValue, setAccordionValue] = useState<string>("instructions");
+
   const performanceMetrics = {
     wordCount: inputMessage ? inputMessage.split(/\s+/).filter(word => word.length > 0).length : 0,
     paragraphCount: inputMessage ? inputMessage.split(/\n\s*\n/).filter(para => para.trim().length > 0).length : 0,
@@ -261,7 +263,6 @@ export default function LeftColumn({
     toast.success('Feedback cleared');
   }, []);
 
-  const [accordionValue, setAccordionValue] = useState<string | undefined>('instructions');
   const accordionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
