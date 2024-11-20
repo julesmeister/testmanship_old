@@ -14,10 +14,10 @@ export function sanitizeInput(input: string): string {
     ALLOWED_ATTR: [] // No attributes allowed
   });
 
-  // Additional security measures
+  // Additional security measures but preserve whitespace
   return sanitized
     .replace(/[<>]/g, '') // Remove any remaining angle brackets
-    .trim();
+    .replace(/\s+/g, ' '); // Normalize whitespace but don't remove it
 }
 
 /**

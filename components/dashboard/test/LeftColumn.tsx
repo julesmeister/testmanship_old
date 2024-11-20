@@ -390,7 +390,7 @@ export default function LeftColumn({
                   <div className="grid grid-cols-2 gap-3">
                     <InfoCard 
                       title="Time Allocation" 
-                      value={`${challenge.time_allocation} minutes`}
+                      value={`${challenge.time_allocation} minute${challenge.time_allocation === 1 ? '' : 's'}`}
                       icon={HiClock}
                       colorScheme="blue"
                     />

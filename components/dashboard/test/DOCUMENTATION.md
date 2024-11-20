@@ -421,6 +421,52 @@ When modifying or adding card components:
 - [ ] Test responsive behavior
 - [ ] Verify accessibility
 
+## Recent Updates (2024)
+
+### Card Components Refactoring
+1. **FocusCard**
+   - Simplified props interface
+   - Added specific color schemes for emerald and amber
+   - Improved dark mode support
+   - Enhanced accessibility with semantic HTML
+
+2. **GradientCard**
+   - Streamlined props to essential fields
+   - Updated gradient styling
+   - Improved dark mode compatibility
+   - Better responsive design
+
+3. **InstructionsCard**
+   - Migrated to HiClipboardDocument icon
+   - Enhanced readability with better text formatting
+   - Improved dark mode support
+   - Added line-by-line instruction rendering
+
+4. **InfoCard**
+   - Simplified color scheme options (blue/purple)
+   - Enhanced dark mode support
+   - Improved typography and spacing
+   - Better icon integration
+
+5. **FooterStats**
+   - Added dynamic minute/minutes text based on time allocation
+   - Enhanced difficulty level badge styling
+   - Improved dark mode support
+   - Better responsive layout
+
+### LeftColumn Component Updates
+1. **Pagination Improvements**
+   - Added conditional rendering (only shows when totalPages > 1)
+   - Enhanced spacing and layout
+   - Centered pagination controls
+   - Improved dark mode border colors
+
+2. **Time Display Enhancement**
+   - Added grammatically correct singular/plural form for time allocation
+   - Example: "1 minute" vs "2 minutes"
+
+These updates focus on maintaining visual consistency, improving dark mode support, and enhancing user experience across all components.
+
 ## Important Notes
 
 ### Feedback State Management

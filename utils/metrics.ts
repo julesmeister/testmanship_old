@@ -116,13 +116,17 @@ function calculateVocabularyDiversity(text: string): number {
  * @returns Score between 0 (very difficult) and 100 (very easy)
  */
 export function calculateReadabilityScore(text: string): number {
-  const metrics = calculateMetrics(text);
+  if (!text) return 0;
+
+  // Direct text analysis without using calculateMetrics
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+  const words = text.split(/[\s,.:;?!()[\]{}'"]+/).filter(word => word.length > 0);
   
-  if (metrics.wordCount === 0 || metrics.sentenceCount === 0) {
+  if (words.length === 0 || sentences.length === 0) {
     return 0;
   }
 
-  const wordsPerSentence = metrics.wordCount / metrics.sentenceCount;
+  const wordsPerSentence = words.length / sentences.length;
   const syllablesPerWord = estimateSyllablesPerWord(text);
 
   // Flesch Reading Ease formula

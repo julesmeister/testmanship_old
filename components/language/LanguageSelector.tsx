@@ -86,6 +86,7 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
         value={selectedLanguageId || ''}
         onValueChange={(value) => {
           setTempSelectedLanguage(value);
+          setSelectedLanguageId(value);
           if (userId) {
             updateUserLanguage(userId, value);
           }

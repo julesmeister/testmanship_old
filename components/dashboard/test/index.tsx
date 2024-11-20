@@ -132,7 +132,7 @@ export default function Test({ user, userDetails }: Props) {
     const { wordCount, charCount, readingTime } = metrics;
     
     // Show feedback window on first typing if not manually closed
-    if (newText.trim() && !manuallyClosedFeedbackState) {
+    if (newText.length > 0 && !showFeedbackState && !manuallyClosedFeedbackState) {
       setShowFeedbackState(true);
     }
     
