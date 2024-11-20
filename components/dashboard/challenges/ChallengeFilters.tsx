@@ -54,7 +54,13 @@ export function ChallengeFilters({
           >
             {level.label}
             {selectedLevel === level.value.toUpperCase() && (
-              <X className="h-3.5 w-3.5 text-current opacity-70 hover:opacity-100" />
+              <X 
+                className="h-3.5 w-3.5 text-current opacity-70 hover:opacity-100 cursor-pointer" 
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent the button click from firing
+                  onLevelChange(null);
+                }}
+              />
             )}
           </button>
         ))}

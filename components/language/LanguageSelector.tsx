@@ -80,7 +80,7 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
   return (
     <>
       <Select
-        value={localLanguageId || ''}
+        value={localLanguageId || undefined}
         onValueChange={async (value) => {
           if (userId) {
             // First update the backend and store
@@ -121,7 +121,7 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
           </DialogHeader>
           <div className="space-y-4">
             <Select
-              value={localLanguageId}
+              value={localLanguageId || undefined}
               onValueChange={(value) => setLocalLanguageId(value)}
             >
               <SelectTrigger>
