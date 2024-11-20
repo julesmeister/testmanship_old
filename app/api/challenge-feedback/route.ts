@@ -22,6 +22,13 @@ export async function POST(request: Request) {
     const { essayContent, challengeId, targetLanguage = 'EN' } = await request.json();
     const languageName = getLanguageName(targetLanguage);
 
+    console.log('[API] Received request with:', {
+      targetLanguage,
+      languageName,
+      challengeId,
+      textPreview: essayContent?.slice(0, 50) + '...'
+    });
+
     if (!essayContent?.trim()) {
       return NextResponse.json(
         { error: 'Essay content cannot be empty' },
@@ -40,12 +47,12 @@ export async function POST(request: Request) {
       const messages = [
         {
           role: 'system' as const,
-          content: `Generate language learning feedback following these exact requirements:
+          content: `Generate language learning feedback for ${languageName} following these exact requirements:
 
 Format: Provide exactly three lines of feedback using these markers at the start of each line:
-   ✓ [point] - identify one correct language usage from the text
-   ✗ [point] - identify one specific error or mistake from the text
-   ! [suggestion] - provide one clear improvement or translation
+   ✓ [point] - identify one correct language usage from the text (if text is not in ${languageName}, mark it as incorrect)
+   ✗ [point] - identify one specific error or mistake from the text (if text is not in ${languageName}, point this out)
+   ! [suggestion] - provide the ${languageName} translation or improvement for the text
 
 Requirements:
 1. Each feedback line must begin with its respective marker (✓, ✗, or !)
@@ -54,11 +61,12 @@ Requirements:
 4. Write direct statements without explanations
 5. Do not include questions or hypotheticals
 6. All three markers must be used exactly once
+7. The ! [suggestion] line MUST provide the ${languageName} translation if the text is not in ${languageName}
 
 Example format:
 ✓ [point] {single correct usage observation}
 ✗ [point] {single error identification}
-! [suggestion] {single improvement point}`
+! [suggestion] {single improvement point or translation}`
         },
         {
           role: 'user' as const,

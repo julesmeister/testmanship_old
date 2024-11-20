@@ -88,7 +88,7 @@ export default function Test({ user, userDetails }: Props) {
   const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
 
   useEffect(() => {
-    console.log('Current Language State:', {
+    console.log('[Test Component] Language State:', {
       selectedLanguageId,
       languages,
       selectedLanguage,
@@ -100,6 +100,12 @@ export default function Test({ user, userDetails }: Props) {
     challenge: selectedChallenge,
     targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
   });
+
+  useEffect(() => {
+    console.log('[Test Component] AIFeedback Hook Initialization:', {
+      targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
+    });
+  }, [selectedLanguage]);
 
   const {
     text: inputMessage,

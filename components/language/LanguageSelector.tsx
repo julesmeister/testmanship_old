@@ -41,11 +41,19 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
 
   useEffect(() => {
     async function init() {
+      console.log('[LanguageSelector] Initializing with:', {
+        userId,
+        initialLanguageId,
+        forceDialog
+      });
+      
       await loadLanguages();
       
       // If initialLanguageId is provided and not null
       if (initialLanguageId) {
+        console.log('[LanguageSelector] Using initialLanguageId:', initialLanguageId);
         setLocalLanguageId(initialLanguageId);
+        setSelectedLanguageId(initialLanguageId);
       } else if (userId) {
         // If no initial language or it's null, fetch from user data
         const supabase = createClientComponentClient();
@@ -59,7 +67,9 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
           console.error('Error fetching user language:', fetchError);
           toast.error('Failed to load language preference');
         } else if (userData?.target_language_id) {
+          console.log('[LanguageSelector] Using user language:', userData.target_language_id);
           setLocalLanguageId(userData.target_language_id);
+          setSelectedLanguageId(userData.target_language_id);
         }
       }
 
@@ -71,7 +81,16 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
       setIsLoading(false);
     }
     init();
-  }, [userId, loadLanguages, forceDialog, initialLanguageId]);
+  }, [userId, loadLanguages, forceDialog, initialLanguageId, setSelectedLanguageId]);
+
+  // Debug: Track language changes
+  useEffect(() => {
+    console.log('[LanguageSelector] Language state updated:', {
+      localLanguageId,
+      currentLanguage: languages.find(l => l.id === localLanguageId),
+      allLanguages: languages
+    });
+  }, [localLanguageId, languages]);
 
   if (isLoading) return null;
 

@@ -34,6 +34,10 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   showDialog: false,
   languages: [],
   setSelectedLanguageId: (id) => {
+    console.log('[Language Store] Setting selectedLanguageId:', {
+      newId: id,
+      currentState: get()
+    });
     set({ selectedLanguageId: id });
     // Force a store update to notify subscribers
     set(state => ({ ...state }));
@@ -42,6 +46,7 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   setLanguages: (languages) => set({ languages }),
   loadLanguages: async () => {
     try {
+      console.log('[Language Store] Loading languages...');
       const supabase = getSupabase();
       const { data: languagesData, error: languagesError } = await supabase
         .from('supported_languages')
@@ -55,6 +60,7 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
       }
 
       if (languagesData) {
+        console.log('[Language Store] Languages loaded:', languagesData);
         set({ languages: languagesData });
       }
     } catch (error) {

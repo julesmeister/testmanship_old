@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Challenge } from '@/types/challenge';
 
 export interface AIFeedbackOptions {
@@ -10,6 +10,15 @@ export interface AIFeedbackOptions {
 export const useAIFeedback = ({ challenge, targetLanguage }: AIFeedbackOptions) => {
   const [feedback, setFeedback] = useState<string>('');
 
+  // Debug: Log when hook is initialized or targetLanguage changes
+  useEffect(() => {
+    console.log('[useAIFeedback] Hook initialized/updated:', {
+      targetLanguage,
+      normalizedLanguage: targetLanguage ? targetLanguage.toUpperCase() : 'EN',
+      challengeId: challenge?.id
+    });
+  }, [targetLanguage, challenge]);
+
   const generateFeedback = useCallback(async (paragraphText: string): Promise<string> => {
     try {
       if (!paragraphText?.trim()) {
@@ -20,6 +29,12 @@ export const useAIFeedback = ({ challenge, targetLanguage }: AIFeedbackOptions) 
         throw new Error('No active challenge found');
       }
 
+      console.log('[useAIFeedback] Making API request with:', {
+        targetLanguage: (targetLanguage || 'EN').toUpperCase(),
+        challengeId: challenge.id,
+        textPreview: paragraphText.slice(0, 50) + '...'
+      });
+
       const response = await fetch('/api/challenge-feedback', {
         method: 'POST',
         headers: {
@@ -28,7 +43,7 @@ export const useAIFeedback = ({ challenge, targetLanguage }: AIFeedbackOptions) 
         body: JSON.stringify({
           essayContent: paragraphText,
           challengeId: challenge.id,
-          targetLanguage: targetLanguage || 'English',
+          targetLanguage: (targetLanguage || 'EN').toUpperCase(),
         }),
       });
 
