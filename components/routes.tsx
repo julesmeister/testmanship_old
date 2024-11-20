@@ -43,8 +43,8 @@ export const routes: IRoute[] = [
     disabled: false
   },
   {
-    name: 'Users List',
-    path: '/dashboard/users-list',
+    name: 'Wordsmiths',
+    path: '/dashboard/wordsmiths',
     icon: (
       <HiOutlineUsers className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
     ),
