@@ -462,197 +462,65 @@ The writing challenge feature is a complex system that allows users to practice 
 
    ## Components
 
-   ### Card Components
-   ⚠️ **Migration Notice**: Card components have been moved to `/components/card` for better reusability.
-   Please refer to the [Card Components Documentation](/components/card/DOCUMENTATION.md) for details.
+   ### Card Components (`@/components/card/`)
 
-   Import cards from the new location:
-   ```typescript
-   import { GradientCard, InfoCard, DifficultyBadge } from '@/components/card';
-   ```
+   ### Component Overview
 
-   ### Test Interface Components
+   #### 1. InfoCard
+   - **Purpose**: Display single value information with an icon and title
+   - **Props**:
+     - `title`: string - Card header
+     - `value`: string | number - Single value to display
+     - `icon`: IconType - React icon component
+     - `colorScheme`: 'blue' | 'purple' - Color theme
+   - **Usage**: Best for displaying single metrics or status information
+
+   #### 2. FocusCard
+   - **Purpose**: Display a list of items with bullet points
+   - **Props**:
+     - `title`: string - Card header
+     - `items`: string[] - Array of text items to display
+     - `icon`: IconType - React icon component
+     - `colorScheme`: 'emerald' | 'amber' - Color theme
+   - **Usage**: Best for displaying lists like strengths, improvements, or tips
+
+   #### 3. MetricsCard
+   - **Purpose**: Display multiple metric items with labels and values
+   - **Props**:
+     - `title`: string - Card header
+     - `items`: MetricItem[] - Array of {label: string, value: number}
+     - `icon`: IconType (optional) - Default is HiChartBar
+   - **Usage**: Best for displaying performance metrics or scoring
+
+   #### 4. InstructionsCard
+   - **Purpose**: Display challenge instructions with rich formatting
+   - **Props**:
+     - `title`: string - Card header
+     - `content`: string - Instruction content
+     - `icon`: IconType (optional)
+   - **Usage**: Best for displaying formatted instructions or guidelines
+
+   ### Usage Guidelines
+
+   1. **Choosing the Right Card**:
+     - Use `InfoCard` for single value displays (e.g., total score)
+     - Use `FocusCard` for lists with bullet points (e.g., feedback items)
+     - Use `MetricsCard` for multiple related metrics (e.g., performance scores)
+     - Use `InstructionsCard` for formatted text content (e.g., challenge instructions)
+
+   2. **Color Schemes**:
+     - InfoCard: blue (default), purple (highlight)
+     - FocusCard: emerald (success), amber (warning)
+     - MetricsCard: uses neutral zinc colors
+     - InstructionsCard: uses neutral zinc colors
+
+   3. **Best Practices**:
+     - Keep content concise and focused
+     - Use consistent icons within the same section
+     - Match color schemes to content meaning
+     - Ensure proper spacing between cards
+
    {{ ... }}
-
-   ## Writing Challenge Components
-
-   ### Accordion Components
-
-   1. **InstructionsAccordion**
-      - Displays challenge instructions and criteria
-      - Shows time allocation and word count
-      - Lists grammar focus points and vocabulary themes
-      - Includes difficulty level and format information
-      - Supports dark mode and responsive layout
-
-   2. **EvaluationAccordion**
-      - Shows writing performance evaluation after challenge completion
-      - Displays comprehensive metrics:
-        - Performance score and grade
-        - Time spent and word count
-        - Total challenges completed
-        - Average performance
-        - Strongest skills and areas for improvement
-        - Recent improvement trends
-        - Personalized feedback
-      - Integrates with the following database tables:
-        - `challenge_attempts`
-        - `skill_metrics`
-        - `performance_metrics`
-        - `user_progress`
-
-   ### Metrics and Evaluation
-
-   1. **Performance Metrics**
-      - Word count and paragraph structure
-      - Time management
-      - Overall performance score
-      - Detailed feedback
-
-   2. **Skill Analysis**
-      - Category-based skill tracking
-      - Proficiency level measurements
-      - Improvement rate calculations
-      - Trend analysis
-
-   3. **Progress Tracking**
-      - Total challenges completed
-      - Cumulative words written
-      - Time investment
-      - Skill progression
-      - Topic preferences
-
-   ### Implementation Notes
-
-   1. **State Management**
-      - Accordion state handling
-      - Metrics data fetching
-      - Progress calculations
-
-   2. **UI/UX Considerations**
-      - Consistent styling with instructions
-      - Clear performance visualization
-      - Responsive layout
-      - Dark mode support
-
-   3. **Performance**
-      - Optimized rendering
-      - Efficient data updates
-      - Smooth animations
-
-   ## Toast Notifications
-
-   ### Evaluation Loading Toast
-   The system shows a loading toast when evaluating the user's writing. This toast:
-   - Is dismissible by the user at any time
-   - Automatically dismisses when evaluation is complete
-   - Shows a helpful message about the evaluation process
-   - Prevents multiple toasts from stacking up
-
-   Implementation details:
-   ```typescript
-   useEffect(() => {
-     if (evaluationLoading) {
-       const toastId = toast.loading('Evaluating your writing...', {
-         description: 'This may take a few moments',
-         dismissible: true,
-       });
-
-       // Cleanup when loading is done
-       return () => {
-         toast.dismiss(toastId);
-       };
-     }
-   }, [evaluationLoading]);
-   ```
-
-   Best Practices:
-   - Always store toast IDs when showing loading states
-   - Clean up toasts in useEffect cleanup functions
-   - Make loading toasts dismissible
-   - Provide clear progress information to users
-
-   ## Reusable Components
-
-   ### Card Components (`/components/card/`)
-   A collection of reusable card components designed for consistent UI presentation across the test interface.
-
-   #### Available Cards
-   1. `GradientCard`
-      - Purpose: Base card with gradient background
-      - Usage: Foundation for other card components
-      - Props: `className`, `children`
-
-   2. `InstructionsCard`
-      - Purpose: Displays test instructions
-      - Usage: Shows challenge requirements and guidelines
-      - Props: `instructions`, `className`
-
-   3. `InfoCard`
-      - Purpose: Displays informational content
-      - Usage: Shows tips, hints, or additional information
-      - Props: `title`, `content`, `className`
-
-   4. `FocusCard`
-      - Purpose: Highlights important content
-      - Usage: Drawing attention to specific information
-      - Props: `title`, `content`, `highlight`
-
-   5. `DifficultyBadge`
-      - Purpose: Visual indicator of difficulty level
-      - Usage: Shows test or challenge difficulty
-      - Props: `difficulty`, `size`
-
-   6. `FooterStats`
-      - Purpose: Displays statistics in card footer
-      - Usage: Shows completion rates, scores, etc.
-      - Props: `stats`, `className`
-
-   #### Shared Types (`types.ts`)
-   ```typescript
-   // Common interfaces used across card components
-   interface CardBase {
-     className?: string;
-     children?: React.ReactNode;
-   }
-
-   interface Stats {
-     // Add the actual stats interface
-   }
-   ```
-
-   #### Usage Guidelines
-   1. Import cards from the barrel file:
-      ```typescript
-      import { GradientCard, InfoCard, FocusCard } from './components/card';
-      ```
-
-   2. Maintain consistency:
-      - Use appropriate card for content type
-      - Follow existing styling patterns
-      - Extend base types when adding props
-
-   3. When to use each card:
-      - `GradientCard`: Base container needing visual emphasis
-      - `InstructionsCard`: Primary test instructions
-      - `InfoCard`: Secondary information
-      - `FocusCard`: Important notices or highlights
-      - `DifficultyBadge`: Difficulty indicators
-      - `FooterStats`: Statistical information
-
-   4. Customization:
-      - All cards accept className for styling overrides
-      - Maintain responsive design
-      - Follow accessibility guidelines
-
-   #### Development Guidelines
-   When modifying or adding card components:
-   - [ ] Update types in `types.ts`
-   - [ ] Export new components in `index.ts`
-   - [ ] Add props documentation
-   - [ ] Update this section with usage examples
-   - [ ] Test responsive behavior
-   - [ ] Verify accessibility
 
    ## Writing Challenge Evaluation System
 
@@ -874,7 +742,7 @@ The writing challenge feature is a complex system that allows users to practice 
    ## Evaluation Mechanism
 
    ### Overview
-   The evaluation mechanism is a comprehensive system that provides AI-powered assessment of user's writing submissions. It consists of several interconnected components that work together to provide real-time feedback and performance metrics.
+   The evaluation mechanism is a comprehensive system that provides AI-powered assessment of user submissions, offering detailed metrics and feedback. The system is designed to be modular, extensible, and user-friendly.
 
    ### Components
 
@@ -1008,7 +876,7 @@ The writing challenge feature is a complex system that allows users to practice 
    4. **Security**:
      - Validate all inputs
      - Sanitize user content
-     - Protect API keys
+     - Protect sensitive data
      - Implement proper rate limiting
 
    ### Known Limitations
@@ -1045,40 +913,183 @@ The writing challenge feature is a complex system that allows users to practice 
      - Add offline support
      - Optimize large content handling
 
-   ## Future Considerations
-   1. Add feedback history
-   2. Implement feedback caching
-   3. Add offline support
-   4. Enhance error recovery
-   5. Add feedback analytics
+   ## Challenge Evaluation API
 
-   ## Breaking Changes Checklist
-   When modifying this feature, check the following:
+   Located in `app/api/challenge-evaluation/route.ts`, this API endpoint handles the evaluation of writing challenges and provides comprehensive feedback.
 
-   1. State Management
-      - [ ] Feedback state flow remains intact
-      - [ ] Challenge state properly updates
-      - [ ] Local states sync correctly
+   ### API Structure
 
-   2. User Experience
-      - [ ] Feedback window behavior
-      - [ ] Challenge flow remains smooth
-      - [ ] Error messages are helpful
+   #### Request Format
+   ```typescript
+   {
+     challengeId: string;    // ID of the challenge being evaluated
+     content: string;        // The user's written content
+     timeSpent: number;      // Time spent on the challenge in seconds
+   }
+   ```
 
-   3. Performance
-      - [ ] Rate limiting works
-      - [ ] No memory leaks
-      - [ ] Proper cleanup
+   #### Response Format
+   ```typescript
+   {
+     performanceMetrics: {
+       wordCount: number;        // Total words in submission
+       paragraphCount: number;   // Number of paragraphs
+       timeSpent: number;        // Time taken in seconds
+       performanceScore: number; // Overall score (0-1)
+       improvedEssay: string;    // AI-enhanced version
+       metrics: {
+         grammar: number;        // Grammar score (0-1)
+         vocabulary: number;     // Vocabulary score (0-1)
+         fluency: number;        // Writing fluency (0-1)
+         overall: number;        // Combined score (0-1)
+       }
+     },
+     skillMetrics: {
+       writingComplexity: number; // Sentence complexity (0-1)
+       accuracy: number;          // Content accuracy (0-1)
+       coherence: number;         // Logical flow (0-1)
+       style: number;            // Writing style (0-1)
+     },
+     insights: {
+       strengths: string[];      // List of identified strengths
+       weaknesses: string[];     // Areas needing improvement
+       tips: string[];          // Actionable improvement suggestions
+     }
+   }
+   ```
 
-   4. Error Handling
-      - [ ] All error states handled
-      - [ ] User notifications work
-      - [ ] Error logging
-      - [ ] Recovery procedures
+   ### Validation and Error Handling
 
-   5. Components
-      - [ ] DraggableWindow functions
-      - [ ] ChallengeCard displays correctly
-      - [ ] All props passed correctly
+   #### Input Validation
+   - Ensures `challengeId` is provided
+   - Verifies `content` is non-empty
+   - Validates request structure
 
-   This documentation should be reviewed and updated whenever making changes to ensure system integrity.
+   #### Response Validation
+   1. **JSON Extraction**
+     - Safely extracts JSON from AI response
+     - Handles potential formatting issues
+     - Validates JSON structure
+
+   2. **Array Validation**
+     ```typescript
+     // Validates insight arrays (strengths, weaknesses, tips)
+     const validateInsightArray = (arr: any[], name: string): string[] => {
+       if (!arr.every(item => typeof item === 'string' && item.trim())) {
+         throw new Error(`Invalid ${name} format`);
+       }
+       return arr.map(item => item.trim());
+     };
+     ```
+
+   3. **Data Requirements**
+     - Non-empty arrays for insights
+     - Valid numeric ranges for metrics
+     - Complete response structure
+
+   #### Error States
+   1. **400 Bad Request**
+     - Empty content
+     - Missing challenge ID
+     - Invalid request format
+
+   2. **429 Rate Limit**
+     - Too many requests
+     - AI service limitations
+
+   3. **500 Internal Error**
+     - AI response parsing failure
+     - Invalid response structure
+     - Missing required data
+
+   ### Integration Points
+
+   1. **Frontend Components**
+     - `EvaluationAccordion`: Displays evaluation results
+     - `FocusCard`: Shows strengths, weaknesses, and tips
+     - `MetricsCard`: Visualizes performance metrics
+
+   2. **State Management**
+     - `useEvaluationState`: Manages evaluation data
+     - Handles loading and error states
+     - Updates UI based on response
+
+   3. **Data Flow**
+     ```
+     User Submission → API Request → AI Processing → 
+     Validation → Response Formatting → State Update → UI Render
+     ```
+
+   ### Best Practices
+
+   1. **Error Handling**
+     - Always validate API responses
+     - Provide clear error messages
+     - Implement retry mechanisms
+     - Log validation failures
+
+   2. **Performance**
+     - Cache evaluation results
+     - Implement rate limiting
+     - Optimize response size
+
+   3. **Security**
+     - Sanitize user input
+     - Validate request origins
+     - Protect sensitive data
+
+   ### Testing Checklist
+
+   - [ ] Input validation
+     - [ ] Empty content handling
+     - [ ] Invalid challenge ID
+     - [ ] Malformed requests
+
+   - [ ] Response validation
+     - [ ] Array structure
+     - [ ] Data completeness
+     - [ ] Type checking
+
+   - [ ] Error handling
+     - [ ] Rate limit responses
+     - [ ] Parsing failures
+     - [ ] Network errors
+
+   - [ ] Integration
+     - [ ] Frontend updates
+     - [ ] State management
+     - [ ] UI rendering
+
+   ### Known Issues and Solutions
+
+   1. **Empty Insight Arrays**
+     - Issue: FocusCards appearing blank
+     - Solution: Added strict array validation
+     - Prevention: Validate response structure
+
+   2. **Invalid Metrics**
+     - Issue: Scores outside 0-1 range
+     - Solution: Value normalization
+     - Prevention: Range validation
+
+   3. **Response Format**
+     - Issue: Inconsistent AI responses
+     - Solution: JSON extraction utility
+     - Prevention: Structured prompts
+
+   ### Maintenance Notes
+
+   1. **Regular Checks**
+     - Monitor error rates
+     - Review AI response quality
+     - Update validation rules
+
+   2. **Updates Required**
+     - Document API changes
+     - Test new validations
+     - Update error messages
+
+   3. **Performance Monitoring**
+     - Track response times
+     - Monitor rate limits
+     - Log validation failures

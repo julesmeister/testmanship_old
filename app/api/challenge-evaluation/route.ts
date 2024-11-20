@@ -20,6 +20,11 @@ const EVALUATION_PROMPT = `You are a writing evaluation assistant. Analyze the g
     "coherence": number (0-100),
     "style": number (0-100)
   },
+  "insights": {
+    "strengths": ["list of 2-3 specific strengths in the writing"],
+    "weaknesses": ["list of 2-3 specific areas for improvement"],
+    "tips": ["2-3 actionable tips for improvement"]
+  },
   "improvedEssay": "an improved version of the text that fixes any issues and enhances the writing"
 }`;
 
@@ -90,6 +95,11 @@ interface EvaluationResponse {
     coherence: number;
     style: number;
   };
+  insights: {
+    strengths: string[];
+    weaknesses: string[];
+    tips: string[];
+  };
 }
 
 export async function POST(request: Request) {
@@ -116,7 +126,9 @@ export async function POST(request: Request) {
     ];
 
     const aiResponse = await makeAIRequest(messages);
+    console.log('AI API Response:', aiResponse);
     const jsonStr = extractJSON(aiResponse);
+    console.log('Extracted JSON:', jsonStr);
 
     if (!jsonStr) {
       console.error('Failed to extract JSON from AI response:', aiResponse);
@@ -128,15 +140,37 @@ export async function POST(request: Request) {
 
     try {
       const evaluation = JSON.parse(jsonStr);
+      console.log('Parsed evaluation:', evaluation);
       
-      // Validate the response structure
-      if (!evaluation.metrics || !evaluation.skills || !evaluation.improvedEssay) {
-        console.error('Invalid evaluation structure:', evaluation);
+      // Validate the response structure and ensure arrays are not empty
+      if (!evaluation.metrics || !evaluation.skills || !evaluation.improvedEssay || 
+          !evaluation.insights || !evaluation.insights.strengths || !evaluation.insights.weaknesses || 
+          !evaluation.insights.tips || !Array.isArray(evaluation.insights.strengths) || 
+          !Array.isArray(evaluation.insights.weaknesses) || !Array.isArray(evaluation.insights.tips) ||
+          evaluation.insights.strengths.length === 0 || evaluation.insights.weaknesses.length === 0 || 
+          evaluation.insights.tips.length === 0) {
+        console.error('Invalid evaluation structure or empty arrays:', evaluation);
         return NextResponse.json(
-          { error: 'The evaluation format was unexpected. Please try again.' },
+          { error: 'The evaluation format was unexpected or missing required data. Please try again.' },
           { status: 500 }
         );
       }
+
+      // Ensure all arrays have at least one item and are strings
+      const validateInsightArray = (arr: any[], name: string): string[] => {
+        console.log(`Validating ${name} array:`, arr);
+        if (!arr.every(item => typeof item === 'string' && item.trim())) {
+          throw new Error(`Invalid ${name} format`);
+        }
+        return arr.map(item => item.trim());
+      };
+
+      const insights = {
+        strengths: validateInsightArray(evaluation.insights.strengths, 'strengths'),
+        weaknesses: validateInsightArray(evaluation.insights.weaknesses, 'weaknesses'),
+        tips: validateInsightArray(evaluation.insights.tips, 'tips')
+      };
+      console.log('Processed insights:', insights);
 
       const evaluationResponse: EvaluationResponse = {
         performanceMetrics: {
@@ -147,7 +181,8 @@ export async function POST(request: Request) {
           improvedEssay: evaluation.improvedEssay,
           metrics: evaluation.metrics
         },
-        skillMetrics: evaluation.skills
+        skillMetrics: evaluation.skills,
+        insights
       };
 
       return NextResponse.json(evaluationResponse);

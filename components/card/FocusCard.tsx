@@ -7,7 +7,7 @@ interface FocusCardProps {
   title: string;
   items: string[];
   icon: IconType;
-  colorScheme: 'emerald' | 'amber';
+  colorScheme: 'emerald' | 'amber' | 'red';
 }
 
 export function FocusCard({ title, items, icon: Icon, colorScheme }: FocusCardProps) {
@@ -25,6 +25,13 @@ export function FocusCard({ title, items, icon: Icon, colorScheme }: FocusCardPr
       title: 'text-amber-900 dark:text-amber-100',
       text: 'text-amber-700 dark:text-amber-300',
       dot: 'bg-amber-500'
+    },
+    red: {
+      bg: 'bg-red-50 dark:bg-red-900/20',
+      border: 'border-red-100 dark:border-red-800',
+      title: 'text-red-900 dark:text-red-100',
+      text: 'text-red-700 dark:text-red-300',
+      dot: 'bg-red-500'
     }
   };
 

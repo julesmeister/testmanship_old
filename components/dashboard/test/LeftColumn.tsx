@@ -9,6 +9,7 @@ import { useEvaluationState } from '@/hooks/useEvaluationState';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { difficultyLevels } from '@/utils/constants';
+import { generateInsights } from '@/utils/insights';
 import { 
   HiXMark, 
   HiLightBulb, 
@@ -37,7 +38,7 @@ import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, MessageSquare, AlertCircle, Loader2Icon } from 'lucide-react';
 import { DraggableWindow, LoadingState, EmptyState } from './components';
 import { InstructionsAccordion } from "./components/InstructionsAccordion";
-import { EvaluationAccordion } from "./components/EvaluationAccordion";
+import EvaluationAccordion from "./components/EvaluationAccordion";
 import { type Challenge } from '@/types/challenge';
 
 interface LeftColumnProps {
@@ -197,13 +198,32 @@ export default function LeftColumn({
     isLoading
   } = useChallenge(onStartChallenge, onStopChallenge);
 
+  const performanceMetrics = {
+    wordCount: inputMessage ? inputMessage.split(/\s+/).filter(word => word.length > 0).length : 0,
+    paragraphCount: inputMessage ? inputMessage.split(/\n\s*\n/).filter(para => para.trim().length > 0).length : 0,
+    timeSpent: timeElapsed || 0,
+    performanceScore: 0,
+    metrics: {
+      grammar: 0,
+      vocabulary: 0,
+      fluency: 0,
+      overall: 0
+    }
+  };
+
+  const skillMetrics = {
+    writingComplexity: 0,
+    accuracy: 0,
+    coherence: 0,
+    style: 0
+  };
+
   const {
     showEvaluation,
-    performanceMetrics,
-    skillMetrics,
+    insights,
     isLoading: evaluationLoading,
     error: evaluationError
-  } = useEvaluationState(challenge, isTimeUp, inputMessage);
+  } = useEvaluationState(challenge, isTimeUp, inputMessage, performanceMetrics, skillMetrics);
 
   useEffect(() => {
     if (evaluationError) {
@@ -294,25 +314,25 @@ export default function LeftColumn({
         />
       )}
 
-      {/* Evaluation Accordion - Show when evaluation is complete */}
-      {showEvaluation && challenge && (
-        <EvaluationAccordion
-          challenge={challenge}
-          performanceMetrics={performanceMetrics}
-          skillMetrics={skillMetrics}
-          showChallenges={showChallenges}
-          accordionValue={accordionValue}
-          onAccordionValueChange={setAccordionValue}
-          onBackToChallenges={() => {
-            onStopChallenge();
-            setShowChallenges(true);
-          }}
-        />
-      )}
+     {showEvaluation && challenge && (
+       <EvaluationAccordion
+         challenge={challenge}
+         performanceMetrics={performanceMetrics}
+         skillMetrics={skillMetrics}
+         insights={insights}
+         showChallenges={showChallenges}
+         accordionValue={accordionValue}
+         onAccordionValueChange={setAccordionValue}
+         onBackToChallenges={() => {
+           onStopChallenge();
+           setShowChallenges(true);
+         }}
+       />
+     )}
 
       {/* Challenge Selection */}
-      <div className={!challenge ? "space-y-4" : ""}>
-        {(showChallenges || !challenge) && (
+      <div className={(!challenge || showChallenges) ? "space-y-4" : ""}>
+        {(!challenge || (showChallenges && !showEvaluation)) && (
           <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden">
             <div className="p-4 border-b border-zinc-200 dark:border-zinc-700">
               <h3 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-zinc-100">

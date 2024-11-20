@@ -30,3 +30,5 @@ export function MetricsCard({ title, items, icon: Icon = HiChartBar }: MetricsCa
     </div>
   );
 }
+
+export default MetricsCard;

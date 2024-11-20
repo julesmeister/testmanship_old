@@ -104,7 +104,8 @@ export default function Test({ user, userDetails }: Props) {
   const {
     text: inputMessage,
     stats: { wordCount, paragraphCount, charCount },
-    setInputMessage
+    setInputMessage,
+    handleTextChange: handleTextStats
   } = useTextEditor();
 
   const {
@@ -125,17 +126,12 @@ export default function Test({ user, userDetails }: Props) {
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = sanitizeInput(e.target.value);
     
-    // Update input message and track previous text
-    const prevText = inputMessage;
-    setInputMessage(newText);
+    // Update input message and stats
+    handleTextStats(newText);
     
     // Auto-adjust height
     e.target.style.height = 'auto';
     e.target.style.height = `${e.target.scrollHeight}px`;
-    
-    // Calculate metrics for the new text
-    const metrics = calculateMetrics(newText);
-    const { wordCount, charCount, readingTime } = metrics;
     
     // Show feedback window on first typing if not manually closed
     if (newText.length > 0 && !showFeedbackState && !manuallyClosedFeedbackState) {
@@ -153,8 +149,8 @@ export default function Test({ user, userDetails }: Props) {
     const currentIndex = paragraphs.length - 1;
     
     // Only trigger paragraph change if content actually changed
-    if (newText !== prevText) {
-      handleParagraphChange(newText, prevText, currentIndex);
+    if (newText !== inputMessage) {
+      handleParagraphChange(newText, inputMessage, currentIndex);
     }
   };
 
@@ -349,6 +345,18 @@ export default function Test({ user, userDetails }: Props) {
       setIsWriting(false);
     }
   }, [elapsedTime, selectedChallenge]);
+
+  const performanceMetrics = useMemo(() => ({
+    wordCount,
+    paragraphCount,
+    timeSpent: elapsedTime,
+    metrics: {
+      grammar: 0.85,
+      vocabulary: 0.78,
+      fluency: 0.82,
+      overall: 0.82
+    }
+  }), [wordCount, paragraphCount, elapsedTime]);
 
   return (
     <DashboardLayout

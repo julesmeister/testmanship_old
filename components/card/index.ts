@@ -10,4 +10,5 @@ export * from './InfoCard';
 export * from './FocusCard';
 export * from './DifficultyBadge';
 export * from './FooterStats';
+export * from './MetricsCard';
 export * from './types';

@@ -1,34 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { type Challenge } from '@/types/challenge';
-
-interface PerformanceMetrics {
-  wordCount: number;
-  paragraphCount: number;
-  timeSpent: number;
-  performanceScore: number;
-  improvedEssay?: string;
-  metrics: {
-    grammar: number;
-    vocabulary: number;
-    fluency: number;
-    overall: number;
-  };
-}
-
-interface SkillMetrics {
-  writingComplexity: number;
-  accuracy: number;
-  coherence: number;
-  style: number;
-}
-
-export interface EvaluationState {
-  showEvaluation: boolean;
-  performanceMetrics: PerformanceMetrics;
-  skillMetrics: SkillMetrics;
-  isLoading: boolean;
-  error: string | null;
-}
+import { type EvaluationState, type PerformanceMetrics, type SkillMetrics, type Insights } from '@/types/evaluation';
 
 const defaultState: EvaluationState = {
   showEvaluation: false,
@@ -51,64 +23,66 @@ const defaultState: EvaluationState = {
     coherence: 0,
     style: 0
   },
+  insights: {
+    strengths: [],
+    weaknesses: [],
+    tips: []
+  },
   isLoading: false,
   error: null
 };
 
-export const useEvaluationState = (
+export function useEvaluationState(
   challenge: Challenge | null,
   isTimeUp: boolean,
-  content?: string
-) => {
+  content?: string,
+  performanceMetrics?: PerformanceMetrics,
+  skillMetrics?: SkillMetrics,
+  insights?: Insights
+): EvaluationState {
   const [state, setState] = useState<EvaluationState>(defaultState);
 
-  const fetchEvaluation = useCallback(async () => {
-    if (!challenge?.id || !content) return;
-
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const response = await fetch('/api/challenge-evaluation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          challengeId: challenge.id,
-          content: content,
-          timeSpent: challenge.time_allocation || 1800 // default to 30 minutes
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch evaluation');
+  useEffect(() => {
+    const evaluateChallenge = async () => {
+      if (!challenge || !content || !isTimeUp) {
+        setState(prev => ({ ...prev, showEvaluation: false }));
+        return;
       }
 
-      const data = await response.json();
-      
-      setState({
-        showEvaluation: true,
-        performanceMetrics: data.performanceMetrics,
-        skillMetrics: data.skillMetrics,
-        isLoading: false,
-        error: null
-      });
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'An error occurred',
-        isLoading: false
-      }));
-    }
-  }, [challenge, content]);
+      try {
+        const response = await fetch('/api/challenge-evaluation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ challengeId: challenge.id, content })
+        });
 
-  useEffect(() => {
-    if (challenge && isTimeUp && content) {
-      fetchEvaluation();
-    }
-  }, [challenge, isTimeUp, content, fetchEvaluation]);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to evaluate challenge');
+        }
+
+        setState(prev => ({
+          ...prev,
+          showEvaluation: true,
+          performanceMetrics: data.performanceMetrics,
+          skillMetrics: data.skillMetrics,
+          insights: data.insights,
+          isLoading: false
+        }));
+      } catch (error) {
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error.message : 'Failed to evaluate challenge',
+          isLoading: false
+        }));
+      }
+    };
+
+    evaluateChallenge();
+  }, [challenge, isTimeUp, content]);
 
   return state;
 };

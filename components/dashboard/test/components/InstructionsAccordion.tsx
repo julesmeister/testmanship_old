@@ -38,6 +38,12 @@ export function InstructionsAccordion({
   const accordionRef = useRef<HTMLDivElement>(null);
 
   const handleAccordionChange = (value: string) => {
+    // Always keep instructions expanded
+    if (value === "") {
+      onAccordionValueChange("instructions");
+      return;
+    }
+    
     onAccordionValueChange(value);
     
     // Add a small delay to let the accordion animation complete
@@ -71,6 +77,7 @@ export function InstructionsAccordion({
         defaultValue="instructions"
         className="w-full"
         onValueChange={handleAccordionChange}
+        collapsible={false}
       >
         <AccordionItem value="instructions" className="w-full border rounded-lg bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700">
           <div className="flex justify-between items-center pr-4">
