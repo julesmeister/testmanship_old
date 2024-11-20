@@ -459,16 +459,18 @@ export default function LeftColumn({
                     {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
                       paragraph.trim() && (
                         <TooltipProvider key={index}>
-                          <Tooltip>
+                          <Tooltip defaultOpen={index === 0}>
                             <TooltipTrigger asChild>
                               <button
                                 onClick={async () => {
                                   console.log(`Analyzing paragraph ${index + 1}:`, paragraph.slice(0, 50) + '...');
                                   await handleParagraphFeedback(paragraph, index);
                                 }}
-                                className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all overflow-hidden w-full"
+                                className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all w-full"
                               >
-                                {/* Animated border */}
+                                {/* Container for both borders */}
+                                <div className="absolute inset-0 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-opacity group-hover:opacity-0" />
+                                {/* Animated gradient border */}
                                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 animate-gradient-x transition-opacity" >
                                   <div className="absolute inset-[1px] bg-white dark:bg-zinc-900 rounded-lg" />
                                 </div>
