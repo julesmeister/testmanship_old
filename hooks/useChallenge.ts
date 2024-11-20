@@ -17,6 +17,12 @@ export const useChallenge = (
   const itemsPerPage = 10;
   const [outputCodeState, setOutputCodeState] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+  const [paragraphs, setParagraphs] = useState<string[]>([]);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [performanceScore, setPerformanceScore] = useState(0);
+  const [feedback, setFeedback] = useState('');
 
   const fetchChallenges = useCallback(async () => {
     try {
@@ -95,6 +101,12 @@ export const useChallenge = (
     outputCodeState,
     setOutputCodeState,
     isLoading,
+    challengeCompleted,
+    wordCount,
+    paragraphs,
+    timeSpent,
+    performanceScore,
+    feedback,
     handleStartChallenge,
     handleBackToChallenges,
     fetchChallenges,

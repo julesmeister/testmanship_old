@@ -280,7 +280,7 @@ The writing challenge feature is a complex system that allows users to practice 
      - Handles challenge start action
 
    ##### InfoCard
-   - Purpose: Displays challenge metadata
+   - Purpose: Displays informational content
    - Props:
      ```typescript
      interface InfoCardProps {
@@ -294,7 +294,7 @@ The writing challenge feature is a complex system that allows users to practice 
    - Usage: Displays time allocation, word count, etc.
 
    ##### FocusCard
-   - Purpose: Displays focused information with visual emphasis
+   - Purpose: Highlights important content
    - Props:
      ```typescript
      interface FocusCardProps {
@@ -374,6 +374,48 @@ The writing challenge feature is a complex system that allows users to practice 
    }
    ```
 
+   ## Type System and Imports
+
+   ### Case Sensitivity in Imports
+   - The project uses case-sensitive imports for consistency
+   - Always use lowercase for the `challenge` type import:
+     ```typescript
+     import { Challenge } from "@/types/challenge"; // Correct
+     import { Challenge } from "@/types/Challenge"; // Incorrect
+     ```
+
+   ### Type Handling Best Practices
+   1. **Optional Props with Default Values**
+      - When a prop might be undefined, make it optional in the interface and provide a default value:
+        ```typescript
+        interface Props {
+          value?: string;
+        }
+        
+        function Component({ value = "default" }: Props) {
+          // ...
+        }
+        ```
+
+   2. **Challenge Type**
+      - Always import from `@/types/challenge` (lowercase)
+      - Used consistently across components for type safety
+      - Provides structure for challenge-related data
+
+   3. **Common Type Issues and Solutions**
+   1. **Accordion Value Type**
+      - Issue: Type 'string | undefined' not assignable to 'string'
+      - Solution: Make the prop optional and provide a default value
+        ```typescript
+        accordionValue?: string;
+        accordionValue = "instructions";
+        ```
+
+   2. **Import Case Sensitivity**
+      - Issue: File name differs only in casing
+      - Solution: Always use lowercase for challenge imports
+      - Affects: All components using Challenge type
+
    ## Best Practices
 
    1. **Type Safety**
@@ -431,6 +473,72 @@ The writing challenge feature is a complex system that allows users to practice 
 
    ### Test Interface Components
    {{ ... }}
+
+   ## Writing Challenge Components
+
+   ### Accordion Components
+
+   1. **InstructionsAccordion**
+      - Displays challenge instructions and criteria
+      - Shows time allocation and word count
+      - Lists grammar focus points and vocabulary themes
+      - Includes difficulty level and format information
+      - Supports dark mode and responsive layout
+
+   2. **EvaluationAccordion**
+      - Shows writing performance evaluation after challenge completion
+      - Displays comprehensive metrics:
+        - Performance score and grade
+        - Time spent and word count
+        - Total challenges completed
+        - Average performance
+        - Strongest skills and areas for improvement
+        - Recent improvement trends
+        - Personalized feedback
+      - Integrates with the following database tables:
+        - `challenge_attempts`
+        - `skill_metrics`
+        - `performance_metrics`
+        - `user_progress`
+
+   ### Metrics and Evaluation
+
+   1. **Performance Metrics**
+      - Word count and paragraph structure
+      - Time management
+      - Overall performance score
+      - Detailed feedback
+
+   2. **Skill Analysis**
+      - Category-based skill tracking
+      - Proficiency level measurements
+      - Improvement rate calculations
+      - Trend analysis
+
+   3. **Progress Tracking**
+      - Total challenges completed
+      - Cumulative words written
+      - Time investment
+      - Skill progression
+      - Topic preferences
+
+   ### Implementation Notes
+
+   1. **State Management**
+      - Accordion state handling
+      - Metrics data fetching
+      - Progress calculations
+
+   2. **UI/UX Considerations**
+      - Consistent styling with instructions
+      - Clear performance visualization
+      - Responsive layout
+      - Dark mode support
+
+   3. **Performance**
+      - Optimized rendering
+      - Efficient data updates
+      - Smooth animations
 
    ## Reusable Components
 
@@ -515,6 +623,21 @@ The writing challenge feature is a complex system that allows users to practice 
    - [ ] Verify accessibility
 
    ## Recent Updates (2024)
+
+   ### Component Refactoring
+
+   #### New Components
+   - `InstructionsAccordion`: A reusable component that displays writing instructions and criteria in an accordion format
+     - Handles footer overlap adjustment
+     - Manages accordion state and animations
+     - Displays challenge details including title, instructions, time allocation, word count, grammar focus, and vocabulary themes
+     - Supports dark mode and responsive layout
+
+   #### Modified Components
+   - `LeftColumn`: Refactored to use the new `InstructionsAccordion` component
+     - Improved code organization and reusability
+     - Maintained existing functionality and behavior
+     - Prepared for future evaluation accordion implementation
 
    ### Card Components Refactoring
    1. **FocusCard**

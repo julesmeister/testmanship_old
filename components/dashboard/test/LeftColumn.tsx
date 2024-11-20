@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChallengeCard } from "@/components/dashboard/test/components/ChallengeCard";
 import { useChallenge } from '@/hooks/useChallenge';
 import { useFeedbackGeneration } from '@/hooks/useFeedbackGeneration';
+import { useEvaluationState } from '@/hooks/useEvaluationState';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { difficultyLevels } from '@/utils/constants';
@@ -35,6 +36,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, MessageSquare, AlertCircle, Loader2Icon } from 'lucide-react';
 import { DraggableWindow, LoadingState, EmptyState } from './components';
+import { InstructionsAccordion } from "./components/InstructionsAccordion";
+import { EvaluationAccordion } from "./components/EvaluationAccordion";
 import { type Challenge } from '@/types/challenge';
 
 interface LeftColumnProps {
@@ -194,6 +197,29 @@ export default function LeftColumn({
     isLoading
   } = useChallenge(onStartChallenge, onStopChallenge);
 
+  const {
+    showEvaluation,
+    performanceMetrics,
+    skillMetrics,
+    userProgress,
+    isLoading: evaluationLoading,
+    error: evaluationError
+  } = useEvaluationState(challenge, isTimeUp, inputMessage);
+
+  useEffect(() => {
+    if (evaluationError) {
+      toast.error(evaluationError);
+    }
+  }, [evaluationError]);
+
+  useEffect(() => {
+    if (evaluationLoading) {
+      toast.loading('Evaluating your writing...', {
+        description: 'This may take a few moments'
+      });
+    }
+  }, [evaluationLoading]);
+
   const [localOutputCode, setLocalOutputCode] = useState(outputCode);
 
   useEffect(() => {
@@ -240,11 +266,41 @@ export default function LeftColumn({
     }
   }, [timeElapsed, timeAllocation, isTimeUp, inputMessage, handleFinishChallenge, onStopChallenge]);
 
+  useEffect(() => {
+    if (isTimeUp && showEvaluation) {
+      setAccordionValue('evaluation');
+    }
+  }, [isTimeUp, showEvaluation]);
+
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
       {showTip && (
         <TipBox onClose={() => setShowTip(false)} />
       )}
+
+      {/* Instructions & Criteria - Show when not evaluating */}
+      {challenge && !showChallenges && !showEvaluation && (
+        <InstructionsAccordion
+          challenge={challenge}
+          showChallenges={showChallenges}
+          accordionValue={accordionValue}
+          onAccordionValueChange={setAccordionValue}
+          onBackToChallenges={handleBackToChallenges}
+        />
+      )}
+
+      {/* Evaluation Accordion - Show when evaluation is complete */}
+      {challenge && !showChallenges && showEvaluation && !evaluationLoading && (
+        <EvaluationAccordion
+          challenge={challenge}
+          performanceMetrics={performanceMetrics}
+          skillMetrics={skillMetrics}
+          userProgress={userProgress}
+          accordionValue={accordionValue}
+          onAccordionValueChange={setAccordionValue}
+        />
+      )}
+
       {/* Challenge Selection */}
       <div className={!challenge ? "space-y-4" : ""}>
         {(showChallenges || !challenge) && (
@@ -316,114 +372,6 @@ export default function LeftColumn({
           </div>
         )}
       </div>
-
-      {/* Instructions & Criteria */}
-      {challenge && !showChallenges && (
-        <div className="w-full" ref={accordionRef}>
-          <Accordion 
-            type="single"
-            value={accordionValue}
-            defaultValue="instructions"
-            className="w-full"
-            onValueChange={(value) => {
-              // Add a small delay to let the accordion animation complete
-              setTimeout(() => {
-                const accordionEl = accordionRef.current;
-                const footerEl = document.querySelector('.footer-admin') as HTMLElement;
-                if (accordionEl && footerEl) {
-                  const accordionRect = accordionEl.getBoundingClientRect();
-                  const footerRect = footerEl.getBoundingClientRect();
-                  const viewportHeight = window.innerHeight;
-                  
-                  // Check if accordion extends beyond viewport or overlaps footer
-                  if (accordionRect.bottom > footerRect.top || accordionRect.bottom > viewportHeight) {
-                    const overlap = Math.max(
-                      accordionRect.bottom - footerRect.top,
-                      accordionRect.bottom - viewportHeight
-                    );
-                    footerEl.style.marginTop = `${overlap + 40}px`; // Add extra padding
-                  } else {
-                    footerEl.style.marginTop = ''; // Reset if no overlap
-                  }
-                }
-              }, 300); // Wait for accordion animation
-            }}
-          >
-            <AccordionItem value="instructions" className="w-full border rounded-lg bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700">
-              <div className="flex justify-between items-center pr-4">
-                <AccordionTrigger className="px-4 flex-grow text-left text-base sm:text-sm [&>svg]:hidden">Writing Instructions & Criteria</AccordionTrigger>
-                {!showChallenges && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="flex items-center gap-2"
-                          onClick={handleBackToChallenges}
-                        >
-                          <HiMiniArrowLeftOnRectangle className="w-4 h-4" />
-                          Exit Challenge
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="bg-black border-black">
-                        <p className="text-white">Stop timer and return to challenges</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-              <AccordionContent className="px-4 pb-4">
-                <div className="space-y-4">
-                  <GradientCard title={challenge.title} subtitle="Writing Challenge" />
-                  <InstructionsCard instructions={challenge.instructions} />
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <InfoCard 
-                      title="Time Allocation" 
-                      value={`${challenge.time_allocation} minute${challenge.time_allocation === 1 ? '' : 's'}`}
-                      icon={HiClock}
-                      colorScheme="blue"
-                    />
-                    {challenge.word_count && (
-                      <InfoCard 
-                        title="Word Count" 
-                        value={challenge.word_count}
-                        icon={HiDocumentText}
-                        colorScheme="purple"
-                      />
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {Array.isArray(challenge.grammar_focus) && challenge.grammar_focus.length > 0 && (
-                      <FocusCard 
-                        title="Grammar Focus"
-                        items={challenge.grammar_focus}
-                        icon={HiCheckCircle}
-                        colorScheme="emerald"
-                      />
-                    )}
-                    {Array.isArray(challenge.vocabulary_themes) && challenge.vocabulary_themes.length > 0 && (
-                      <FocusCard 
-                        title="Vocabulary Themes"
-                        items={challenge.vocabulary_themes}
-                        icon={HiBookOpen}
-                        colorScheme="amber"
-                      />
-                    )}
-                  </div>
-
-                  <FooterStats 
-                    timeAllocation={challenge.time_allocation}
-                    difficultyLevel={challenge.difficulty_level}
-                  />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      )}
 
       {/* Toggle Feedback Button */}
       {challenge && !propsShowFeedback && (

@@ -301,143 +301,38 @@ export default function Test({ user, userDetails }: Props) {
       return;
     }
 
-    // Content validation
-    if (!validateSubmission(inputMessage)) {
-      toast.error(securityError || 'Invalid submission');
-      return;
-    }
-
     try {
       setLoading(true);
-      await checkRateLimit();
 
-      // Sanitize user input
-      const sanitizedContent = sanitizeInput(inputMessage);
-      
-      // Calculate detailed metrics
-      const metrics = calculateMetrics(sanitizedContent);
-      const { 
-        readingTime, 
-        sentenceCount, 
-        paragraphCount, 
-        readabilityScore, 
-        vocabularyDiversity,
-        grammarScore,
-        avgSentenceLength,
-        topicRelevance,
-        improvementRate
-      } = metrics;
-      
-      const challengeResult = {
-        challenge_id: selectedChallenge.id,
-        user_id: user?.id,
-        content: sanitizedContent,
-        word_count: metrics.wordCount,
-        char_count: metrics.charCount,
-        sentence_count: sentenceCount,
-        paragraph_count: paragraphCount,
-        reading_time: readingTime,
-        readability_score: readabilityScore,
-        vocabulary_diversity: vocabularyDiversity,
-        grammar_score: grammarScore,
-        avg_sentence_length: avgSentenceLength,
-        topic_relevance: topicRelevance,
-        improvement_rate: improvementRate,
-        time_taken: elapsedTime,
-        mode: mode,
-        completed: isTimeUp || elapsedTime >= (selectedChallenge.time_allocation * 60),
-        feedback_count: feedback.length,
-        created_at: new Date().toISOString(),
-        // Enhanced metrics
-        metrics: {
-          grammar_score: metrics.grammarScore,
-          vocabulary_diversity: metrics.vocabularyDiversity,
-          average_sentence_length: metrics.avgSentenceLength,
-          readability_score: metrics.readabilityScore,
-          topic_relevance: metrics.topicRelevance,
-          improvement_rate: metrics.improvementRate
+      // Trigger evaluation
+      const response = await fetch('/api/challenge-evaluation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        // Security metadata
-        submission_metadata: {
-          client_timestamp: new Date().toISOString(),
-          client_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          submission_source: 'web',
-          user_agent: navigator.userAgent,
-          session_id: crypto.randomUUID()
-        }
-      };
-
-      // First verify user's access to challenge
-      const { data: accessCheck, error: accessError } = await supabase
-        .from('user_challenges')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('challenge_id', selectedChallenge.id)
-        .single();
-
-      if (accessError || !accessCheck) {
-        throw new Error('Unauthorized access to challenge');
-      }
-
-      // Then save the result with transaction
-      const { error } = await supabase
-        .from('challenge_results')
-        .insert(challengeResult);
-
-      if (error) {
-        if (error.code === '23505') { // Unique violation
-          throw new Error('Challenge already submitted');
-        }
-        throw error;
-      }
-
-      // Log successful submission for audit
-      await supabase.from('submission_logs').insert({
-        user_id: user.id,
-        challenge_id: selectedChallenge.id,
-        action: 'submit',
-        status: 'success',
-        metadata: challengeResult.submission_metadata
+        body: JSON.stringify({
+          challengeId: selectedChallenge.id,
+          content: inputMessage,
+          timeSpent: selectedChallenge.time_allocation || 1800
+        })
       });
 
-      toast.success('Challenge results saved successfully');
-    } catch (error) {
-      console.error('Error saving challenge results:', error);
-      
-      // Detailed error handling
-      if (error instanceof Error) {
-        switch (error.message) {
-          case 'Unauthorized access to challenge':
-            toast.error('You do not have access to this challenge');
-            break;
-          case 'Challenge already submitted':
-            toast.error('This challenge has already been submitted');
-            break;
-          default:
-            toast.error('Failed to save challenge results');
-        }
-
-        // Log error for monitoring
-        const { error: logError } = await supabase
-          .from('error_logs')
-          .insert({
-            user_id: user?.id,
-            error_type: 'challenge_submission',
-            error_message: error.message,
-            stack_trace: error.stack,
-            metadata: {
-              challenge_id: selectedChallenge.id,
-              timestamp: new Date().toISOString()
-            }
-          });
-          
-        if (logError) {
-          console.error('Failed to log error:', logError);
-        }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to evaluate challenge');
       }
+      
+      toast.success('Challenge completed! Viewing evaluation...');
+      
+      // Let the timer handle setting isTimeUp
+      if (!isTimeUp) {
+        handleBackToChallenges();
+      }
+    } catch (error) {
+      console.error('Error grading challenge:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to grade challenge');
     } finally {
       setLoading(false);
-      handleBackToChallenges();
     }
   };
 
