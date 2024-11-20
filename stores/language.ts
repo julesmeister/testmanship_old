@@ -16,20 +16,33 @@ interface LanguageState {
   languages: Language[];
   setLanguages: (languages: Language[]) => void;
   loadLanguages: () => Promise<void>;
-  updateUserLanguage: (userId: string, languageId: string) => Promise<void>;
+  updateUserLanguage: (userId: string, languageId: string) => Promise<boolean>;
 }
 
-const supabase = createClientComponentClient();
+// Use a singleton pattern for the Supabase client
+let supabaseInstance: ReturnType<typeof createClientComponentClient> | null = null;
 
-export const useLanguageStore = create<LanguageState>((set) => ({
+const getSupabase = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClientComponentClient();
+  }
+  return supabaseInstance;
+};
+
+export const useLanguageStore = create<LanguageState>((set, get) => ({
   selectedLanguageId: null,
   showDialog: false,
   languages: [],
-  setSelectedLanguageId: (id) => set({ selectedLanguageId: id }),
+  setSelectedLanguageId: (id) => {
+    set({ selectedLanguageId: id });
+    // Force a store update to notify subscribers
+    set(state => ({ ...state }));
+  },
   setShowDialog: (show) => set({ showDialog: show }),
   setLanguages: (languages) => set({ languages }),
   loadLanguages: async () => {
     try {
+      const supabase = getSupabase();
       const { data: languagesData, error: languagesError } = await supabase
         .from('supported_languages')
         .select('*')
@@ -51,6 +64,7 @@ export const useLanguageStore = create<LanguageState>((set) => ({
   },
   updateUserLanguage: async (userId: string, languageId: string) => {
     try {
+      const supabase = getSupabase();
       const { data: response, error: rpcError } = await supabase.rpc(
         'update_user_language',
         { 
@@ -62,24 +76,29 @@ export const useLanguageStore = create<LanguageState>((set) => ({
       if (rpcError) {
         console.error('RPC error updating language:', rpcError);
         toast.error("Failed to save language preference");
-        return;
+        return false;
       }
 
       if (!response?.success) {
         console.error('Update failed:', response?.error || 'Unknown error');
         toast.error(response?.error || "Failed to save language preference");
-        return;
+        return false;
       }
 
+      // Update the state and force a store update
       set({ selectedLanguageId: languageId });
+      set(state => ({ ...state }));
       set({ showDialog: false });
-      const language = useLanguageStore.getState().languages.find(l => l.id === languageId);
+      
+      const language = get().languages.find(l => l.id === languageId);
       if (language) {
         toast.success(`Learning language set to ${language.name}!`);
       }
+      return true;
     } catch (error) {
       console.error('Error saving language:', error);
       toast.error("Failed to save language preference");
+      return false;
     }
   }
 }));

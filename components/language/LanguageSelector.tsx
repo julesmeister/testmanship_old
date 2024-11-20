@@ -28,15 +28,14 @@ interface Props {
 }
 
 export default function LanguageSelector({ userId, className, forceDialog, initialLanguageId }: Props) {
-  const [tempSelectedLanguage, setTempSelectedLanguage] = useState<string>('');
+  const [localLanguageId, setLocalLanguageId] = useState<string | null>(null);
   const {
     languages,
-    selectedLanguageId,
-    showDialog,
-    setShowDialog,
     loadLanguages,
     updateUserLanguage,
-    setSelectedLanguageId
+    setSelectedLanguageId,
+    showDialog,
+    setShowDialog
   } = useLanguageStore();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -46,8 +45,7 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
       
       // If initialLanguageId is provided and not null
       if (initialLanguageId) {
-        setSelectedLanguageId(initialLanguageId);
-        setTempSelectedLanguage(initialLanguageId);
+        setLocalLanguageId(initialLanguageId);
       } else if (userId) {
         // If no initial language or it's null, fetch from user data
         const supabase = createClientComponentClient();
@@ -61,34 +59,37 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
           console.error('Error fetching user language:', fetchError);
           toast.error('Failed to load language preference');
         } else if (userData?.target_language_id) {
-          setSelectedLanguageId(userData.target_language_id);
-          setTempSelectedLanguage(userData.target_language_id);
+          setLocalLanguageId(userData.target_language_id);
         }
       }
 
       // Show dialog if no language is selected and forceDialog is true
-      if (forceDialog && !initialLanguageId && !selectedLanguageId) {
+      if (forceDialog && !initialLanguageId && !localLanguageId) {
         setShowDialog(true);
       }
       
       setIsLoading(false);
     }
     init();
-  }, [userId, loadLanguages, forceDialog, initialLanguageId, setSelectedLanguageId, selectedLanguageId]);
+  }, [userId, loadLanguages, forceDialog, initialLanguageId]);
 
   if (isLoading) return null;
 
-  const currentLanguage = languages.find(l => l.id === selectedLanguageId);
+  const currentLanguage = languages.find(l => l.id === localLanguageId);
 
   return (
     <>
       <Select
-        value={selectedLanguageId || ''}
-        onValueChange={(value) => {
-          setTempSelectedLanguage(value);
-          setSelectedLanguageId(value);
+        value={localLanguageId || ''}
+        onValueChange={async (value) => {
           if (userId) {
-            updateUserLanguage(userId, value);
+            // First update the backend and store
+            const success = await updateUserLanguage(userId, value);
+            // Only update the local state if backend update was successful
+            if (success) {
+              setLocalLanguageId(value);
+              setSelectedLanguageId(value);
+            }
           }
         }}
       >
@@ -120,8 +121,8 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
           </DialogHeader>
           <div className="space-y-4">
             <Select
-              value={tempSelectedLanguage}
-              onValueChange={(value) => setTempSelectedLanguage(value)}
+              value={localLanguageId}
+              onValueChange={(value) => setLocalLanguageId(value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a learning language" />
@@ -141,11 +142,11 @@ export default function LanguageSelector({ userId, className, forceDialog, initi
             <Button
               className="w-full"
               onClick={() => {
-                if (userId && tempSelectedLanguage) {
-                  updateUserLanguage(userId, tempSelectedLanguage);
+                if (userId && localLanguageId) {
+                  updateUserLanguage(userId, localLanguageId);
                 }
               }}
-              disabled={!tempSelectedLanguage}
+              disabled={!localLanguageId}
             >
               Continue
             </Button>

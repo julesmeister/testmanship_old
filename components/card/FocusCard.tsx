@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { type FocusCardProps } from './types';
+import { type FocusCardProps as ImportedFocusCardProps } from './types';
 import { IconType } from 'react-icons';
 import { HiChevronRight } from 'react-icons/hi';
 
