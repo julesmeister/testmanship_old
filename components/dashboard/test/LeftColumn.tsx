@@ -182,7 +182,7 @@ export default function LeftColumn({
     showChallenges,
     showTip,
     currentPage,
-    itemsPerPage,
+    totalPages,
     setSelectedLevel,
     setSearchQuery,
     setShowTip,
@@ -191,6 +191,7 @@ export default function LeftColumn({
     handleStartChallenge,
     handleBackToChallenges,
     fetchChallenges,
+    isLoading
   } = useChallenge(onStartChallenge, onStopChallenge);
 
   const [localOutputCode, setLocalOutputCode] = useState(outputCode);
@@ -254,7 +255,7 @@ export default function LeftColumn({
                 Writing Challenges
               </h3>
               <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                Select your preferred difficulty level and find a challenge
+                Select your proficiency level and find a challenge
               </p>
             </div>
 
@@ -287,13 +288,13 @@ export default function LeftColumn({
               </div>
 
               {/* Challenges List */}
-              <div className="space-y-3 pt-2">
-                {challenges.length > 0 ? (
-                  challenges
-                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                    .map((challenge) => (
-                      <ChallengeCard key={challenge.id} challenge={challenge} onStart={handleStartChallenge} />
-                    ))
+              <div className="space-y-4">
+                {isLoading ? (
+                  <div>Loading challenges...</div>
+                ) : challenges.length > 0 ? (
+                  challenges.map((challenge) => (
+                    <ChallengeCard key={challenge.id} challenge={challenge} onStart={handleStartChallenge} />
+                  ))
                 ) : (
                   <div className="relative overflow-hidden rounded-lg border border-dashed border-zinc-200 dark:border-zinc-700 p-8">
                     <div className="absolute inset-0 bg-gradient-to-br from-zinc-50/40 via-zinc-50/30 to-zinc-50/20 dark:from-zinc-950/20 dark:via-zinc-950/15 dark:to-zinc-950/10" />
@@ -309,11 +310,11 @@ export default function LeftColumn({
               </div>
 
               {/* Pagination */}
-              {challenges.length > itemsPerPage && (
+              {challenges.length > 0 && (
                 <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
                   <Pagination 
                     currentPage={currentPage} 
-                    totalPages={Math.ceil(challenges.length / itemsPerPage)} 
+                    totalPages={totalPages} 
                     onPageChange={setCurrentPage} 
                   />
                 </div>

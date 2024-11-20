@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'sonner';
 import { type Challenge } from '@/types/challenge';
@@ -16,41 +16,54 @@ export const useChallenge = (
   const supabase = createClientComponentClient();
   const itemsPerPage = 10;
   const [outputCodeState, setOutputCodeState] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchChallenges = useCallback(async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    try {
+      setIsLoading(true);
+      let query = supabase
+        .from('challenges')
+        .select('*')
+        .eq('difficulty_level', selectedLevel.toUpperCase());
+      
+      if (searchQuery) {
+        query = query.ilike('title', `%${searchQuery}%`);
+      }
 
-    if (!userId) {
-      toast.error('User not authenticated');
-      return;
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching challenges:', error);
+        return;
+      }
+
+      // Get current user for creator info
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      // Ensure all challenges have the created_by field
+      const challengesWithCreator = data?.map(challenge => ({
+        ...challenge,
+        created_by: challenge.created_by || userId || 'unknown' // Use current user ID or 'unknown' as fallback
+      })) || [];
+
+      setChallenges(challengesWithCreator);
+    } catch (err) {
+      console.error('Error in fetchChallenges:', err);
+    } finally {
+      setIsLoading(false);
     }
+  }, [supabase, selectedLevel, searchQuery]);
 
-    let query = supabase
-      .from('challenges')
-      .select('*')
-      .eq('difficulty_level', selectedLevel.toUpperCase());
-    
-    if (searchQuery) {
-      query = query.ilike('title', `%${searchQuery}%`);
-    }
+  // Fetch challenges when level or search changes
+  useEffect(() => {
+    fetchChallenges();
+  }, [fetchChallenges]);
 
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching challenges:', error);
-      toast.error('Failed to fetch challenges');
-      return;
-    }
-
-    // Ensure all challenges have the created_by field
-    const challengesWithCreator = data?.map(challenge => ({
-      ...challenge,
-      created_by: challenge.created_by || userId // Use current user ID as fallback
-    })) || [];
-
-    setChallenges(challengesWithCreator);
-  }, [selectedLevel, searchQuery, supabase]);
+  const filteredChallenges = challenges;
+  const totalPages = Math.ceil(filteredChallenges.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedChallenges = filteredChallenges.slice(startIndex, startIndex + itemsPerPage);
 
   const handleStartChallenge = useCallback((challenge: Challenge) => {
     onStartChallenge(challenge);
@@ -67,22 +80,23 @@ export const useChallenge = (
   }, [onStopChallenge]);
 
   return {
-    challenges,
+    challenges: paginatedChallenges,
     selectedLevel,
-    searchQuery,
-    showChallenges,
-    showTip,
-    currentPage,
-    itemsPerPage,
     setSelectedLevel,
+    searchQuery,
     setSearchQuery,
-    setShowTip,
-    setCurrentPage,
+    showChallenges,
     setShowChallenges,
+    showTip,
+    setShowTip,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    outputCodeState,
+    setOutputCodeState,
+    isLoading,
     handleStartChallenge,
     handleBackToChallenges,
     fetchChallenges,
-    outputCodeState,
-    setOutputCodeState,
   };
 };

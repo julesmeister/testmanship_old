@@ -17,7 +17,7 @@ import { useLanguageStore } from '@/stores/language';
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TimerProgress from './TimerProgress';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,6 +33,13 @@ import { useAuthCheck } from '@/hooks/useAuthCheck';
 import { rateLimit } from '@/utils/rateLimit';
 import { sanitizeInput } from '@/utils/security';
 import { calculateMetrics } from '@/utils/metrics';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface Props {
   user: User | null | undefined;
@@ -109,14 +116,20 @@ export default function Test({ user, userDetails }: Props) {
     setIsWriting
   } = useChallengeTimer(selectedChallenge);
 
-  const { handleParagraphChange } = useFeedbackManager(generateFeedback);
+  const {
+    handleParagraphChange
+  } = useFeedbackManager(generateFeedback);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
+    const newText = sanitizeInput(e.target.value);
     
     // Update input message and track previous text
     const prevText = inputMessage;
     setInputMessage(newText);
+    
+    // Calculate metrics for the new text
+    const metrics = calculateMetrics(newText);
+    const { wordCount, charCount, readingTime } = metrics;
     
     // Show feedback window on first typing if not manually closed
     if (newText.trim() && !manuallyClosedFeedbackState) {
@@ -163,26 +176,49 @@ export default function Test({ user, userDetails }: Props) {
       throw new Error('Feedback generation already in progress');
     }
 
+    // Check rate limit before proceeding
+    try {
+      await checkRateLimit();
+    } catch (error) {
+      setRateLimitExceeded(true);
+      throw new Error('Too many feedback requests. Please wait a moment.');
+    }
+
+    // Sanitize and validate input
+    const sanitizedParagraph = sanitizeInput(paragraph);
+    if (!validateSubmission(sanitizedParagraph)) {
+      throw new Error(securityError || 'Invalid input');
+    }
+
     setIsGeneratingFeedback(true);
     try {
-      return await generateFeedback(paragraph);
+      return await generateFeedback(sanitizedParagraph);
     } finally {
       setIsGeneratingFeedback(false);
     }
   };
 
-  // Add authentication check
-  useAuthCheck({ user, userDetails, supabase });
-
-  // Add rate limiting for submissions
-  const rateLimitedSubmission = useCallback(rateLimit(async () => {
-    setRateLimitExceeded(false);
-  }, 60000), []); // 1 minute cooldown
-
   const validateSubmission = (content: string): boolean => {
+    // Reset previous error
+    setSecurityError(null);
+
     // Basic content validation
     if (!content.trim()) {
       setSecurityError('Content cannot be empty');
+      return false;
+    }
+    
+    // Get text metrics
+    const metrics = calculateMetrics(content);
+    
+    // Validate content length
+    if (metrics.wordCount < 5) {
+      setSecurityError('Content is too short (minimum 5 words)');
+      return false;
+    }
+    
+    if (metrics.wordCount > 1000) {
+      setSecurityError('Content is too long (maximum 1000 words)');
       return false;
     }
     
@@ -203,6 +239,23 @@ export default function Test({ user, userDetails }: Props) {
 
     return true;
   };
+
+  // Add authentication check with proper types
+  useAuthCheck({ 
+    user: user || null, 
+    userDetails, 
+    supabase 
+  });
+
+  // Rate limiting function
+  const checkRateLimit = useCallback(async () => {
+    const key = user?.id || 'anonymous';
+    if (rateLimit.isLimited(key)) {
+      setRateLimitExceeded(true);
+      throw new Error('Rate limit exceeded. Please wait a moment.');
+    }
+    setRateLimitExceeded(false);
+  }, [user?.id]);
 
   const handleGradeChallenge = async () => {
     setSecurityError(null);
@@ -227,19 +280,40 @@ export default function Test({ user, userDetails }: Props) {
 
     try {
       setLoading(true);
-      await rateLimitedSubmission();
+      await checkRateLimit();
 
       // Sanitize user input
       const sanitizedContent = sanitizeInput(inputMessage);
       
       // Calculate detailed metrics
-      const metrics = calculateMetrics(sanitizedContent, feedback);
+      const metrics = calculateMetrics(sanitizedContent);
+      const { 
+        readingTime, 
+        sentenceCount, 
+        paragraphCount, 
+        readabilityScore, 
+        vocabularyDiversity,
+        grammarScore,
+        avgSentenceLength,
+        topicRelevance,
+        improvementRate
+      } = metrics;
       
       const challengeResult = {
         challenge_id: selectedChallenge.id,
-        user_id: user.id,
+        user_id: user?.id,
         content: sanitizedContent,
-        word_count: wordCount,
+        word_count: metrics.wordCount,
+        char_count: metrics.charCount,
+        sentence_count: sentenceCount,
+        paragraph_count: paragraphCount,
+        reading_time: readingTime,
+        readability_score: readabilityScore,
+        vocabulary_diversity: vocabularyDiversity,
+        grammar_score: grammarScore,
+        avg_sentence_length: avgSentenceLength,
+        topic_relevance: topicRelevance,
+        improvement_rate: improvementRate,
         time_taken: elapsedTime,
         mode: mode,
         completed: isTimeUp || elapsedTime >= (selectedChallenge.time_allocation * 60),
@@ -315,16 +389,22 @@ export default function Test({ user, userDetails }: Props) {
         }
 
         // Log error for monitoring
-        await supabase.from('error_logs').insert({
-          user_id: user.id,
-          error_type: 'challenge_submission',
-          error_message: error.message,
-          stack_trace: error.stack,
-          metadata: {
-            challenge_id: selectedChallenge.id,
-            timestamp: new Date().toISOString()
-          }
-        }).catch(console.error); // Catch logging error separately
+        const { error: logError } = await supabase
+          .from('error_logs')
+          .insert({
+            user_id: user?.id,
+            error_type: 'challenge_submission',
+            error_message: error.message,
+            stack_trace: error.stack,
+            metadata: {
+              challenge_id: selectedChallenge.id,
+              timestamp: new Date().toISOString()
+            }
+          });
+          
+        if (logError) {
+          console.error('Failed to log error:', logError);
+        }
       }
     } finally {
       setLoading(false);
