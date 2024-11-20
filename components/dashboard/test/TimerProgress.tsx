@@ -1,6 +1,45 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { CheckCircle } from 'lucide-react';
 
+interface GradeButtonProps {
+  onClick: () => void;
+  onMouseLeave?: () => void;
+  showWordCount?: boolean;
+  wordCount?: number;
+  requiredWordCount?: number;
+}
+
+const GradeButton: React.FC<GradeButtonProps> = ({ 
+  onClick, 
+  onMouseLeave,
+  showWordCount,
+  wordCount,
+  requiredWordCount
+}) => (
+  <button
+    onClick={onClick}
+    onMouseLeave={onMouseLeave}
+    className="group relative flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 rounded-lg transition-all overflow-hidden w-full h-12 hover:text-zinc-900 dark:hover:text-zinc-100"
+  >
+    {/* Subtle background color */}
+    <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-violet-50 dark:from-violet-950/30 dark:via-fuchsia-950/30 dark:to-violet-950/30 opacity-80" />
+    
+    {/* Always visible gradient border */}
+    <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 opacity-100 animate-gradient-x">
+      <div className="absolute inset-[1px] bg-white/80 dark:bg-zinc-900/80 rounded-lg backdrop-blur-sm" />
+    </div>
+    
+    {/* Content with hover effects */}
+    <span className="relative z-10 transform transition-transform duration-200">
+      Grade and Record Challenge
+      {showWordCount && ` (${wordCount}/${requiredWordCount} words)`}
+    </span>
+    <CheckCircle 
+      className="relative z-10 h-5 w-5 transform group-hover:scale-110 transition-all duration-200 text-violet-500 dark:text-violet-400 group-hover:text-violet-600 dark:group-hover:text-violet-300" 
+    />
+  </button>
+);
+
 interface TimerProgressProps {
   timeElapsed: number;
   timeAllocation?: number;
@@ -75,53 +114,18 @@ export default function TimerProgress({
   const backgroundColor = mode === 'exam' ? '#2563eb' : '#059669';
 
   if (isTimeUp) {
-    return (
-      <button
-        onClick={onGradeChallenge}
-        className="group relative flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 rounded-lg transition-all overflow-hidden w-full h-12 hover:text-zinc-900 dark:hover:text-zinc-100"
-      >
-        {/* Subtle background color */}
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-violet-50 dark:from-violet-950/30 dark:via-fuchsia-950/30 dark:to-violet-950/30 opacity-80" />
-        
-        {/* Always visible gradient border */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 opacity-100 animate-gradient-x">
-          <div className="absolute inset-[1px] bg-white/80 dark:bg-zinc-900/80 rounded-lg backdrop-blur-sm" />
-        </div>
-        
-        {/* Content with hover effects */}
-        <span className="relative z-10 transform transition-transform duration-200">
-          Grade and Record Challenge
-        </span>
-        <CheckCircle 
-          className="relative z-10 h-5 w-5 transform group-hover:scale-110 transition-all duration-200 text-violet-500 dark:text-violet-400 group-hover:text-violet-600 dark:group-hover:text-violet-300" 
-        />
-      </button>
-    );
+    return <GradeButton onClick={onGradeChallenge} />;
   }
 
   if (isHovered && showGradeButton) {
     return (
-      <button
+      <GradeButton 
         onClick={onGradeChallenge}
         onMouseLeave={() => setIsHovered(false)}
-        className="group relative flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 rounded-lg transition-all overflow-hidden w-full h-12 hover:text-zinc-900 dark:hover:text-zinc-100"
-      >
-        {/* Subtle background color */}
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-violet-50 dark:from-violet-950/30 dark:via-fuchsia-950/30 dark:to-violet-950/30 opacity-80" />
-        
-        {/* Always visible gradient border */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 opacity-100 animate-gradient-x">
-          <div className="absolute inset-[1px] bg-white/80 dark:bg-zinc-900/80 rounded-lg backdrop-blur-sm" />
-        </div>
-        
-        {/* Content with hover effects */}
-        <span className="relative z-10 transform transition-transform duration-200">
-          Grade and Record Challenge ({wordCount}/{requiredWordCount} words)
-        </span>
-        <CheckCircle 
-          className="relative z-10 h-5 w-5 transform group-hover:scale-110 transition-all duration-200 text-violet-500 dark:text-violet-400 group-hover:text-violet-600 dark:group-hover:text-violet-300" 
-        />
-      </button>
+        showWordCount
+        wordCount={wordCount}
+        requiredWordCount={requiredWordCount}
+      />
     );
   }
 

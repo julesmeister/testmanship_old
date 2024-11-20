@@ -1239,4 +1239,147 @@ The writing challenge feature is a complex system that allows users to practice 
      - Monitor rate limits
      - Log validation failures
 
-```
+   ## TimerProgress Component
+
+   ### Overview
+   The TimerProgress component is a sophisticated progress indicator that transforms into a grade button based on specific conditions. It provides visual feedback for time remaining and word count progress.
+
+   ### Component Architecture
+
+   ##### GradeButton Subcomponent
+   ```typescript
+   interface GradeButtonProps {
+     onClick: () => void;
+     onMouseLeave?: () => void;
+     showWordCount?: boolean;
+     wordCount?: number;
+     requiredWordCount?: number;
+   }
+   ```
+   A reusable button component that displays grading options with:
+   - Gradient background and border effects
+   - Word count progress (optional)
+   - Hover animations
+   - Dark mode support
+
+   ##### TimerProgress Component
+   ```typescript
+   interface TimerProgressProps {
+     timeElapsed: number;
+     timeAllocation?: number;
+     mode: 'practice' | 'exam';
+     onGradeChallenge: () => void;
+     wordCount?: number;
+     requiredWordCount?: number;
+     showGradeButton?: boolean;
+   }
+   ```
+
+   ### Key Features
+
+   1. **Dynamic State Management**
+     - Tracks hover state for conditional button display
+     - Manages fill animation for progress bar
+     - Handles time-up conditions
+     - Monitors word count requirements
+
+   2. **Progress Bar Visualization**
+     - Smooth width transitions
+     - Mode-specific colors (exam/practice)
+     - Remaining time display
+     - Dark mode support
+
+   3. **Conditional Grade Button**
+     - Appears in two scenarios:
+       1. When time is up (automatic)
+       2. When hovered AND word count requirement is met
+     - Shows word count progress when applicable
+     - Maintains consistent styling with gradient effects
+
+   4. **Accessibility Features**
+     - Clear visual feedback
+     - Hover states for interactivity
+     - Readable time remaining display
+     - High contrast in both light/dark modes
+
+   ### Implementation Details
+
+   1. **Progress Calculation**
+   ```typescript
+   const progress = timeAllocation 
+     ? Math.max(0, 100 - (timeElapsed / (timeAllocation * 60)) * 100) 
+     : 0;
+   ```
+
+   2. **Time Formatting**
+   ```typescript
+   const formatTimeRemaining = (seconds: number) => {
+     if (!timeAllocation) return "∞";
+     const remainingSeconds = Math.max(0, (timeAllocation * 60) - seconds);
+     const minutes = Math.floor(remainingSeconds / 60);
+     const secs = Math.floor(remainingSeconds % 60);
+     return `${minutes}:${secs.toString().padStart(2, '0')}`;
+   };
+   ```
+
+   3. **Conditional Rendering Logic**
+   ```typescript
+   if (isTimeUp) {
+     return <GradeButton onClick={onGradeChallenge} />;
+   }
+
+   if (isHovered && showGradeButton) {
+     return (
+       <GradeButton 
+         onClick={onGradeChallenge}
+         onMouseLeave={() => setIsHovered(false)}
+         showWordCount
+         wordCount={wordCount}
+         requiredWordCount={requiredWordCount}
+       />
+     );
+   }
+   ```
+
+   ### Usage Guidelines
+
+   1. **Time Allocation**
+     - Optional parameter
+     - When undefined, shows "∞" for time remaining
+     - Specified in minutes, converted to seconds internally
+
+   2. **Word Count Requirements**
+     - Set `requiredWordCount` to enable word count checking
+     - Grade button appears only when `wordCount >= requiredWordCount`
+     - Word count display shows progress toward goal
+
+   3. **Mode-Specific Styling**
+     - 'exam' mode: Blue progress bar (#2563eb)
+     - 'practice' mode: Green progress bar (#059669)
+
+   4. **Event Handling**
+     - `onGradeChallenge`: Callback for grading action
+     - `onMouseEnter/onMouseLeave`: For hover state management
+     - Automatic cleanup of animation frames
+
+   ### Best Practices
+
+   1. **Performance Optimization**
+     - Use `useRef` for animation frame management
+     - Implement smooth transitions with CSS
+     - Avoid unnecessary re-renders
+
+   2. **Styling Consistency**
+     - Maintain gradient effects across states
+     - Use consistent spacing and sizing
+     - Follow dark mode guidelines
+
+   3. **Error Prevention**
+     - Handle undefined timeAllocation gracefully
+     - Prevent negative progress values
+     - Manage cleanup of animation frames
+
+   4. **Accessibility**
+     - Maintain readable contrast ratios
+     - Provide clear visual feedback
+     - Support keyboard navigation
