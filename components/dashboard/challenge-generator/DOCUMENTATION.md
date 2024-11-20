@@ -19,6 +19,7 @@ challenge-generator/
 │   ├── ChallengeSuggestions.tsx   # AI-powered challenge suggestions
 │   └── GuideContent.tsx           # Guide and help content
 ├── index.tsx                      # Main container component
+├── page.tsx                       # Server-side entry point
 └── schema.ts                      # Type definitions and validations
 ```
 
@@ -96,6 +97,115 @@ interface GuideContentProps {
 }
 ```
 Context-aware help and guidance content.
+
+## Server Component (page.tsx)
+
+### Overview
+The server-side entry point for the Challenge Generator, handling:
+- User authentication
+- Challenge data fetching for edit mode
+- URL parameter processing
+- Ownership verification
+
+### Implementation
+```typescript
+// Props type for searchParams handling
+interface Props {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+// Server Component with async searchParams handling
+async function ChallengeGeneratorPage({ searchParams }: Props)
+```
+
+### URL Parameters Handling
+- **Next.js 13+ Considerations**
+  - searchParams must be handled asynchronously
+  - Direct property access needs special handling
+  - Type safety must be maintained
+
+- **Parameter Extraction**
+  ```typescript
+  // Safe parameter extraction pattern
+  const params = await Promise.resolve(searchParams);
+  const mode = String(params?.mode || '');
+  const challengeId = String(params?.id || '');
+  ```
+
+- **Available Parameters**
+  - `mode`: Operation mode ('edit' or undefined)
+  - `id`: Challenge ID for edit mode
+
+### Security Features
+1. **URL Parameter Validation**
+   - Async-safe parameter extraction
+   - Type-safe conversion
+   - Default value handling
+   - Protection against undefined/null
+
+2. **Authentication Flow**
+   - Server-side user verification
+   - Redirect to signin if unauthenticated
+   - Ownership validation for edit mode
+
+3. **Edit Mode Protection**
+   - Challenge ownership verification
+   - Automatic redirect on unauthorized access
+   - Error handling for invalid challenge IDs
+
+### Data Flow
+1. Await and validate URL parameters
+2. Verify user authentication
+3. If edit mode:
+   - Fetch challenge data
+   - Verify ownership
+   - Prepare for editing
+4. Render ChallengeGeneratorView with appropriate props
+
+### Type Safety
+```typescript
+// Type-safe challenge handling
+let challengeToEdit: Challenge | undefined = undefined;
+
+// Safe parameter type conversion
+const mode: string = String(params?.mode || '');
+const challengeId: string = String(params?.id || '');
+```
+
+### Error Handling
+1. **Parameter Validation**
+   - Async parameter resolution
+   - Safe type conversion
+   - Default value fallbacks
+   - Protection against malformed input
+
+2. **Authentication Failures**
+   - Redirect to signin page
+   - Clear error messaging
+   - Session state handling
+
+3. **Edit Mode Errors**
+   - Invalid challenge ID handling
+   - Unauthorized access protection
+   - Database error management
+
+### Next.js 13+ Best Practices
+1. **Async Parameter Handling**
+   - Always await searchParams resolution
+   - Use type-safe parameter extraction
+   - Handle undefined/null cases
+   - Provide default values
+
+2. **Route Protection**
+   - Server-side authentication checks
+   - Proper redirect handling
+   - Error boundary implementation
+
+3. **Performance Considerations**
+   - Efficient parameter parsing
+   - Proper async/await usage
+   - Optimized database queries
+   - Response caching when appropriate
 
 ## State Management
 

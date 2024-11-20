@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { ChallengeGeneratorView } from '@/components/dashboard/challenge-generator';
 import { Metadata } from 'next';
+import { Challenge } from '@/types/challenge';
 
 export const metadata: Metadata = {
   title: 'Challenge Generator',
@@ -24,11 +25,12 @@ export default async function ChallengeGeneratorPage({ searchParams }: Props) {
     return redirect('/dashboard/signin');
   }
 
-  // Handle edit mode
-  const mode = String(searchParams?.mode || '');
-  const challengeId = String(searchParams?.id || '');
+  // Handle edit mode - safely parse searchParams
+  const params = await Promise.resolve(searchParams);
+  const mode = String(params?.mode || '');
+  const challengeId = String(params?.id || '');
   
-  let challengeToEdit = null;
+  let challengeToEdit: Challenge | undefined = undefined;
   if (mode === 'edit' && challengeId) {
     const { data: challenge, error } = await supabase
       .from('challenges')
