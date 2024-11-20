@@ -33,8 +33,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { SearchInput } from '@/components/ui/search-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
-import { DraggableWindow } from './components/DraggableWindow';
+import { CheckCircle2, XCircle, MessageSquare, AlertCircle, Loader2Icon } from 'lucide-react';
+import { DraggableWindow, LoadingState, EmptyState } from './components';
 import { type Challenge } from '@/types/challenge';
 
 interface LeftColumnProps {
@@ -290,22 +290,13 @@ export default function LeftColumn({
               {/* Challenges List */}
               <div className="space-y-4">
                 {isLoading ? (
-                  <div>Loading challenges...</div>
+                  <LoadingState />
                 ) : challenges.length > 0 ? (
                   challenges.map((challenge) => (
                     <ChallengeCard key={challenge.id} challenge={challenge} onStart={handleStartChallenge} />
                   ))
                 ) : (
-                  <div className="relative overflow-hidden rounded-lg border border-dashed border-zinc-200 dark:border-zinc-700 p-8">
-                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-50/40 via-zinc-50/30 to-zinc-50/20 dark:from-zinc-950/20 dark:via-zinc-950/15 dark:to-zinc-950/10" />
-                    <div className="relative text-center space-y-3">
-                      <HiSparkles className="mx-auto h-8 w-8 text-zinc-400 dark:text-zinc-600" />
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">No challenges found</h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">Try adjusting your search or difficulty level to find more challenges</p>
-                      </div>
-                    </div>
-                  </div>
+                  <EmptyState />
                 )}
               </div>
 
