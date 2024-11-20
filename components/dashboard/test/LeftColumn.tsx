@@ -294,12 +294,6 @@ export default function LeftColumn({
   }, [selectedLevel, searchQuery, fetchChallenges]);
 
   useEffect(() => {
-    if (timeAllocation && timeElapsed >= timeAllocation * 60) {
-      setAccordionValue(undefined);
-    }
-  }, [timeElapsed, timeAllocation]);
-
-  useEffect(() => {
     const timeAllocationInSeconds = timeAllocation ? timeAllocation * 60 : 0;
     
     if (timeAllocationInSeconds > 0 && timeElapsed >= timeAllocationInSeconds && !isTimeUp) {
@@ -452,8 +446,12 @@ export default function LeftColumn({
                             <TooltipTrigger asChild>
                               <button
                                 onClick={async () => {
-                                  console.log(`Analyzing paragraph ${index + 1}:`, paragraph.slice(0, 50) + '...');
-                                  await handleParagraphFeedback(paragraph, index);
+                                  try {
+                                    await handleParagraphFeedback(paragraph, index);
+                                  } catch (error) {
+                                    // Error is already handled by the hook
+                                    console.debug('Paragraph feedback error handled by hook:', error);
+                                  }
                                 }}
                                 className="group relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 rounded-lg transition-all w-full"
                               >

@@ -55,35 +55,42 @@ export const useFeedbackGeneration = (
       return;
     }
 
-    const toastId = toast.loading(`Analyzing paragraph ${index + 1}...`);
+    let toastId: string | number;
     try {
+      toastId = toast.loading(`Analyzing paragraph ${index + 1}...`, {
+        duration: 3000, // Keep until dismissed
+      });
+
       const feedback = await handleGenerateFeedback(paragraph);
+      
       if (!feedback?.trim()) {
-        toast.dismiss(toastId);
-        toast.error('No feedback received');
+        toast.error('No feedback received', { id: toastId });
         return;
       }
-      setFeedback(feedback);
-      toast.dismiss(toastId);
-      toast.success(`Generated feedback for paragraph ${index + 1}`);
-    } catch (error) {
-      // Always dismiss the loading toast first
-      toast.dismiss(toastId);
       
+      setFeedback(feedback);
+      toast.success(`Generated feedback for paragraph ${index + 1}`, { id: toastId });
+    } catch (error) {
       let errorMessage = 'Failed to generate feedback';
       let duration = 3000; // default 3 seconds
-      
+      let toastId: string | number | null = null;
+
       if (error instanceof Error) {
         if (error.message.toLowerCase().includes('rate limit')) {
           errorMessage = error.message;
-          duration = 5000; // show rate limit errors longer
+          duration = 5000;
         } else {
           errorMessage = error.message;
         }
       }
       
-      // Show error toast
-      toast.error(errorMessage, { duration });
+      // Replace loading toast with error
+      if (toastId) {
+        toast.error(errorMessage, { 
+          id: toastId,
+          duration 
+        });
+      }
 
       // Log error details in development
       if (process.env.NODE_ENV === 'development') {

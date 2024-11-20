@@ -520,7 +520,151 @@ The writing challenge feature is a complex system that allows users to practice 
      - Match color schemes to content meaning
      - Ensure proper spacing between cards
 
-   {{ ... }}
+   6. **Error Prevention**
+   - Prevents "Cannot set properties of null" errors
+   - Handles race conditions between state updates
+   - Maintains textarea reference across renders
+   - Gracefully handles edge cases
+
+   ### Critical Component Interactions
+
+   #### State Management Flow
+
+   1. **Challenge Selection & Instructions**
+     ```typescript
+     // LeftColumn.tsx
+     const [accordionValue, setAccordionValue] = useState<string>("instructions");
+     
+     useEffect(() => {
+       // Reset accordion when challenge changes
+       if (challenge) {
+         setAccordionValue("instructions");
+       }
+     }, [challenge]);
+     ```
+     - Accordion state must be initialized to "instructions"
+     - State resets when challenge changes to ensure visibility
+     - Never remove the useEffect or the initial state
+
+   2. **Evaluation Metrics Flow**
+     ```typescript
+     // Real-time metrics calculation
+     const initialPerformanceMetrics = {
+       wordCount: inputMessage ? inputMessage.split(/\s+/).filter(word => word.length > 0).length : 0,
+       paragraphCount: inputMessage ? inputMessage.split(/\n\s*\n/).filter(para => para.trim().length > 0).length : 0,
+       timeSpent: timeElapsed || 0,
+       // ... other metrics
+     };
+
+     // Combine with API evaluation results
+     const performanceMetrics = {
+       ...evaluatedPerformanceMetrics,  // From API
+       wordCount: initialPerformanceMetrics.wordCount,  // Real-time
+       paragraphCount: initialPerformanceMetrics.paragraphCount,  // Real-time
+       timeSpent: initialPerformanceMetrics.timeSpent,  // Real-time
+     };
+     ```
+     - Real-time metrics must override API metrics for counts
+     - Never remove the real-time calculation
+     - Always merge in this order to preserve real-time updates
+
+   3. **Component Visibility Logic**
+     ```typescript
+     // Challenge Selection
+     {(!challenge || (showChallenges && !showEvaluation)) && (
+       <ChallengeSelection />
+     )}
+
+     // Instructions
+     {challenge && !showChallenges && !showEvaluation && (
+       <InstructionsAccordion />
+     )}
+
+     // Evaluation
+     {showEvaluation && challenge && (
+       <EvaluationAccordion />
+     )}
+     ```
+     - Conditions are mutually exclusive
+     - Order matters for proper UI flow
+     - Never modify without checking all three conditions
+
+   #### API Integration Points
+
+   1. **Challenge Evaluation**
+     ```typescript
+     // useEvaluationState.ts
+     const evaluateChallenge = async () => {
+       if (!challenge || !content || !isTimeUp) {
+         setState(prev => ({ ...prev, showEvaluation: false }));
+         return;
+       }
+       // ... API call and state update
+     };
+     ```
+     - Requires all three conditions to be true
+     - State updates must preserve existing metrics
+     - Error handling is critical for UX
+
+   2. **Real-time Feedback**
+     ```typescript
+     // index.tsx
+     const handleTextChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+       const newText = e.target.value;
+       setInputMessage(newText);
+       // ... feedback generation logic
+     };
+     ```
+     - Debounce feedback requests
+     - Preserve cursor position
+     - Handle loading states
+
+   ### Component Dependencies
+
+   #### LeftColumn.tsx Dependencies
+   - `useEvaluationState`: Manages evaluation lifecycle
+   - `useChallenge`: Handles challenge selection and state
+   - `Challenge` type: Must match API contract
+   - UI components: Must maintain consistent styling
+
+   #### index.tsx Dependencies
+   - `LeftColumn`: Main UI container
+   - `Timer`: Challenge time tracking
+   - `useAIFeedback`: Feedback state management
+   - Event handlers: Must preserve proper order
+
+   ### Breaking Changes Prevention
+
+   1. **State Updates**
+     - Always use functional updates for dependent states
+     - Maintain proper update order
+     - Check all dependent components
+
+   2. **Component Props**
+     - Never remove required props
+     - Always provide fallbacks for optional props
+     - Document prop changes in this file
+
+   3. **API Contracts**
+     - Maintain type consistency
+     - Version API changes
+     - Update types in sync
+
+   4. **UI Components**
+     - Preserve component hierarchy
+     - Maintain consistent styling
+     - Test all view states
+
+   ### Testing Checklist
+
+   Before making changes:
+   1. [ ] Check all state dependencies
+   2. [ ] Verify component visibility logic
+   3. [ ] Test accordion behavior
+   4. [ ] Validate metrics calculation
+   5. [ ] Check API integration
+   6. [ ] Test error handling
+   7. [ ] Verify UI consistency
 
    ## Writing Challenge Evaluation System
 
@@ -814,7 +958,8 @@ The writing challenge feature is a complex system that allows users to practice 
 
    2. **Data Flow**:
      ```
-     User Submission → useEvaluationState → API → AI Processing → Response → UI Update
+     User Submission → API Request → AI Processing → 
+     Validation → Response Formatting → State Update → UI Render
      ```
 
    3. **Error Handling**:
@@ -1093,3 +1238,5 @@ The writing challenge feature is a complex system that allows users to practice 
      - Track response times
      - Monitor rate limits
      - Log validation failures
+
+```
