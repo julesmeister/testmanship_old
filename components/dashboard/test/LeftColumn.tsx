@@ -497,22 +497,24 @@ export default function LeftColumn({
                 </div>
               )}
 
-              {/* Output */}
-              <div className="flex-1 overflow-y-auto px-3">
+              {/* Feedback Content */}
+              <div className="flex-1 min-h-0">
                 {localOutputCode ? (
-                  <div className="text-zinc-600 dark:text-zinc-400 text-md leading-relaxed">
+                  <div className="w-full h-full overflow-y-auto px-3">
                     {localOutputCode.split('\n').map((line, index) => (
                       <FeedbackLine key={index} line={line} />
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center space-y-3 p-6">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 flex items-center justify-center">
-                      <HiSparkles className="w-6 h-6 text-indigo-400 dark:text-indigo-500" />
+                  <div className="h-full flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center space-y-3 p-6">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 flex items-center justify-center">
+                        <HiSparkles className="w-6 h-6 text-indigo-400 dark:text-indigo-500" />
+                      </div>
+                      <p className="text-zinc-400 dark:text-zinc-500 text-sm text-center max-w-[250px]">
+                        Your writing feedback will appear here. Choose a paragraph to see feedback!
+                      </p>
                     </div>
-                    <p className="text-zinc-400 dark:text-zinc-500 text-sm text-center max-w-[250px]">
-                      Your writing feedback will appear here. Choose a paragraph to see feedback!
-                    </p>
                   </div>
                 )}
               </div>
