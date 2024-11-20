@@ -14,7 +14,6 @@
 
 import DashboardLayout from '@/components/layout';
 import { useLanguageStore } from '@/stores/language';
-
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
@@ -30,6 +29,10 @@ import { type Challenge } from '@/types/challenge';
 import { useTextEditor } from '@/hooks/useTextEditor';
 import { useChallengeTimer } from '@/hooks/useChallengeTimer';
 import { useFeedbackManager } from '@/hooks/useFeedbackManager';
+import { useAuthCheck } from '@/hooks/useAuthCheck';
+import { rateLimit } from '@/utils/rateLimit';
+import { sanitizeInput } from '@/utils/security';
+import { calculateMetrics } from '@/utils/metrics';
 
 interface Props {
   user: User | null | undefined;
@@ -70,6 +73,8 @@ export default function Test({ user, userDetails }: Props) {
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
   const [showFeedbackState, setShowFeedbackState] = useState(false);
   const [manuallyClosedFeedbackState, setManuallyClosedFeedbackState] = useState(false);
+  const [rateLimitExceeded, setRateLimitExceeded] = useState<boolean>(false);
+  const [securityError, setSecurityError] = useState<string | null>(null);
 
   // Debug logging for language selection
   const { selectedLanguageId, languages } = useLanguageStore();
@@ -166,6 +171,167 @@ export default function Test({ user, userDetails }: Props) {
     }
   };
 
+  // Add authentication check
+  useAuthCheck({ user, userDetails, supabase });
+
+  // Add rate limiting for submissions
+  const rateLimitedSubmission = useCallback(rateLimit(async () => {
+    setRateLimitExceeded(false);
+  }, 60000), []); // 1 minute cooldown
+
+  const validateSubmission = (content: string): boolean => {
+    // Basic content validation
+    if (!content.trim()) {
+      setSecurityError('Content cannot be empty');
+      return false;
+    }
+    
+    // Check for suspicious patterns
+    const suspiciousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /data:/i,
+      /vbscript:/i,
+      /onload=/i,
+      /onerror=/i
+    ];
+    
+    if (suspiciousPatterns.some(pattern => pattern.test(content))) {
+      setSecurityError('Invalid content detected');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleGradeChallenge = async () => {
+    setSecurityError(null);
+    
+    // Authentication check
+    if (!user?.id || !selectedChallenge?.id) {
+      toast.error('Authentication required to save results');
+      return;
+    }
+
+    // Rate limit check
+    if (rateLimitExceeded) {
+      toast.error('Please wait before submitting another challenge');
+      return;
+    }
+
+    // Content validation
+    if (!validateSubmission(inputMessage)) {
+      toast.error(securityError || 'Invalid submission');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await rateLimitedSubmission();
+
+      // Sanitize user input
+      const sanitizedContent = sanitizeInput(inputMessage);
+      
+      // Calculate detailed metrics
+      const metrics = calculateMetrics(sanitizedContent, feedback);
+      
+      const challengeResult = {
+        challenge_id: selectedChallenge.id,
+        user_id: user.id,
+        content: sanitizedContent,
+        word_count: wordCount,
+        time_taken: elapsedTime,
+        mode: mode,
+        completed: isTimeUp || elapsedTime >= (selectedChallenge.time_allocation * 60),
+        feedback_count: feedback.length,
+        created_at: new Date().toISOString(),
+        // Enhanced metrics
+        metrics: {
+          grammar_score: metrics.grammarScore,
+          vocabulary_diversity: metrics.vocabularyDiversity,
+          average_sentence_length: metrics.avgSentenceLength,
+          readability_score: metrics.readabilityScore,
+          topic_relevance: metrics.topicRelevance,
+          improvement_rate: metrics.improvementRate
+        },
+        // Security metadata
+        submission_metadata: {
+          client_timestamp: new Date().toISOString(),
+          client_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          submission_source: 'web',
+          user_agent: navigator.userAgent,
+          session_id: crypto.randomUUID()
+        }
+      };
+
+      // First verify user's access to challenge
+      const { data: accessCheck, error: accessError } = await supabase
+        .from('user_challenges')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('challenge_id', selectedChallenge.id)
+        .single();
+
+      if (accessError || !accessCheck) {
+        throw new Error('Unauthorized access to challenge');
+      }
+
+      // Then save the result with transaction
+      const { error } = await supabase
+        .from('challenge_results')
+        .insert(challengeResult);
+
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          throw new Error('Challenge already submitted');
+        }
+        throw error;
+      }
+
+      // Log successful submission for audit
+      await supabase.from('submission_logs').insert({
+        user_id: user.id,
+        challenge_id: selectedChallenge.id,
+        action: 'submit',
+        status: 'success',
+        metadata: challengeResult.submission_metadata
+      });
+
+      toast.success('Challenge results saved successfully');
+    } catch (error) {
+      console.error('Error saving challenge results:', error);
+      
+      // Detailed error handling
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'Unauthorized access to challenge':
+            toast.error('You do not have access to this challenge');
+            break;
+          case 'Challenge already submitted':
+            toast.error('This challenge has already been submitted');
+            break;
+          default:
+            toast.error('Failed to save challenge results');
+        }
+
+        // Log error for monitoring
+        await supabase.from('error_logs').insert({
+          user_id: user.id,
+          error_type: 'challenge_submission',
+          error_message: error.message,
+          stack_trace: error.stack,
+          metadata: {
+            challenge_id: selectedChallenge.id,
+            timestamp: new Date().toISOString()
+          }
+        }).catch(console.error); // Catch logging error separately
+      }
+    } finally {
+      setLoading(false);
+      handleBackToChallenges();
+    }
+  };
+
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
@@ -234,13 +400,7 @@ export default function Test({ user, userDetails }: Props) {
               timeElapsed={elapsedTime}
               timeAllocation={selectedChallenge.time_allocation}
               mode={mode}
-              onGradeChallenge={() => {
-                // First record the challenge results
-                // TODO: Add your API call here to save the challenge results
-                
-                // Then navigate back to challenges
-                handleBackToChallenges();
-              }}
+              onGradeChallenge={handleGradeChallenge}
             />
           )}
           <textarea
