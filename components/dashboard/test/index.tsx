@@ -120,6 +120,8 @@ export default function Test({ user, userDetails }: Props) {
     handleParagraphChange
   } = useFeedbackManager(generateFeedback);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = sanitizeInput(e.target.value);
     
@@ -160,13 +162,18 @@ export default function Test({ user, userDetails }: Props) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const cursorPosition = e.currentTarget.selectionStart;
-      // Add double newline for new paragraph
       const newValue = inputMessage.slice(0, cursorPosition) + '\n\n' + inputMessage.slice(cursorPosition);
       setInputMessage(newValue);
+      
+      // Store the reference to the current target
+      const textarea = e.currentTarget;
+      
       // Set cursor position after the new paragraph
       setTimeout(() => {
-        e.currentTarget.selectionStart = cursorPosition + 2;
-        e.currentTarget.selectionEnd = cursorPosition + 2;
+        if (textarea) {
+          textarea.selectionStart = cursorPosition + 2;
+          textarea.selectionEnd = cursorPosition + 2;
+        }
       }, 0);
     }
   };
@@ -506,6 +513,7 @@ export default function Test({ user, userDetails }: Props) {
             />
           )}
           <textarea
+            ref={textareaRef}
             value={inputMessage}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
