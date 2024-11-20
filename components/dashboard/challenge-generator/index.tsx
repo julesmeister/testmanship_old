@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSupabase } from '@/app/supabase-provider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -48,14 +48,15 @@ export const ChallengeGeneratorView = ({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const isEditMode = !!challengeToEdit;
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: challengeToEdit?.title || '',
       instructions: challengeToEdit?.instructions || '',
+      difficulty: challengeToEdit?.difficulty_level || 'A1',
       format: challengeToEdit?.format_id || '',
-      difficulty: (challengeToEdit?.difficulty_level as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2') || 'A1',
       timeAllocation: challengeToEdit?.time_allocation || 30,
       wordCount: challengeToEdit?.word_count || 150,
       grammarFocus: challengeToEdit?.grammar_focus || [],
@@ -65,7 +66,11 @@ export const ChallengeGeneratorView = ({
 
   // Use custom hooks
   useAuthCheck({ user, userDetails, supabase });
-  const { formats, groupedFormats, loadFormats } = useChallengeFormats(typedSupabase);
+  const { formats, groupedFormats, loadFormats, isLoading: isLoadingFormats } = useChallengeFormats(
+    typedSupabase,
+    form.getValues('difficulty')
+  );
+
   const { suggestions, setSuggestions, isGenerating: isGeneratingSuggestions, generateSuggestions } = useChallengeSuggestions(
     form.getValues,
     formats
@@ -73,10 +78,15 @@ export const ChallengeGeneratorView = ({
   const { isGenerating: isGeneratingInstructions, generateInstructions } = useInstructionGenerator();
   const { isSaving, submitChallenge } = useChallengeSubmission();
 
-  // Reset used titles when difficulty or format changes
+  // Watch for difficulty changes
   useEffect(() => {
-    // Removed resetUsedTitles() call
-  }, [form.watch('difficulty'), form.watch('format')]);
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'difficulty' && value.difficulty) {
+        loadFormats(value.difficulty);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, loadFormats]);
 
   // Update formats when difficulty changes
   useEffect(() => {
@@ -177,8 +187,9 @@ export const ChallengeGeneratorView = ({
                     formats={formats}
                     groupedFormats={groupedFormats}
                     loadFormats={loadFormats}
-                    isGenerating={isGeneratingSuggestions}
+                    isGenerating={isGenerating}
                     generateSuggestions={generateSuggestions}
+                    isLoadingFormats={isLoadingFormats}
                   />
                 </div>
 

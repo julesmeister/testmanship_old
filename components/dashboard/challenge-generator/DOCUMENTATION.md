@@ -207,6 +207,344 @@ const challengeId: string = String(params?.id || '');
    - Optimized database queries
    - Response caching when appropriate
 
+## Component Behaviors
+
+### Format Selection (ChallengeSettings.tsx)
+
+#### Format Loading Flow
+1. **Initial Load**
+   - Formats are loaded based on initial difficulty
+   - Grouped by difficulty level
+   - Cached for performance
+
+2. **Difficulty Change**
+   ```typescript
+   // Format loading on difficulty change
+   const loadFormats = async (difficulty: string) => {
+     // Load formats for the selected difficulty
+     // Update groupedFormats state
+   };
+   ```
+
+#### State Management
+1. **Format Groups**
+   ```typescript
+   interface GroupedFormats {
+     [difficulty: string]: ChallengeFormat[];
+   }
+   ```
+   - Formats are grouped by difficulty
+   - Each group contains format objects
+   - Maintained in component state
+
+2. **Selection State**
+   - Current format selection preserved in form state
+   - Format list updates on difficulty change
+   - Previous selection cleared if not available in new difficulty
+
+#### Known Issues
+1. **Format List Flickering**
+   - **Symptom**: Visual glitch when switching difficulties
+   - **Cause**: Async format loading and state updates
+   - **Impact**: UI flickers briefly during format reload
+   - **Affected Components**:
+     - Select dropdown
+     - Format groups
+     - Selected value
+
+2. **Loading States**
+   - Format loading may show temporary empty state
+   - Dropdown might briefly show loading placeholder
+   - Group headers may shift during reload
+
+#### Performance Considerations
+1. **Format Caching**
+   - Consider caching formats by difficulty
+   - Implement format preloading
+   - Use optimistic updates
+
+2. **State Updates**
+   - Minimize cascading updates
+   - Implement proper loading states
+   - Handle race conditions
+
+3. **UI Stability**
+   - Add loading indicators
+   - Maintain consistent heights
+   - Prevent layout shifts
+
+#### Best Practices
+1. **Format Loading**
+   - Pre-fetch common formats
+   - Cache loaded formats
+   - Handle loading errors gracefully
+
+2. **State Management**
+   - Use proper loading states
+   - Implement optimistic updates
+   - Handle edge cases (empty lists, errors)
+
+3. **UI/UX**
+   - Show loading indicators
+   - Maintain consistent layout
+   - Prevent unnecessary re-renders
+
+### Format Loading and State Management (Updated)
+
+#### Format Loading Mechanism
+
+The challenge generator now implements an optimized format loading mechanism with the following features:
+
+1. **Global Format Cache**
+```typescript
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const formatCache: FormatCache = {};
+```
+- Formats are cached at module level for persistence between component mounts
+- Cache duration is set to 5 minutes to balance freshness and performance
+- Cache is keyed by difficulty level for targeted invalidation
+
+2. **State Management**
+```typescript
+const { formats, groupedFormats, loadFormats, isLoading } = useChallengeFormats(
+  supabase,
+  form.getValues('difficulty')
+);
+```
+- Format state is managed through a dedicated hook
+- Loading states are properly tracked and exposed
+- Formats are grouped by difficulty level for organized display
+
+3. **Format Loading Hook**
+```typescript
+export function useChallengeFormats(supabase: SupabaseClient, initialDifficulty: string) {
+  // State initialization
+  const updateFormatsState = useCallback((formatsData: ChallengeFormat[]) => {
+    setFormats(formatsData);
+    setGroupedFormats(/* grouping logic */);
+  }, []);
+
+  const loadFormats = useCallback(async (difficulty: string) => {
+    // Cache check and format loading logic
+  }, [supabase, updateFormatsState]);
+
+  // Initial format loading
+  useEffect(() => {
+    loadFormats(initialDifficulty);
+  }, [initialDifficulty, loadFormats]);
+}
+```
+- Uses `useCallback` for stable function references
+- Implements proper cleanup and error handling
+- Provides consistent state updates through `updateFormatsState`
+
+4. **Form Integration**
+```typescript
+useEffect(() => {
+  const subscription = form.watch((value, { name }) => {
+    if (name === 'difficulty' && value.difficulty) {
+      loadFormats(value.difficulty);
+    }
+  });
+  return () => subscription.unsubscribe();
+}, [form, loadFormats]);
+```
+- Form changes trigger format loading through subscription
+- Proper cleanup prevents memory leaks
+- Only difficulty changes trigger format updates
+
+#### UI Components
+
+1. **Loading States**
+```tsx
+<Select
+  disabled={isLoadingFormats}
+  // ...
+>
+  <SelectTrigger>
+    <SelectValue placeholder={isLoadingFormats ? "Loading formats..." : "Select challenge format"} />
+  </SelectTrigger>
+  <SelectContent>
+    {isLoadingFormats ? (
+      <LoadingIndicator />
+    ) : Object.entries(groupedFormats).length > 0 ? (
+      <FormatGroups />
+    ) : (
+      <EmptyState />
+    )}
+  </SelectContent>
+</Select>
+```
+- Clear loading indicators
+- Disabled state during format loading
+- Empty state handling
+- Grouped format display
+
+#### Performance Considerations
+
+1. **Cache Strategy**
+- Module-level cache persists between component mounts
+- Cache invalidation after 5 minutes ensures data freshness
+- Per-difficulty caching reduces unnecessary API calls
+
+2. **State Updates**
+- Batched state updates through `updateFormatsState`
+- Debounced form subscription prevents rapid updates
+- Proper cleanup of subscriptions and effects
+
+3. **Error Handling**
+- Graceful error handling with toast notifications
+- Loading state reset on error
+- Cache fallback for failed requests
+
+#### Best Practices
+
+1. **Component Structure**
+- Clear separation of concerns between hooks and components
+- Proper prop typing and validation
+- Consistent state management patterns
+
+2. **Form Integration**
+- Form state drives format loading
+- Proper subscription cleanup
+- Type-safe form values
+
+3. **Performance**
+- Minimized re-renders through proper hook usage
+- Efficient state updates
+- Smart caching strategy
+
+#### Known Limitations
+
+1. Cache is cleared on page refresh
+2. No offline support
+3. Cache is not shared between browser tabs
+
+#### Future Improvements
+
+1. **Cache Enhancement**
+- Implement persistent cache through localStorage
+- Add cache sharing between tabs
+- Implement cache preloading
+
+2. **Performance**
+- Add performance monitoring
+- Implement request batching
+- Add prefetching for common formats
+
+3. **User Experience**
+- Add format preview
+- Implement format search
+- Add format recommendations
+
+## UI Components and Styling (Updated)
+
+### ChallengeSettings Component
+
+The ChallengeSettings component has been updated with improved visual hierarchy and user experience:
+
+1. **Section Organization**
+```tsx
+<div className="rounded-lg border p-4">
+  <h4 className="mb-3 font-medium text-zinc-900 dark:text-white">Section Title</h4>
+  <FormField>
+    {/* Form controls */}
+  </FormField>
+</div>
+```
+- Each major section is contained in a bordered card
+- Clear section headings with consistent styling
+- Proper spacing between sections
+
+2. **Proficiency Level Selector**
+```tsx
+<Tabs 
+  value={field.value?.toLowerCase() || 'a1'} 
+  onValueChange={(value) => {
+    field.onChange(value.toUpperCase());
+    loadFormats(value.toUpperCase());
+  }}
+  className="w-full"
+>
+  <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-gray-800">
+    <TabsTrigger className="data-[state=inactive]:text-gray-600">A1</TabsTrigger>
+    {/* ... other triggers */}
+  </TabsList>
+</Tabs>
+```
+- Grid-based tab layout
+- Consistent inactive/active states
+- Dark mode compatible colors
+- Immediate format loading on change
+
+3. **Format Selection**
+```tsx
+<Select
+  onValueChange={field.onChange}
+  value={field.value}
+  disabled={isLoadingFormats}
+>
+  <SelectTrigger>
+    <SelectValue placeholder={isLoadingFormats ? "Loading..." : "Select format"} />
+  </SelectTrigger>
+  <SelectContent>
+    {/* Grouped format options */}
+  </SelectContent>
+</Select>
+```
+- Clear loading states
+- Grouped format options by level
+- Disabled state during loading
+- Proper placeholder handling
+
+4. **Visual Hierarchy**
+- Section titles use consistent font weights and colors
+- Form descriptions provide context
+- Loading states are clearly indicated
+- Error messages are properly positioned
+
+5. **Dark Mode Support**
+```tsx
+className="text-zinc-900 dark:text-white"
+className="bg-gray-100 dark:bg-gray-800"
+className="data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-300"
+```
+- Consistent dark mode colors
+- Proper contrast ratios
+- State-specific color adjustments
+
+6. **Accessibility**
+- Proper ARIA labels
+- Keyboard navigation support
+- Clear focus states
+- Loading state announcements
+
+### Best Practices
+
+1. **Component Structure**
+- Logical grouping of related fields
+- Consistent spacing using Tailwind classes
+- Clear visual hierarchy
+- Proper form field wrapping
+
+2. **State Management**
+- Loading states for async operations
+- Proper error handling
+- Form validation integration
+- Controlled component patterns
+
+3. **User Experience**
+- Clear visual feedback
+- Intuitive layout
+- Proper spacing
+- Consistent styling
+
+4. **Maintainability**
+- Reusable style patterns
+- Consistent class naming
+- Dark mode compatibility
+- Clear component structure
+
 ## State Management
 
 ### Challenge Generation/Edit State
