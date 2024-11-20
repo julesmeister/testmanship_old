@@ -19,13 +19,22 @@ import { getLanguageName } from '@/types/language';
 
 export async function POST(request: Request) {
   try {
-    const { essayContent, challengeId, targetLanguage = 'EN' } = await request.json();
+    const { essayContent, challenge, targetLanguage } = await request.json();
+    
+    if (!essayContent || !challenge || !targetLanguage) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
     const languageName = getLanguageName(targetLanguage);
+    console.log('Language name resolved:', languageName);
 
     console.log('[API] Received request with:', {
       targetLanguage,
       languageName,
-      challengeId,
+      challenge: challenge.title,
       textPreview: essayContent?.slice(0, 50) + '...'
     });
 
@@ -36,27 +45,31 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!challengeId) {
-      return NextResponse.json(
-        { error: 'Challenge ID is required' },
-        { status: 400 }
-      );
-    }
 
     try {
       const messages = [
         {
           role: 'system' as const,
+          content: `You are a ${languageName} language learning assistant providing feedback on writing exercises.`
+        },
+        {
+          role: 'user' as const,
           content: `Generate language learning feedback for ${languageName} following these exact requirements:
 
 Format: Provide exactly three lines of feedback using these markers at the start of each line:
-   ✓ [point] - identify one correct language usage from the text (if text is not in ${languageName}, mark it as incorrect)
-   ✗ [point] - identify one specific error or mistake from the text (if text is not in ${languageName}, point this out)
-   ! [suggestion] - provide the ${languageName} translation or improvement for the text
+   ✓ [point] - identify one correct language usage or alignment with challenge instructions (if text not in ${languageName} mark as incorrect)
+   ✗ [point] - identify one specific error or area for improvement (if text not in ${languageName}, point this out)
+   ! [suggestion] - provide the ${languageName} translation if not in ${languageName} otherwise just suggest improvement for the text
+
+Context:
+Challenge Title: ${challenge.title}
+Challenge Instructions: ${challenge.instructions}
 
 Requirements:
 1. Each feedback line must begin with its respective marker (✓, ✗, or !)
-2. Analyze only the provided text content
+2. First check if the text is in ${languageName}:
+   - If NOT in ${languageName}, mark as incorrect and provide translation
+   - If IN ${languageName}, focus on grammar and alignment with challenge instructions
 3. Keep each feedback line to one clear, specific point
 4. Write direct statements without explanations
 5. Do not include questions or hypotheticals
@@ -66,11 +79,9 @@ Requirements:
 Example format:
 ✓ [point] {single correct usage observation}
 ✗ [point] {single error identification}
-! [suggestion] {single improvement point or translation}`
-        },
-        {
-          role: 'user' as const,
-          content: `Analyze this ${languageName} text:\n\n${essayContent}`
+! [suggestion] {single improvement point or translation}
+
+Text to analyze: "${essayContent}"`
         }
       ];
 

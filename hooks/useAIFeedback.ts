@@ -42,7 +42,7 @@ export const useAIFeedback = ({ challenge, targetLanguage }: AIFeedbackOptions) 
         },
         body: JSON.stringify({
           essayContent: paragraphText,
-          challengeId: challenge.id,
+          challenge: challenge,
           targetLanguage: (targetLanguage || 'EN').toUpperCase(),
         }),
       });
