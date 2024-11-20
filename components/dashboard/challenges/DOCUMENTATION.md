@@ -132,6 +132,29 @@ graph TD
 - Responsive design
 - Error boundaries
 
+## Navigation and User Experience
+
+### Progress Bar Integration
+The challenge components integrate with Testmanship's global progress bar system to provide visual feedback during navigation:
+
+1. **Challenge Dialog Navigation**
+   - Progress bar is triggered when navigating to:
+     - Challenge editor (`/dashboard/challenge-generator`)
+     - Writing test page (`/dashboard/test`)
+   - Implementation uses `startProgress()` from `@/components/ui/progress-bar`
+   - Progress automatically completes when navigation finishes
+
+```typescript
+// Example: Navigation with progress bar
+import { startProgress } from '@/components/ui/progress-bar';
+
+// Trigger before navigation
+startProgress();
+router.push('/destination-route');
+```
+
+The progress bar provides a smooth, consistent navigation experience across the application, matching the behavior found in other sections like the sidebar navigation.
+
 ## Component Documentation
 
 ### ChallengeDialog Component
