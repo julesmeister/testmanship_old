@@ -127,6 +127,10 @@ export default function Test({ user, userDetails }: Props) {
     const prevText = inputMessage;
     setInputMessage(newText);
     
+    // Auto-adjust height
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+    
     // Calculate metrics for the new text
     const metrics = calculateMetrics(newText);
     const { wordCount, charCount, readingTime } = metrics;
@@ -142,11 +146,29 @@ export default function Test({ user, userDetails }: Props) {
       setIsWriting(true);
     }
 
-    // Calculate current paragraph index
+    // Calculate current paragraph index by counting double newlines
     const paragraphs = newText.split(/\n\s*\n/);
     const currentIndex = paragraphs.length - 1;
     
-    handleParagraphChange(newText, prevText, currentIndex);
+    // Only trigger paragraph change if content actually changed
+    if (newText !== prevText) {
+      handleParagraphChange(newText, prevText, currentIndex);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const cursorPosition = e.currentTarget.selectionStart;
+      // Add double newline for new paragraph
+      const newValue = inputMessage.slice(0, cursorPosition) + '\n\n' + inputMessage.slice(cursorPosition);
+      setInputMessage(newValue);
+      // Set cursor position after the new paragraph
+      setTimeout(() => {
+        e.currentTarget.selectionStart = cursorPosition + 2;
+        e.currentTarget.selectionEnd = cursorPosition + 2;
+      }, 0);
+    }
   };
 
   const handleStartChallenge = (challenge: Challenge) => {
@@ -486,8 +508,9 @@ export default function Test({ user, userDetails }: Props) {
           <textarea
             value={inputMessage}
             onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
             placeholder="Start writing your essay here..."
-            className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent"
+            className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap"
             disabled={isTimeUp}
           />
           {/* Writing Statistics Bar */}

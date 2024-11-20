@@ -27,9 +27,19 @@ The writing challenge feature is a complex system that allows users to practice 
 ##### `handleTextChange(e: React.ChangeEvent<HTMLTextAreaElement>)`
 - Purpose: Manages text input and triggers feedback
 - Key responsibilities:
-  - Updates input message
+  - Updates input message with sanitized text
   - Shows feedback window on first typing
   - Preserves previous text for comparison
+  - Handles paragraph separation and tracking
+  - Auto-adjusts textarea height
+  - Triggers feedback only on actual content changes
+
+##### `handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>)`
+- Purpose: Manages keyboard interactions for better writing experience
+- Key features:
+  - Creates new paragraphs with double newlines on Enter
+  - Preserves cursor position after paragraph creation
+  - Prevents default Enter behavior for better control
 
 ##### `handleStartChallenge(challenge: Challenge)`
 - Purpose: Initializes new challenge
@@ -113,6 +123,23 @@ The writing challenge feature is a complex system that allows users to practice 
    - Removes potentially harmful content
    - Preserves legitimate formatting
    - Maintains content integrity
+
+   #### Text Processing and Security
+
+   ##### Input Sanitization (`utils/security.ts`)
+   - Purpose: Ensures text input is safe while preserving formatting
+   - Key features:
+     - Removes potentially harmful HTML and attributes
+     - Preserves newlines for paragraph structure
+     - Normalizes other whitespace (spaces, tabs) for consistency
+     - Uses DOMPurify for base sanitization
+
+   #### Writing Experience Improvements
+   - Proper paragraph separation with double newlines
+   - Cursor position preservation after paragraph creation
+   - Dynamic textarea height adjustment
+   - Whitespace normalization that preserves formatting
+   - Improved feedback triggering based on actual content changes
 
 ##### Performance Metrics
 1. **Writing Quality**
