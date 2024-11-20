@@ -132,6 +132,119 @@ graph TD
 - Responsive design
 - Error boundaries
 
+## Component Documentation
+
+### ChallengeDialog Component
+
+#### Overview
+The `ChallengeDialog` component is a modal dialog that displays detailed information about a writing challenge. It provides a rich, interactive interface for viewing challenge details and taking actions such as starting or editing a challenge.
+
+#### Props Interface
+```typescript
+interface ChallengeDialogProps {
+  challenge: Challenge | null;     // The challenge to display
+  creatorName: string;            // Name of the challenge creator
+  isCurrentUser: boolean;         // Whether the current user created this challenge
+  onClose: () => void;            // Callback when dialog is closed
+  onEdit?: () => void;            // Optional callback for edit action (currently unused)
+}
+```
+
+#### Features
+1. **Challenge Header**
+   - Displays difficulty level badge
+   - Shows edit button for challenge creators
+   - Indicates time allocation
+
+2. **Challenge Information**
+   - Title and creator name
+   - Time allocation display
+   - Word count target (if specified)
+   - Detailed instructions
+   - Grammar focus points
+   - Vocabulary themes
+
+3. **Interactive Elements**
+   - Edit button (for challenge creators)
+   - Start challenge button
+   - Close dialog functionality
+
+#### Navigation
+- Edit functionality: Direct navigation to challenge editor
+  ```typescript
+  router.push(`/dashboard/challenge-generator?mode=edit&id=${challenge.id}`)
+  ```
+- Start challenge: Links to the challenge test page
+  ```typescript
+  <Link href={`/dashboard/test?challenge=${challenge.id}`}>
+  ```
+
+#### Styling
+- Uses a semi-transparent backdrop blur effect
+- Responsive grid layout for information display
+- Color-coded sections for different types of information:
+  - Blue theme for time allocation
+  - Emerald theme for word count
+  - Custom styling for grammar and vocabulary tags
+
+#### Implementation Details
+1. **Conditional Rendering**
+   - Early return if no challenge is provided
+   - Conditional rendering of word count section
+   - Dynamic display of grammar focus and vocabulary themes
+
+2. **Layout Structure**
+   ```
+   Dialog
+   └── DialogContent
+       ├── DialogHeader
+       │   ├── Difficulty Badge
+       │   ├── Edit Button (if owner)
+       │   └── Time Allocation
+       └── Content Sections
+           ├── Challenge Info Grid
+           ├── Instructions
+           ├── Grammar Focus
+           ├── Vocabulary Themes
+           └── Start Button
+   ```
+
+3. **Responsive Design**
+   - Single column layout on mobile
+   - Two-column grid on larger screens
+   - Adaptive spacing and sizing
+
+#### Usage Example
+```tsx
+<ChallengeDialog
+  challenge={selectedChallenge}
+  creatorName="John Doe"
+  isCurrentUser={true}
+  onClose={() => setSelectedChallenge(null)}
+/>
+```
+
+#### Best Practices
+1. **State Management**
+   - Use controlled dialog state with `open` prop
+   - Handle close events through callback
+   - Manage navigation through router
+
+2. **Accessibility**
+   - Semantic HTML structure
+   - ARIA attributes through Dialog primitive
+   - Keyboard navigation support
+
+3. **Error Handling**
+   - Null challenge handling
+   - Loading states for creator name
+   - Graceful fallbacks for missing data
+
+4. **Performance**
+   - Conditional rendering of complex sections
+   - Optimized re-renders through proper prop usage
+   - Efficient navigation handling
+
 ## Functions Reference
 
 ### Challenge Management
