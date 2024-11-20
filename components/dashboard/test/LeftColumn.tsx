@@ -200,6 +200,13 @@ export default function LeftColumn({
 
   const [accordionValue, setAccordionValue] = useState<string>("instructions");
 
+  useEffect(() => {
+    // Reset accordion value when challenge changes
+    if (challenge) {
+      setAccordionValue("instructions");
+    }
+  }, [challenge]);
+
   const {
     showEvaluation,
     insights,
