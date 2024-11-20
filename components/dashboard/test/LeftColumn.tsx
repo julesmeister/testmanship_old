@@ -200,7 +200,17 @@ export default function LeftColumn({
 
   const [accordionValue, setAccordionValue] = useState<string>("instructions");
 
-  const performanceMetrics = {
+  const {
+    showEvaluation,
+    insights,
+    isLoading: evaluationLoading,
+    error: evaluationError,
+    performanceMetrics: evaluatedPerformanceMetrics,
+    skillMetrics: evaluatedSkillMetrics
+  } = useEvaluationState(challenge, isTimeUp, inputMessage);
+
+  // Calculate initial metrics for display before evaluation
+  const initialPerformanceMetrics = {
     wordCount: inputMessage ? inputMessage.split(/\s+/).filter(word => word.length > 0).length : 0,
     paragraphCount: inputMessage ? inputMessage.split(/\n\s*\n/).filter(para => para.trim().length > 0).length : 0,
     timeSpent: timeElapsed || 0,
@@ -213,19 +223,22 @@ export default function LeftColumn({
     }
   };
 
-  const skillMetrics = {
+  const initialSkillMetrics = {
     writingComplexity: 0,
     accuracy: 0,
     coherence: 0,
     style: 0
   };
 
-  const {
-    showEvaluation,
-    insights,
-    isLoading: evaluationLoading,
-    error: evaluationError
-  } = useEvaluationState(challenge, isTimeUp, inputMessage, performanceMetrics, skillMetrics);
+  // Combine real-time counts with evaluated metrics
+  const performanceMetrics = {
+    ...evaluatedPerformanceMetrics,
+    wordCount: initialPerformanceMetrics.wordCount,
+    paragraphCount: initialPerformanceMetrics.paragraphCount,
+    timeSpent: initialPerformanceMetrics.timeSpent,
+  };
+
+  const skillMetrics = evaluatedSkillMetrics;
 
   useEffect(() => {
     if (evaluationError) {
