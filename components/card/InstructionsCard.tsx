@@ -1,35 +1,20 @@
-import { cn } from '@/lib/utils';
-import { type InstructionsCardProps } from './types';
-import { BookOpen } from 'lucide-react';
+import { HiClipboardDocument } from 'react-icons/hi2';
 
-export function InstructionsCard({
-  instructions,
-  className,
-}: InstructionsCardProps) {
+interface InstructionsCardProps {
+  instructions: string;
+}
+
+export function InstructionsCard({ instructions }: InstructionsCardProps) {
   return (
-    <div
-      className={cn(
-        'relative overflow-hidden rounded-lg border bg-background p-6',
-        'before:absolute before:inset-0 before:transform before:bg-gradient-to-br',
-        'before:from-emerald-500/20 before:to-teal-500/20',
-        'dark:before:from-emerald-500/10 dark:before:to-teal-500/10',
-        'before:blur-2xl before:content-[""]',
-        'dark:border-slate-800 dark:bg-slate-950/50',
-        className
-      )}
-    >
-      <div className="relative space-y-4">
-        <div className="flex items-center gap-3">
-          <BookOpen className="h-5 w-5 text-foreground/70" />
-          <h3 className="font-medium">Instructions</h3>
-        </div>
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          {typeof instructions === 'string' ? (
-            <div dangerouslySetInnerHTML={{ __html: instructions }} />
-          ) : (
-            instructions
-          )}
-        </div>
+    <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+      <h3 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
+        <HiClipboardDocument className="h-4 w-4 text-zinc-500" />
+        Instructions
+      </h3>
+      <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2">
+        {instructions.split('\n').map((instruction: string, index: number) => (
+          <p key={index} className="leading-relaxed">{instruction}</p>
+        ))}
       </div>
     </div>
   );

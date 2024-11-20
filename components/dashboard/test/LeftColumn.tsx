@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChallengeCard } from "@/components/dashboard/challenges/ChallengeCard";
+import { ChallengeCard } from "@/components/dashboard/test/components/ChallengeCard";
 import { useChallenge } from '@/hooks/useChallenge';
 import { useFeedbackGeneration } from '@/hooks/useFeedbackGeneration';
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -310,13 +310,15 @@ export default function LeftColumn({
               </div>
 
               {/* Pagination */}
-              {challenges.length > 0 && (
-                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                  <Pagination 
-                    currentPage={currentPage} 
-                    totalPages={totalPages} 
-                    onPageChange={setCurrentPage} 
-                  />
+              {challenges.length > 0 && totalPages > 1 && (
+                <div className="mt-6 flex justify-center border-t border-zinc-200 dark:border-zinc-800">
+                  <div className="pt-6">
+                    <Pagination 
+                      currentPage={currentPage} 
+                      totalPages={totalPages} 
+                      onPageChange={setCurrentPage} 
+                    />
+                  </div>
                 </div>
               )}
             </div>

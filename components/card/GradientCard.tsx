@@ -1,24 +1,23 @@
 import { cn } from '@/lib/utils';
-import { type GradientCardProps } from './types';
 
-export function GradientCard({
-  title,
-  subtitle,
-  className,
-  children,
-}: GradientCardProps) {
+interface GradientCardProps {
+  title: string;
+  subtitle: string;
+  className?: string;
+}
+
+export function GradientCard({ title, subtitle, className }: GradientCardProps) {
   return (
-    <div
-      className={cn(
-        'relative overflow-hidden rounded-lg border bg-background p-6',
-        'before:absolute before:inset-0 before:-translate-y-1/2 before:transform before:bg-gradient-to-br before:from-purple-500/25 before:to-blue-500/25 before:blur-3xl before:content-[""]',
-        'dark:border-slate-800 dark:bg-slate-950/50',
-        className
-      )}
-    >
-      {title && <h3 className="mb-2 text-lg font-semibold">{title}</h3>}
-      {subtitle && <p className="mb-4 text-sm text-muted-foreground">{subtitle}</p>}
-      {children}
+    <div className={cn("relative p-4 rounded-lg bg-white dark:bg-zinc-900 shadow-sm overflow-hidden", className)}>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-purple-50/60 to-emerald-50/40 dark:from-blue-950/30 dark:via-purple-950/20 dark:to-emerald-950/10" />
+      <div className="relative">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          {title}
+        </h3>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          {subtitle}
+        </p>
+      </div>
     </div>
   );
 }

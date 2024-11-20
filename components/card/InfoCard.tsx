@@ -1,39 +1,39 @@
-import { cn } from '@/lib/utils';
-import { type InfoCardProps } from './types';
+import { IconType } from 'react-icons';
 
-export function InfoCard({
-  title,
-  content,
-  value,
-  icon: Icon,
-  colorScheme = 'blue',
-  className,
-}: InfoCardProps) {
-  const colorVariants = {
-    blue: 'from-blue-500/50 to-cyan-500/50 dark:from-blue-500/20 dark:to-cyan-500/20',
-    purple: 'from-purple-500/50 to-pink-500/50 dark:from-purple-500/20 dark:to-pink-500/20',
-    emerald: 'from-emerald-500/50 to-teal-500/50 dark:from-emerald-500/20 dark:to-teal-500/20',
-    amber: 'from-amber-500/50 to-orange-500/50 dark:from-amber-500/20 dark:to-orange-500/20',
+interface InfoCardProps {
+  title: string;
+  value: string | number;
+  icon: IconType;
+  colorScheme: 'blue' | 'purple';
+}
+
+export function InfoCard({ title, value, icon: Icon, colorScheme }: InfoCardProps) {
+  const colorClasses = {
+    blue: {
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      border: 'border-blue-100 dark:border-blue-800',
+      title: 'text-blue-900 dark:text-blue-100',
+      value: 'text-blue-700 dark:text-blue-300',
+    },
+    purple: {
+      bg: 'bg-purple-50 dark:bg-purple-900/20',
+      border: 'border-purple-100 dark:border-purple-800',
+      title: 'text-purple-900 dark:text-purple-100',
+      value: 'text-purple-700 dark:text-purple-300',
+    },
   };
 
+  const colors = colorClasses[colorScheme];
+
   return (
-    <div
-      className={cn(
-        'relative overflow-hidden rounded-lg border bg-background/95 p-6',
-        'before:absolute before:inset-0 before:-translate-y-1/2 before:transform before:bg-gradient-to-br',
-        colorVariants[colorScheme],
-        'before:blur-2xl before:content-[""]',
-        'dark:border-slate-800 dark:bg-slate-950/50',
-        className
-      )}
-    >
-      <div className="relative flex items-center gap-4">
-        {Icon && <Icon className="h-6 w-6 text-foreground/80" />}
-        <div>
-          <h3 className="font-semibold">{title}</h3>
-          <div className="text-sm text-muted-foreground">{value || content}</div>
-        </div>
-      </div>
+    <div className={`p-3 rounded-lg ${colors.bg} border ${colors.border}`}>
+      <h3 className={`flex items-center gap-2 text-sm font-medium ${colors.title} mb-1`}>
+        <Icon className="h-4 w-4" />
+        {title}
+      </h3>
+      <p className={`text-sm ${colors.value}`}>
+        {value}
+      </p>
     </div>
   );
 }
