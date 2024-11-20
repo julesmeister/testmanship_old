@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DifficultyBadge } from './DifficultyBadge';
+import { startProgress } from '@/components/ui/progress-bar';
 
 interface ChallengeDialogProps {
   challenge: Challenge | null;
@@ -48,6 +49,7 @@ export function ChallengeDialog({
                     className="h-8 w-8"
                     onClick={(e) => {
                       e.stopPropagation();
+                      startProgress();
                       router.push(`/dashboard/challenge-generator?mode=edit&id=${challenge.id}`);
                     }}
                   >
@@ -146,7 +148,10 @@ export function ChallengeDialog({
 
           {/* Start Challenge Button */}
           <div className="pt-4">
-            <Link href={`/dashboard/test?challenge=${challenge.id}`}>
+            <Link 
+              href={`/dashboard/test?challenge=${challenge.id}`} 
+              onClick={() => startProgress()}
+            >
               <Button className="w-full gap-2 h-12 text-base">
                 Start Challenge
                 <ArrowRight className="h-5 w-5" />
