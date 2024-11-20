@@ -25,6 +25,7 @@ export const useChallenge = (
   const [currentPage, setCurrentPage] = useState(1);
   const supabase = createClientComponentClient();
   const itemsPerPage = 10;
+  const [outputCodeState, setOutputCodeState] = useState('');
 
   const fetchChallenges = useCallback(async () => {
     let query = supabase
@@ -50,6 +51,7 @@ export const useChallenge = (
     onStartChallenge(challenge);
     setShowTip(false);
     setShowChallenges(false);
+    setOutputCodeState(''); // Clear feedback when starting new challenge
   }, [onStartChallenge]);
 
   const handleBackToChallenges = useCallback(() => {
@@ -75,5 +77,7 @@ export const useChallenge = (
     handleStartChallenge,
     handleBackToChallenges,
     fetchChallenges,
+    outputCodeState,
+    setOutputCodeState,
   };
 };

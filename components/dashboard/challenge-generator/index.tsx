@@ -1,3 +1,10 @@
+/**
+ * ⚠️ DOCUMENTATION NOTICE
+ * Before making any changes to this file, please review the DOCUMENTATION.md in this directory.
+ * After making changes, update the DOCUMENTATION.md file accordingly.
+ * This helps maintain accurate and up-to-date documentation of the challenge generator system.
+ */
+
 'use client';
 
 import { useEffect, useRef } from 'react';

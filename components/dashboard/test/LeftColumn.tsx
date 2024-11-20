@@ -1,32 +1,41 @@
 'use client';
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HiSparkles, HiPlay, HiStop, HiArrowPath, HiMiniArrowLeftOnRectangle, HiXMark, HiLightBulb, HiClipboardDocument, HiClock, HiDocumentText, HiCheckCircle, HiBookOpen } from 'react-icons/hi2';
+import { ChallengeCard } from './components/ChallengeCard';
+import { useChallenge } from '@/hooks/useChallenge';
+import { useFeedbackGeneration } from '@/hooks/useFeedbackGeneration';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { toast } from 'sonner';
+import { difficultyLevels } from '@/utils/constants';
+import { 
+  HiXMark, 
+  HiLightBulb, 
+  HiClock, 
+  HiDocumentText, 
+  HiCheckCircle, 
+  HiBookOpen,
+  HiSparkles,
+  HiPlay,
+  HiStop,
+  HiArrowPath,
+  HiMiniArrowLeftOnRectangle,
+  HiClipboardDocument
+} from 'react-icons/hi2';
+import {
+  GradientCard,
+  InstructionsCard,
+  InfoCard,
+  FocusCard,
+  FooterStats,
+} from './components/cards';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { SearchInput } from '@/components/ui/search-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
 import { DraggableWindow } from './components/DraggableWindow';
-import { ChallengeCard } from './components/ChallengeCard';
-import { useChallenge } from '@/hooks/useChallenge';
-import { useFeedbackGeneration } from '@/hooks/useFeedbackGeneration';
-import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { difficultyLevels } from '@/utils/constants';
-
-interface Challenge {
-  id: string;
-  title: string;
-  instructions: string;
-  difficulty_level: string;
-  time_allocation: number;
-  word_count?: number;
-  grammar_focus?: string[];
-  vocabulary_themes?: string[];
-}
+import { type Challenge } from '@/types/challenge';
 
 interface LeftColumnProps {
   challenge: Challenge | null;
@@ -40,6 +49,10 @@ interface LeftColumnProps {
   timeElapsed: number;
   timeAllocation?: number;
   inputMessage: string;
+  showFeedback: boolean;
+  manuallyClosedFeedback: boolean;
+  setManuallyClosedFeedback: (value: boolean) => void;
+  setShowFeedback: (value: boolean) => void;
 }
 
 const TipBox = ({ onClose }: { onClose: () => void }) => (
@@ -131,6 +144,20 @@ const Pagination = ({
   </div>
 );
 
+const DifficultyBadge = ({ level }: { level: string }) => {
+  const colors = {
+    Beginner: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+    Intermediate: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+    Advanced: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+  };
+
+  return (
+    <span className={cn("px-2 py-1 rounded-md text-xs font-medium", colors[level as keyof typeof colors])}>
+      {level}
+    </span>
+  );
+};
+
 export default function LeftColumn({
   challenge,
   outputCode,
@@ -143,6 +170,10 @@ export default function LeftColumn({
   timeElapsed,
   timeAllocation,
   inputMessage,
+  showFeedback: propsShowFeedback,
+  manuallyClosedFeedback,
+  setManuallyClosedFeedback,
+  setShowFeedback,
 }: LeftColumnProps) {
   const {
     challenges,
@@ -162,21 +193,28 @@ export default function LeftColumn({
     fetchChallenges,
   } = useChallenge(onStartChallenge, onStopChallenge);
 
+  const [localOutputCode, setLocalOutputCode] = useState(outputCode);
+
+  useEffect(() => {
+    setLocalOutputCode(outputCode);
+  }, [outputCode]);
+
   const {
-    outputCodeState,
-    showFeedback,
-    setOutputCodeState,
-    setShowFeedback,
     handleParagraphFeedback,
-    handleFinishChallenge,
-  } = useFeedbackGeneration(challenge, onGenerateFeedback);
+    handleFinishChallenge
+  } = useFeedbackGeneration(challenge, onGenerateFeedback, setLocalOutputCode);
+
+  const handleClearFeedback = useCallback(() => {
+    setLocalOutputCode('');
+    toast.success('Feedback cleared');
+  }, []);
 
   const [accordionValue, setAccordionValue] = useState<string | undefined>('instructions');
   const accordionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setOutputCodeState(outputCode);
-  }, [outputCode, setOutputCodeState]);
+    setLocalOutputCode(outputCode);
+  }, [outputCode, setLocalOutputCode]);
 
   useEffect(() => {
     fetchChallenges();
@@ -343,111 +381,49 @@ export default function LeftColumn({
               </div>
               <AccordionContent className="px-4 pb-4">
                 <div className="space-y-4">
-                  {/* Main topic card with gradient border */}
-                  <div className="relative p-4 rounded-lg bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-purple-50/60 to-emerald-50/40 dark:from-blue-950/30 dark:via-purple-950/20 dark:to-emerald-950/10" />
-                    <div className="relative">
-                      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                        {challenge.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                        Writing Challenge
-                      </p>
-                    </div>
-                  </div>
+                  <GradientCard title={challenge.title} subtitle="Writing Challenge" />
+                  <InstructionsCard instructions={challenge.instructions} />
 
-                  {/* Instructions card */}
-                  <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
-                    <h3 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
-                      <HiClipboardDocument className="h-4 w-4 text-zinc-500" />
-                      Instructions
-                    </h3>
-                    <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2">
-                      {challenge.instructions.split('\n').map((instruction: string, index: number) => (
-                        <p key={index} className="leading-relaxed">{instruction}</p>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Requirements grid */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
-                      <h3 className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
-                        <HiClock className="h-4 w-4" />
-                        Time Allocation
-                      </h3>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        {challenge.time_allocation} minutes
-                      </p>
-                    </div>
-
+                    <InfoCard 
+                      title="Time Allocation" 
+                      value={`${challenge.time_allocation} minutes`}
+                      icon={HiClock}
+                      colorScheme="blue"
+                    />
                     {challenge.word_count && (
-                      <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800">
-                        <h3 className="flex items-center gap-2 text-sm font-medium text-purple-900 dark:text-purple-100 mb-1">
-                          <HiDocumentText className="h-4 w-4" />
-                          Word Count
-                        </h3>
-                        <p className="text-sm text-purple-700 dark:text-purple-300">
-                          {challenge.word_count}
-                        </p>
-                      </div>
+                      <InfoCard 
+                        title="Word Count" 
+                        value={challenge.word_count}
+                        icon={HiDocumentText}
+                        colorScheme="purple"
+                      />
                     )}
                   </div>
 
-                  {/* Focus areas */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {challenge.grammar_focus && challenge.grammar_focus.length > 0 && (
-                      <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
-                        <h3 className="flex items-center gap-2 font-medium text-emerald-900 dark:text-emerald-100 mb-2">
-                          <HiCheckCircle className="h-4 w-4" />
-                          Grammar Focus
-                        </h3>
-                        <ul className="space-y-1.5">
-                          {challenge.grammar_focus.map((point: string, index: number) => (
-                            <li key={index} className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300">
-                              <span className="mt-1 h-1 w-1 rounded-full bg-emerald-500" />
-                              {point}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                    {Array.isArray(challenge.grammar_focus) && challenge.grammar_focus.length > 0 && (
+                      <FocusCard 
+                        title="Grammar Focus"
+                        items={challenge.grammar_focus}
+                        icon={HiCheckCircle}
+                        colorScheme="emerald"
+                      />
                     )}
-
-                    {challenge.vocabulary_themes && challenge.vocabulary_themes.length > 0 && (
-                      <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
-                        <h3 className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-100 mb-2">
-                          <HiBookOpen className="h-4 w-4" />
-                          Vocabulary Themes
-                        </h3>
-                        <ul className="space-y-1.5">
-                          {challenge.vocabulary_themes.map((theme: string, index: number) => (
-                            <li key={index} className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-300">
-                              <span className="mt-1 h-1 w-1 rounded-full bg-amber-500" />
-                              {theme}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                    {Array.isArray(challenge.vocabulary_themes) && challenge.vocabulary_themes.length > 0 && (
+                      <FocusCard 
+                        title="Vocabulary Themes"
+                        items={challenge.vocabulary_themes}
+                        icon={HiBookOpen}
+                        colorScheme="amber"
+                      />
                     )}
                   </div>
 
-                  {/* Footer stats */}
-                  <div className="flex items-center justify-between mt-4 px-4 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
-                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                      <HiClock className="h-4 w-4" />
-                      <span>{challenge.time_allocation} minutes</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className={cn(
-                        "px-2 py-1 rounded-md text-xs font-medium",
-                        challenge.difficulty_level === "Beginner" && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-                        challenge.difficulty_level === "Intermediate" && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
-                        challenge.difficulty_level === "Advanced" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                      )}>
-                        {challenge.difficulty_level}
-                      </span>
-                    </div>
-                  </div>
+                  <FooterStats 
+                    timeAllocation={challenge.time_allocation}
+                    difficultyLevel={challenge.difficulty_level}
+                  />
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -456,7 +432,7 @@ export default function LeftColumn({
       )}
 
       {/* Toggle Feedback Button */}
-      {challenge && !showFeedback && (
+      {challenge && !propsShowFeedback && (
         <button
           onClick={() => setShowFeedback(true)}
           className="fixed bottom-4 right-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:opacity-90 transition-opacity"
@@ -466,8 +442,11 @@ export default function LeftColumn({
       )}
 
       {/* AI Feedback Window */}
-      {challenge && showFeedback && (
-        <DraggableWindow onClose={() => setShowFeedback(false)}>
+      {challenge && propsShowFeedback && (
+        <DraggableWindow onClose={() => {
+          setManuallyClosedFeedback(true);
+          setShowFeedback(false);
+        }}>
           <div className="flex flex-col h-full">
             <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
               {/* Feedback Controls */}
@@ -504,10 +483,7 @@ export default function LeftColumn({
                   </div>
                   
                   <button
-                    onClick={() => {
-                      setOutputCodeState('');
-                      toast.success('Feedback cleared');
-                    }}
+                    onClick={handleClearFeedback}
                     className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                   >
                     <XCircle className="w-4 h-4" />
@@ -518,11 +494,20 @@ export default function LeftColumn({
 
               {/* Output */}
               <div className="flex-1 overflow-y-auto px-3">
-                {outputCodeState && (
+                {localOutputCode ? (
                   <div className="text-zinc-600 dark:text-zinc-400 text-md leading-relaxed">
-                    {outputCodeState.split('\n').map((line, index) => (
+                    {localOutputCode.split('\n').map((line, index) => (
                       <FeedbackLine key={index} line={line} />
                     ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center space-y-3 p-6">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 flex items-center justify-center">
+                      <HiSparkles className="w-6 h-6 text-indigo-400 dark:text-indigo-500" />
+                    </div>
+                    <p className="text-zinc-400 dark:text-zinc-500 text-sm text-center max-w-[250px]">
+                      Your writing feedback will appear here. Choose a paragraph to see feedback!
+                    </p>
                   </div>
                 )}
               </div>

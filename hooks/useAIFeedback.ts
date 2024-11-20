@@ -7,10 +7,8 @@ export interface AIFeedbackOptions {
   targetLanguage?: string;
 }
 
-export const useAIFeedback = ({ challenge, minInterval = 5000, targetLanguage }: AIFeedbackOptions) => {
+export const useAIFeedback = ({ challenge, targetLanguage }: AIFeedbackOptions) => {
   const [feedback, setFeedback] = useState<string>('');
-  const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
-  const queuedFeedbackRef = useRef<NodeJS.Timeout | null>(null);
 
   const generateFeedback = useCallback(async (paragraphText: string): Promise<string> => {
     try {
@@ -34,47 +32,37 @@ export const useAIFeedback = ({ challenge, minInterval = 5000, targetLanguage }:
         }),
       });
 
-      let errorData;
+      let responseData;
       try {
-        errorData = await response.json();
+        responseData = await response.json();
       } catch (e) {
-        if (!response.ok) {
-          throw new Error(`Failed to generate feedback: ${response.status}`);
-        }
         throw new Error('Invalid response from server');
       }
 
       if (!response.ok) {
-        throw new Error(errorData.message || `Failed to generate feedback: ${response.status}`);
+        // Check for rate limit error from the API
+        if (response.status === 429) {
+          throw new Error('rate limit exceeded');
+        }
+        throw new Error(responseData.message || `Failed to generate feedback: ${response.status}`);
       }
 
-      if (!errorData?.feedback) {
+      if (!responseData?.feedback) {
         throw new Error('No feedback received from server');
       }
 
-      const feedbackText = errorData.feedback;
+      const feedbackText = responseData.feedback;
       setFeedback(feedbackText);
-      setLastFeedbackTime(Date.now());
       return feedbackText;
     } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Failed to generate feedback');
+      // Re-throw the error to be handled by the caller
+      throw error;
     }
   }, [challenge, targetLanguage]);
 
-  // Cleanup function for component unmount
   const cleanup = useCallback(() => {
-    if (queuedFeedbackRef.current) {
-      clearTimeout(queuedFeedbackRef.current);
-      queuedFeedbackRef.current = null;
-    }
+    setFeedback('');
   }, []);
 
-  return {
-    feedback,
-    generateFeedback,
-    cleanup
-  };
+  return { feedback, generateFeedback, cleanup, setFeedback };
 };

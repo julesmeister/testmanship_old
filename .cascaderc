@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "documentationRules": {
+    "enabled": true,
+    "autoPrompt": true,
+    "requireApproval": true
+  },
+  "documentationPaths": [
+    "components/dashboard/test/DOCUMENTATION.md",
+    "components/dashboard/challenges/DOCUMENTATION.md",
+    "components/dashboard/challenge-generator/DOCUMENTATION.md"
+  ],
+  "checkBehavior": {
+    "onFileEdit": true,
+    "onPreCommit": true,
+    "onPullRequest": true
+  },
+  "promptSettings": {
+    "checkRelatedDocs": true,
+    "updateDiagrams": true,
+    "validateConnections": true
+  },
+  "integrations": {
+    "git": {
+      "preCommitHook": true,
+      "prTemplate": true
+    },
+    "ide": {
+      "showPrompts": true,
+      "highlightDocChanges": true
+    }
+  }
+}

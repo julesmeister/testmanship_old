@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface Challenge {
@@ -15,10 +15,9 @@ interface Challenge {
 export const useFeedbackGeneration = (
   challenge: Challenge | null,
   onGenerateFeedback: (paragraph: string) => Promise<string>,
+  setFeedback: (feedback: string) => void,
 ) => {
-  const [outputCodeState, setOutputCodeState] = useState<string>('');
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
-  const [showFeedback, setShowFeedback] = useState(false);
   const MIN_FEEDBACK_INTERVAL = 5000; // 5 seconds
 
   const validateFeedbackRequest = useCallback((inputMessage?: string) => {
@@ -35,11 +34,19 @@ export const useFeedbackGeneration = (
     
     if (timeSinceLastFeedback < MIN_FEEDBACK_INTERVAL) {
       const waitTime = Math.ceil((MIN_FEEDBACK_INTERVAL - timeSinceLastFeedback) / 1000);
-      throw new Error(`Please wait ${waitTime} seconds before requesting feedback again`);
+      throw new Error(`rate limit exceeded. Please wait ${waitTime} seconds.`);
     }
 
-    setLastFeedbackTime(now);
-    return await onGenerateFeedback(paragraph);
+    try {
+      const result = await onGenerateFeedback(paragraph);
+      setLastFeedbackTime(now);
+      return result;
+    } catch (error) {
+      if (error instanceof Error && error.message.toLowerCase().includes('rate limit')) {
+        throw new Error(`rate limit exceeded. Please wait a moment.`);
+      }
+      throw error;
+    }
   }, [challenge, lastFeedbackTime, onGenerateFeedback, validateFeedbackRequest]);
 
   const handleParagraphFeedback = useCallback(async (paragraph: string, index: number) => {
@@ -56,73 +63,71 @@ export const useFeedbackGeneration = (
         toast.error('No feedback received');
         return;
       }
-      setOutputCodeState(feedback);
+      setFeedback(feedback);
       toast.dismiss(toastId);
       toast.success(`Generated feedback for paragraph ${index + 1}`);
     } catch (error) {
+      // Always dismiss the loading toast first
       toast.dismiss(toastId);
+      
       let errorMessage = 'Failed to generate feedback';
+      let duration = 3000; // default 3 seconds
       
       if (error instanceof Error) {
-        // Check for rate limit error
         if (error.message.toLowerCase().includes('rate limit')) {
-          errorMessage = 'Too many requests. Please wait a moment before trying again.';
+          errorMessage = error.message;
+          duration = 5000; // show rate limit errors longer
         } else {
           errorMessage = error.message;
         }
       }
       
-      toast.error(errorMessage);
-      // Log error details without throwing
+      // Show error toast
+      toast.error(errorMessage, { duration });
+
+      // Log error details in development
       if (process.env.NODE_ENV === 'development') {
         console.warn('Feedback generation error:', error);
       }
     }
-  }, [handleGenerateFeedback]);
+  }, [handleGenerateFeedback, setFeedback]);
 
   const handleFinishChallenge = useCallback(async (inputMessage: string, onStopChallenge: () => void) => {
     try {
       validateFeedbackRequest(inputMessage);
       
       const toastId = toast.loading('Analyzing your complete essay...');
-      setShowFeedback(true);
       
       const feedback = await handleGenerateFeedback(inputMessage);
       
       if (feedback?.trim()) {
+        setFeedback(feedback);
         toast.dismiss(toastId);
         toast.success('Generated comprehensive feedback');
       } else {
         toast.dismiss(toastId);
         toast.error('No feedback received');
       }
+      
+      onStopChallenge();
     } catch (error) {
       let errorMessage = 'Failed to generate feedback';
       
       if (error instanceof Error) {
-        // Check for rate limit error
-        if (error.message.toLowerCase().includes('rate limit')) {
-          errorMessage = 'Too many requests. Please wait a moment before trying again.';
-        } else {
-          errorMessage = error.message;
-        }
+        errorMessage = error.message;
       }
       
       toast.error(errorMessage);
-      // Log error details without throwing
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Feedback generation error:', error);
-      }
-    } finally {
-      onStopChallenge();
+      console.warn('Challenge completion error:', error);
     }
-  }, [handleGenerateFeedback, validateFeedbackRequest]);
+  }, [handleGenerateFeedback, setFeedback]);
+
+  // Clear feedback content when challenge changes
+  useEffect(() => {
+    setFeedback('');
+  }, [challenge, setFeedback]);
 
   return {
-    outputCodeState,
-    showFeedback,
-    setOutputCodeState,
-    setShowFeedback,
     handleParagraphFeedback,
     handleFinishChallenge,
   };

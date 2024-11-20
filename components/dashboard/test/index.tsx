@@ -1,3 +1,14 @@
+/**
+ * ⚠️ DOCUMENTATION NOTICE
+ * Before making any changes to this file, please review the DOCUMENTATION.md in this directory.
+ * After making changes, update the DOCUMENTATION.md file accordingly.
+ * This helps maintain accurate and up-to-date documentation of the test system.
+ * 
+ * 
+ * Additional resources:
+ * - See FEEDBACK_MECHANISM.md for AI feedback implementation details
+ */
+
 'use client';
 /*eslint-disable*/
 
@@ -15,7 +26,7 @@ import LeftColumn from './LeftColumn';
 import toast from 'react-hot-toast';
 import { makeAIRequest } from '@/utils/ai';
 import { useAIFeedback } from '@/hooks/useAIFeedback';
-import { Challenge } from '@/types/challenge';
+import { type Challenge } from '@/types/challenge';
 import { useTextEditor } from '@/hooks/useTextEditor';
 import { useChallengeTimer } from '@/hooks/useChallengeTimer';
 import { useFeedbackManager } from '@/hooks/useFeedbackManager';
@@ -41,6 +52,15 @@ const StatCard = ({ label, value }: StatCardProps) => (
   </Card>
 );
 
+// Add inputMessage to the selected challenge
+const extendChallenge = (challenge: Challenge | null, currentInputMessage: string) => {
+  if (!challenge) return null;
+  return {
+    ...challenge,
+    inputMessage: currentInputMessage
+  };
+};
+
 export default function Test({ user, userDetails }: Props) {
   const [outputCode, setOutputCode] = useState<string>('');
   const [model, setModel] = useState<OpenAIModel>('gpt-3.5-turbo');
@@ -48,6 +68,8 @@ export default function Test({ user, userDetails }: Props) {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [mode, setMode] = useState<'practice' | 'exam'>('exam');
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const [showFeedbackState, setShowFeedbackState] = useState(false);
+  const [manuallyClosedFeedbackState, setManuallyClosedFeedbackState] = useState(false);
 
   // Debug logging for language selection
   const { selectedLanguageId, languages } = useLanguageStore();
@@ -62,7 +84,7 @@ export default function Test({ user, userDetails }: Props) {
     });
   }, [selectedLanguageId, languages, selectedLanguage]);
 
-  const { feedback, generateFeedback, cleanup: cleanupFeedback } = useAIFeedback({
+  const { feedback, generateFeedback, cleanup: cleanupFeedback, setFeedback } = useAIFeedback({
     challenge: selectedChallenge,
     targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
   });
@@ -70,10 +92,6 @@ export default function Test({ user, userDetails }: Props) {
   const {
     text: inputMessage,
     stats: { wordCount, paragraphCount, charCount },
-    prevText,
-    lastEditedParagraphIndex,
-    handleTextChange: handleTextChangeInternal,
-    setLastEditedParagraphIndex,
     setInputMessage
   } = useTextEditor();
 
@@ -89,16 +107,28 @@ export default function Test({ user, userDetails }: Props) {
   const { handleParagraphChange } = useFeedbackManager(generateFeedback);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (isTimeUp) return;
-    
     const newText = e.target.value;
-    handleTextChangeInternal(newText);
+    
+    // Update input message and track previous text
+    const prevText = inputMessage;
+    setInputMessage(newText);
+    
+    // Show feedback window on first typing if not manually closed
+    if (newText.trim() && !manuallyClosedFeedbackState) {
+      setShowFeedbackState(true);
+    }
+    
+    if (isTimeUp) return;
     
     if (!isWriting && newText.length > 0 && !isTimeUp) {
       setIsWriting(true);
     }
+
+    // Calculate current paragraph index
+    const paragraphs = newText.split(/\n\s*\n/);
+    const currentIndex = paragraphs.length - 1;
     
-    handleParagraphChange(newText, prevText, lastEditedParagraphIndex);
+    handleParagraphChange(newText, prevText, currentIndex);
   };
 
   const handleStartChallenge = (challenge: Challenge) => {
@@ -106,6 +136,8 @@ export default function Test({ user, userDetails }: Props) {
     setSelectedChallenge(challenge);
     setInputMessage('');
     setOutputCode('');
+    setManuallyClosedFeedbackState(false);
+    setShowFeedbackState(false);
   };
 
   const handleStopChallenge = () => {
@@ -113,6 +145,8 @@ export default function Test({ user, userDetails }: Props) {
     setSelectedChallenge(null);
     setInputMessage('');
     setOutputCode('');
+    setShowFeedbackState(false);
+    setManuallyClosedFeedbackState(false);
   };
 
   const handleBackToChallenges = () => {
@@ -156,16 +190,20 @@ export default function Test({ user, userDetails }: Props) {
       <div className="flex flex-col lg:flex-row gap-4 w-full">
         <LeftColumn
           challenge={selectedChallenge}
-          outputCode={outputCode}
+          outputCode={feedback}
           onStartChallenge={handleStartChallenge}
           onStopChallenge={handleStopChallenge}
           onGenerateFeedback={handleGenerateFeedback}
-          isGeneratingFeedback={isGeneratingFeedback}
+          isGeneratingFeedback={false}
           isTimeUp={isTimeUp}
           mode={mode}
           timeElapsed={elapsedTime}
           timeAllocation={selectedChallenge?.time_allocation}
           inputMessage={inputMessage}
+          showFeedback={showFeedbackState}
+          manuallyClosedFeedback={manuallyClosedFeedbackState}
+          setManuallyClosedFeedback={setManuallyClosedFeedbackState}
+          setShowFeedback={setShowFeedbackState}
         />
 
         {/* Writing Area */}

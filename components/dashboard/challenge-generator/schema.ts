@@ -1,3 +1,15 @@
+/**
+ * ⚠️ DOCUMENTATION NOTICE
+ * Before making any changes to this file, please review the DOCUMENTATION.md in this directory.
+ * After making changes, update the DOCUMENTATION.md file accordingly.
+ * This helps maintain accurate and up-to-date documentation of the challenge generator system.
+ * 
+ * Key areas to update in documentation:
+ * - Type definitions
+ * - Validation rules
+ * - Breaking changes
+ */
+
 import { z } from 'zod';
 import { difficultyLevels, DifficultyLevel } from '@/utils/constants';
 
