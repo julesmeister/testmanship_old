@@ -13,10 +13,15 @@ export default function RootLayout({
   // Layouts must accept a children prop.
   // This will be populated with nested layouts or pages
   children
-}: PropsWithChildren) {
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet" />
         <title>
           Testmanship - Elevate Your Writing with AI-Powered Feedback
         </title>

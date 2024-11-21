@@ -13,11 +13,11 @@ export function DraggableWindow({ children, onClose }: DraggableWindowProps) {
   });
 
   const { size, resizeProps, containerStyle } = useResizable({
-    initialSize: { width: 400, height: 500 },
+    initialSize: { width: 400, height: window.innerHeight - 100 },
     minWidth: 300,
     minHeight: 200,
     maxWidth: 800,
-    maxHeight: 800
+    maxHeight: window.innerHeight - 50
   });
 
   return (
@@ -26,7 +26,11 @@ export function DraggableWindow({ children, onClose }: DraggableWindowProps) {
       style={{
         ...dragProps.style,
         width: containerStyle.width,
-        height: containerStyle.height
+        height: containerStyle.height,
+        position: 'fixed',
+        top: '20px',
+        left: '88px', // Account for collapsed sidebar width
+        zIndex: 50
       }}
       className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm rounded-lg border border-zinc-200/50 dark:border-zinc-700/50 shadow-lg transition-all relative"
     >

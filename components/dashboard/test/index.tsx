@@ -37,7 +37,6 @@ import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
 import { toast } from 'sonner';
 import { useTestState } from '@/hooks/useTestState';
 import { PencilIcon, ClockIcon, CheckCircleIcon, ChatBubbleBottomCenterTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import Head from 'next/head';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -456,11 +455,6 @@ export default function Test({ user, userDetails }: Props) {
       title="Writing Assistant"
       description="Get instant feedback on your writing"
     >
-      <Head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet" />
-      </Head>
       <div className="flex flex-col lg:flex-row gap-4 w-full">
         <LeftColumn
           challenge={selectedChallenge}

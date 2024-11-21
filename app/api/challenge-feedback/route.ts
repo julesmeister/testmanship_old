@@ -77,9 +77,9 @@ Requirements:
 7. The ! [suggestion] line MUST provide the ${languageName} translation if the text is not in ${languageName}
 
 Example format:
-✓ {single correct usage observation}
-✗ {single error identification}
-! {single improvement point or translation}
+✓ single correct usage observation
+✗ single error identification
+! single improvement point or translation
 
 Text to analyze: "${essayContent}"`
         }
