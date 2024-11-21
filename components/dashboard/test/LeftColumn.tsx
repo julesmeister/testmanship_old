@@ -506,16 +506,22 @@ const LeftColumn = ({
 
                   {/* AI Suggestions */}
                   {currentSuggestion && (
-                    <div className="mt-4 px-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <HiLightBulb className="w-4 h-4 text-yellow-400" />
-                        <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Suggestions
+                    <div className="mt-6 px-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500">
+                          <HiLightBulb className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                          Writing Suggestions
                         </span>
                       </div>
                       <div className="space-y-2">
-                        <div className="p-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-sm text-yellow-800 dark:text-yellow-200">
-                          {currentSuggestion}
+                        <div className="p-4 rounded-lg border border-yellow-200 dark:border-yellow-700 bg-gradient-to-b from-yellow-50 to-amber-50/50 dark:from-yellow-900/20 dark:to-amber-900/10 text-sm text-zinc-700 dark:text-zinc-300 shadow-sm">
+                          <div className="relative">
+                            <span className="absolute -left-3 -top-3 text-yellow-500/40 dark:text-yellow-400/30 text-4xl font-serif">"</span>
+                            <p className="relative z-10 leading-relaxed">{currentSuggestion}</p>
+                            <span className="absolute -right-2 -bottom-3 text-yellow-500/40 dark:text-yellow-400/30 text-4xl font-serif rotate-180">"</span>
+                          </div>
                         </div>
                       </div>
                     </div>

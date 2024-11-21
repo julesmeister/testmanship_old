@@ -59,7 +59,7 @@ const StatCard = ({ label, value }: StatCardProps) => (
     <CardContent className="p-6">
       <div className="flex flex-col space-y-2">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <div className="text-2xl font-bold text-foreground dark:text-white">{value}</div>
+        <div className="text-2xl font-bold text-foreground">{value}</div>
       </div>
     </CardContent>
   </Card>
@@ -185,6 +185,10 @@ export default function Test({ user, userDetails }: Props) {
 
     // Set new timer
     idleTimerRef.current = setTimeout(() => {
+      toast.info("Generating writing suggestions...", {
+        duration: 3000,
+        position: 'bottom-right'
+      });
       generateSuggestion();
     }, 20000); // 20 seconds
 
@@ -510,6 +514,7 @@ export default function Test({ user, userDetails }: Props) {
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               placeholder="Start writing your essay here..."
+              spellCheck="false"
               style={{
                 backgroundImage: `
                   linear-gradient(transparent, transparent calc(1.5rem - 1px), #e5e7eb calc(1.5rem - 1px), #e5e7eb 1.5rem, transparent 1.5rem),
@@ -524,7 +529,7 @@ export default function Test({ user, userDetails }: Props) {
                 fontFamily: '"Times New Roman", Times, serif',
                 fontSize: '1.125rem'
               }}
-              className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 dark:text-zinc-300 shadow-inner dark:shadow-zinc-800/30 [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
+              className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 shadow-inner [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
               disabled={isTimeUp}
             />
           ) : (
