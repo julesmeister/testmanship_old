@@ -36,6 +36,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
 import { toast } from 'sonner';
 import { useTestState } from '@/hooks/useTestState';
+import { PencilIcon, ClockIcon, CheckCircleIcon, ChatBubbleBottomCenterTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -502,15 +503,49 @@ export default function Test({ user, userDetails }: Props) {
               showGradeButton={wordCount >= (selectedChallenge.word_count || 0)}
             />
           )}
-          <textarea
-            ref={textareaRef}
-            value={inputMessage}
-            onChange={handleTextChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Start writing your essay here..."
-            className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap"
-            disabled={isTimeUp}
-          />
+          {selectedChallenge ? (
+            <textarea
+              ref={textareaRef}
+              value={inputMessage}
+              onChange={handleTextChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Start writing your essay here..."
+              className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap"
+              disabled={isTimeUp}
+            />
+          ) : (
+            <div className="flex-1 w-full min-h-[200px] rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center p-8 space-y-4">
+              <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                <PencilIcon className="w-8 h-8 text-zinc-400 dark:text-zinc-500" />
+              </div>
+              <div className="space-y-2 text-center max-w-sm">
+                <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                  Ready to Start Writing?
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Select a challenge from the list to begin your writing journey. We'll track your progress and provide feedback along the way.
+                </p>
+                <div className="flex items-center justify-center space-x-2 text-xs text-zinc-400 dark:text-zinc-500 pt-2">
+                  <ClockIcon className="w-4 h-4" />
+                  <span>Timer starts when you select a challenge</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 text-sm text-zinc-400 dark:text-zinc-500">
+                <div className="flex items-center">
+                  <CheckCircleIcon className="w-4 h-4 mr-1" />
+                  <span>Progress Tracking</span>
+                </div>
+                <div className="flex items-center">
+                  <ChatBubbleBottomCenterTextIcon className="w-4 h-4 mr-1" />
+                  <span>Instant Feedback</span>
+                </div>
+                <div className="flex items-center">
+                  <ChartBarIcon className="w-4 h-4 mr-1" />
+                  <span>Performance Stats</span>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Writing Statistics Bar */}
           <div className="mt-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
