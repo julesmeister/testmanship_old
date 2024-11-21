@@ -154,12 +154,12 @@ export default function Wordsmiths({ user, userDetails }: Props) {
                   <Avatar className="h-12 w-12 sm:h-14 sm:w-14 ring-2 ring-background">
                     <AvatarImage src={user.avatar_url} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-base sm:text-lg">
-                      {user.full_name.split(' ').map(n => n[0]).join('')}
+                      {user.full_name.split(' ').map(n => n[0]).join('') || '?' }
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 space-y-1.5 sm:space-y-2">
                     <div>
-                      <h3 className="text-base sm:text-lg font-semibold text-foreground line-clamp-1">{user.full_name}</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground line-clamp-1">{user.full_name || 'Anonymous'}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Last active {formatDistanceToNow(new Date(user.updated_at))} ago
                       </p>

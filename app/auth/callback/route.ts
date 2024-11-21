@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { getErrorRedirect, getStatusRedirect } from '@/utils/helpers';
+import { User } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -35,10 +36,33 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Wait a moment for the database trigger
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Ensure auth.users record exists with retries
+      let retries = 5;
+      let authUser: { user: User } | null = null;
+      while (retries > 0 && !authUser) {
+        const { data: user, error: authError } = await supabase.auth.admin.getUserById(session.user.id);
+        if (user && !authError) {
+          authUser = user;
+          break;
+        }
+        retries--;
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
 
-      // Ensure user record exists with complete data
+      if (!authUser) {
+        console.error('Failed to confirm auth.users record after multiple retries');
+        return NextResponse.redirect(
+          getErrorRedirect(
+            `${requestUrl.origin}/dashboard/signin`,
+            'UserCreationError',
+            "Failed to create user record. Please try again."
+          )
+        );
+      }
+
+      // Now safely create the public.users record
       const { data: existingUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
@@ -48,26 +72,49 @@ export async function GET(request: NextRequest) {
       if (!existingUser || fetchError) {
         console.log('Creating/updating user record after OAuth');
         
-        // Create or update user record
-        const { error: upsertError } = await supabase
-          .from('users')
-          .upsert({
-            id: session.user.id,
-            full_name: session.user.user_metadata?.full_name || 
-                      session.user.user_metadata?.name ||
-                      (session.user.user_metadata?.given_name && session.user.user_metadata?.family_name 
-                        ? `${session.user.user_metadata.given_name} ${session.user.user_metadata.family_name}`
-                        : 'Anonymous User'),
-            avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
-            credits: 0,
-            trial_credits: 3
-          }, {
-            onConflict: 'id',
-            ignoreDuplicates: false
-          });
+        // Create or update user record with retry
+        let upsertRetries = 3;
+        let upsertSuccess = false;
+        
+        while (upsertRetries > 0 && !upsertSuccess) {
+          const { error: upsertError } = await supabase
+            .from('users')
+            .upsert({
+              id: session.user.id,
+              full_name: session.user.user_metadata?.full_name || 
+                        session.user.user_metadata?.name ||
+                        (session.user.user_metadata?.given_name && session.user.user_metadata?.family_name 
+                          ? `${session.user.user_metadata.given_name} ${session.user.user_metadata.family_name}`
+                          : session.user.email?.split('@')[0] || 'Anonymous User'),
+              avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+              credits: 0,
+              trial_credits: 3
+            }, {
+              onConflict: 'id',
+              ignoreDuplicates: false
+            });
 
-        if (upsertError) {
-          console.error('Error ensuring user record:', upsertError);
+          if (!upsertError) {
+            upsertSuccess = true;
+            break;
+          }
+
+          console.error(`Retry ${4 - upsertRetries}/3 failed:`, upsertError);
+          upsertRetries--;
+          if (upsertRetries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+
+        if (!upsertSuccess) {
+          console.error('Failed to create user record after multiple retries');
+          return NextResponse.redirect(
+            getErrorRedirect(
+              `${requestUrl.origin}/dashboard/signin`,
+              'UserCreationError',
+              "Failed to create user record. Please try again."
+            )
+          );
         }
       }
     } catch (error) {
