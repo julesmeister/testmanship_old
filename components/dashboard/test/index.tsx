@@ -473,6 +473,10 @@ export default function Test({ user, userDetails }: Props) {
           setManuallyClosedFeedback={setManuallyClosedFeedbackState}
           setShowFeedback={setShowFeedbackState}
           currentSuggestion={currentSuggestion}
+          stopSuggestions={stopSuggestions}
+          setCurrentSuggestion={setCurrentSuggestion}
+          generateSuggestion={generateSuggestion}
+          isSuggestionActive={isSuggestionActive}
         />
 
         {/* Writing Area */}

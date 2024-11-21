@@ -60,6 +60,10 @@ interface LeftColumnProps {
   setManuallyClosedFeedback: (value: boolean) => void;
   setShowFeedback: (value: boolean) => void;
   currentSuggestion: string;
+  stopSuggestions: () => void;
+  setCurrentSuggestion: (value: string) => void;
+  generateSuggestion: () => void;
+  isSuggestionActive: boolean;
 }
 
 const TipBox = ({ onClose }: { onClose: () => void }) => (
@@ -182,6 +186,10 @@ const LeftColumn = ({
   setManuallyClosedFeedback,
   setShowFeedback,
   currentSuggestion,
+  stopSuggestions,
+  setCurrentSuggestion,
+  generateSuggestion,
+  isSuggestionActive,
 }: LeftColumnProps) => {
   const { showChallenges, showEvaluation, setShowChallenges, setShowEvaluation } = useTestState();
 
@@ -494,7 +502,7 @@ const LeftColumn = ({
                   ) : (
                     <div className="flex-1 flex items-center justify-center">
                       <div className="flex flex-col items-center justify-center space-y-3 p-6">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/20 flex items-center justify-center">
                           <HiSparkles className="w-6 h-6 text-indigo-400 dark:text-indigo-500" />
                         </div>
                         <p className="text-zinc-400 dark:text-zinc-500 text-sm text-center max-w-[250px]">
@@ -507,13 +515,70 @@ const LeftColumn = ({
                   {/* AI Suggestions */}
                   {currentSuggestion && (
                     <div className="mt-6 px-3">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500">
-                          <HiLightBulb className="w-4 h-4 text-white" />
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500">
+                            <HiLightBulb className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                            Writing Suggestions
+                          </span>
                         </div>
-                        <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                          Writing Suggestions
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={async () => {
+                              try {
+                                toast.loading('Generating new suggestion...', {
+                                  id: 'suggestion-toast'
+                                });
+
+                                // Stop any existing suggestions first
+                                stopSuggestions();
+                                
+                                // Call generateSuggestion and wait for it to complete
+                                await generateSuggestion();
+
+                                // Only show success if we get here (no error was thrown)
+                                toast.success('Suggestion generated!', {
+                                  id: 'suggestion-toast'
+                                });
+                              } catch (error) {
+                                // Show error message
+                                toast.error(
+                                  error instanceof Error 
+                                    ? error.message 
+                                    : 'Failed to generate suggestion. Click to try again.',
+                                  { id: 'suggestion-toast' }
+                                );
+                              }
+                            }}
+                            disabled={isSuggestionActive}
+                            className={`p-1.5 rounded-full transition-colors ${
+                              isSuggestionActive
+                                ? 'text-zinc-400 dark:text-zinc-600'
+                                : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                            }`}
+                            title={isSuggestionActive ? 'Generating suggestion...' : 'Generate new suggestion'}
+                          >
+                            <HiArrowPath className={`w-4 h-4 ${isSuggestionActive ? 'animate-spin' : ''}`} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              stopSuggestions();
+                              setCurrentSuggestion('');
+                              toast.success('Writing suggestions reset');
+                            }}
+                            disabled={isSuggestionActive}
+                            className={`p-1.5 rounded-full transition-colors ${
+                              isSuggestionActive
+                                ? 'text-zinc-400 dark:text-zinc-600'
+                                : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                            }`}
+                            title="Reset suggestions"
+                          >
+                            <HiXMark className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <div className="p-4 rounded-lg border border-yellow-200 dark:border-yellow-700 bg-gradient-to-b from-yellow-50 to-amber-50/50 dark:from-yellow-900/20 dark:to-amber-900/10 text-sm text-zinc-700 dark:text-zinc-300 shadow-sm">

@@ -176,16 +176,21 @@ export const useTestAISuggestions = ({
     };
   }, []);
 
+  const stop = useCallback(() => {
+    setIsActive(false);
+    setIsRateLimited(false);
+    setIsDailyLimitReached(false);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    lastSentContentRef.current = '';
+  }, []);
+
   return {
     isActive,
     isRateLimited,
     isDailyLimitReached,
-    stop: useCallback(() => {
-      setIsActive(false);
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    }, []),
+    stop,
     generateSuggestion
   };
 };
