@@ -10,7 +10,7 @@ interface LoadingStateProps {
 
 export function LoadingState({ 
   title = "Loading challenges",
-  description = "Please wait while we fetch your challenges. This should only take a moment."
+  description = "We're preparing your personalized writing challenges. This should only take a moment while we:\n\nBehind the scenes:\n• Analyzing your preferences and skill level\n• Curating challenges that match your interests\n• Preparing writing prompts and guidelines\n• Setting up progress tracking\n\nGet ready to enhance your writing skills with our tailored challenges!"
 }: LoadingStateProps) {
   return (
     <StateWrapper>

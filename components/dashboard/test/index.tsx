@@ -510,7 +510,21 @@ export default function Test({ user, userDetails }: Props) {
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               placeholder="Start writing your essay here..."
-              className="flex-1 w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap"
+              style={{
+                backgroundImage: `
+                  linear-gradient(transparent, transparent calc(1.5rem - 1px), #e5e7eb calc(1.5rem - 1px), #e5e7eb 1.5rem, transparent 1.5rem),
+                  linear-gradient(90deg, transparent 4rem, #f3f4f6 4rem, #f3f4f6 4.25rem, transparent 4.25rem),
+                  linear-gradient(#fafafa, #fafafa)
+                `,
+                backgroundSize: '100% 1.5rem, 100% 100%, 100% 100%',
+                backgroundAttachment: 'local, scroll, scroll',
+                lineHeight: '1.5rem',
+                paddingTop: '1.5rem',
+                paddingLeft: '4.5rem',
+                fontFamily: '"Times New Roman", Times, serif',
+                fontSize: '1.125rem'
+              }}
+              className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 dark:text-zinc-300 shadow-inner dark:shadow-zinc-800/30 [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
               disabled={isTimeUp}
             />
           ) : (
@@ -547,6 +561,7 @@ export default function Test({ user, userDetails }: Props) {
             </div>
           )}
           {/* Writing Statistics Bar */}
+          {selectedChallenge && (
           <div className="mt-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {[/* eslint-disable @typescript-eslint/no-use-before-define */
@@ -558,7 +573,7 @@ export default function Test({ user, userDetails }: Props) {
                 <StatCard key={stat.label} {...stat} />
               ))}
             </div>
-          </div>
+          </div>)}
         </div>
       </div>
       {/* Idle Timer Badge */}
