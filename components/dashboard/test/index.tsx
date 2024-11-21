@@ -22,7 +22,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TimerProgress from './TimerProgress';
 import { Card, CardContent } from '@/components/ui/card';
 import LeftColumn from './LeftColumn';
-import toast from 'react-hot-toast';
 import { makeAIRequest } from '@/utils/ai';
 import { useAIFeedback } from '@/hooks/useAIFeedback';
 import { type Challenge } from '@/types/challenge';
@@ -34,6 +33,8 @@ import { rateLimit } from '@/utils/rateLimit';
 import { sanitizeInput } from '@/utils/security';
 import { calculateMetrics } from '@/utils/metrics';
 import { createClient } from '@supabase/supabase-js';
+import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
+import { toast } from 'sonner';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -82,6 +83,8 @@ export default function Test({ user, userDetails }: Props) {
   const [manuallyClosedFeedbackState, setManuallyClosedFeedbackState] = useState(false);
   const [rateLimitExceeded, setRateLimitExceeded] = useState<boolean>(false);
   const [securityError, setSecurityError] = useState<string | null>(null);
+  const [currentSuggestion, setCurrentSuggestion] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   // Debug logging for language selection
   const { selectedLanguageId, languages } = useLanguageStore();
@@ -127,12 +130,47 @@ export default function Test({ user, userDetails }: Props) {
     handleParagraphChange
   } = useFeedbackManager(generateFeedback);
 
+  const {
+    isActive: isSuggestionsActive, 
+    stop: stopSuggestions,
+    start: startSuggestions,
+    isRateLimited,
+    isDailyLimitReached
+  } = useTestAISuggestions({
+    challenge: selectedChallenge,
+    content: inputMessage,
+    enabled: !!selectedChallenge && !manuallyClosedFeedbackState && !isTimeUp,
+    targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN',
+    onSuggestion: (suggestion) => {
+      console.log('[Index] Setting suggestion:', suggestion?.slice(0, 50) + '...');
+      setCurrentSuggestion(suggestion);
+    },
+    onError: setError
+  });
+
+  useEffect(() => {
+    setError('');
+  }, [inputMessage]);
+
+  useEffect(() => {
+    if (error) {
+      toast(error, {
+        duration: isDailyLimitReached ? 10000 : 5000
+      });
+    }
+  }, [error, isDailyLimitReached]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = sanitizeInput(e.target.value);
     
+    // Stop existing suggestions when user starts typing
+    console.log('[Index] Text changed, stopping suggestions');
+    stopSuggestions();
+    
     // Update input message and stats
+    setInputMessage(newText);
     handleTextStats(newText);
     
     // Auto-adjust height
@@ -157,6 +195,13 @@ export default function Test({ user, userDetails }: Props) {
     // Only trigger paragraph change if content actually changed
     if (newText !== inputMessage) {
       handleParagraphChange(newText, inputMessage, currentIndex);
+      
+      // Restart suggestions after a delay
+      console.log('[Index] Scheduling suggestion restart');
+      setTimeout(() => {
+        console.log('[Index] Restarting suggestions');
+        startSuggestions();
+      }, 1000);
     }
   };
 
@@ -182,7 +227,7 @@ export default function Test({ user, userDetails }: Props) {
 
   const handleStartChallenge = (challenge: Challenge) => {
     resetTimer();
-    setSelectedChallenge(challenge);
+    setSelectedChallenge(extendChallenge(challenge, inputMessage));
     setInputMessage('');
     setOutputCode('');
     setManuallyClosedFeedbackState(false);
@@ -378,7 +423,7 @@ export default function Test({ user, userDetails }: Props) {
           onStartChallenge={handleStartChallenge}
           onStopChallenge={handleStopChallenge}
           onGenerateFeedback={handleGenerateFeedback}
-          isGeneratingFeedback={false}
+          isGeneratingFeedback={isGeneratingFeedback}
           isTimeUp={isTimeUp}
           mode={mode}
           timeElapsed={elapsedTime}
@@ -388,6 +433,7 @@ export default function Test({ user, userDetails }: Props) {
           manuallyClosedFeedback={manuallyClosedFeedbackState}
           setManuallyClosedFeedback={setManuallyClosedFeedbackState}
           setShowFeedback={setShowFeedbackState}
+          currentSuggestion={currentSuggestion}
         />
 
         {/* Writing Area */}

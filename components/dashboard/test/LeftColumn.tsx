@@ -40,6 +40,7 @@ import { DraggableWindow, LoadingState, EmptyState } from './components';
 import { InstructionsAccordion } from "./components/InstructionsAccordion";
 import EvaluationAccordion from "./components/EvaluationAccordion";
 import { type Challenge } from '@/types/challenge';
+import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
 
 interface LeftColumnProps {
   challenge: Challenge | null;
@@ -57,6 +58,7 @@ interface LeftColumnProps {
   manuallyClosedFeedback: boolean;
   setManuallyClosedFeedback: (value: boolean) => void;
   setShowFeedback: (value: boolean) => void;
+  currentSuggestion: string;
 }
 
 const TipBox = ({ onClose }: { onClose: () => void }) => (
@@ -162,7 +164,7 @@ const DifficultyBadge = ({ level }: { level: string }) => {
   );
 };
 
-export default function LeftColumn({
+const LeftColumn = ({
   challenge,
   outputCode,
   onStartChallenge,
@@ -174,11 +176,12 @@ export default function LeftColumn({
   timeElapsed,
   timeAllocation,
   inputMessage,
-  showFeedback: propsShowFeedback,
+  showFeedback,
   manuallyClosedFeedback,
   setManuallyClosedFeedback,
   setShowFeedback,
-}: LeftColumnProps) {
+  currentSuggestion,
+}: LeftColumnProps) => {
   const {
     challenges,
     selectedLevel,
@@ -418,7 +421,7 @@ export default function LeftColumn({
       </div>
 
       {/* Toggle Feedback Button */}
-      {challenge && !propsShowFeedback && (
+      {challenge && !showFeedback && (
         <button
           onClick={() => setShowFeedback(true)}
           className="fixed bottom-4 right-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:opacity-90 transition-opacity"
@@ -428,7 +431,7 @@ export default function LeftColumn({
       )}
 
       {/* AI Feedback Window */}
-      {challenge && propsShowFeedback && (
+      {challenge && showFeedback && (
         <DraggableWindow onClose={() => {
           setManuallyClosedFeedback(true);
           setShowFeedback(false);
@@ -486,24 +489,44 @@ export default function LeftColumn({
 
               {/* Feedback Content */}
               <div className="flex-1 min-h-0">
-                {localOutputCode ? (
-                  <div className="w-full h-full overflow-y-auto px-3">
-                    {localOutputCode.split('\n').map((line, index) => (
-                      <FeedbackLine key={index} line={line} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="flex flex-col items-center justify-center space-y-3 p-6">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 flex items-center justify-center">
-                        <HiSparkles className="w-6 h-6 text-indigo-400 dark:text-indigo-500" />
-                      </div>
-                      <p className="text-zinc-400 dark:text-zinc-500 text-sm text-center max-w-[250px]">
-                        Your writing feedback will appear here. Choose a paragraph to see feedback!
-                      </p>
+                <div className="flex flex-col h-full">
+                  {/* Paragraph Feedback */}
+                  {localOutputCode ? (
+                    <div className="flex-1 w-full overflow-y-auto px-3 border-b border-zinc-200 dark:border-zinc-800">
+                      {localOutputCode.split('\n').map((line, index) => (
+                        <FeedbackLine key={index} line={line} />
+                      ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="flex flex-col items-center justify-center space-y-3 p-6">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 flex items-center justify-center">
+                          <HiSparkles className="w-6 h-6 text-indigo-400 dark:text-indigo-500" />
+                        </div>
+                        <p className="text-zinc-400 dark:text-zinc-500 text-sm text-center max-w-[250px]">
+                          Your writing feedback will appear here. Choose a paragraph to see feedback!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Suggestions */}
+                  {currentSuggestion && (
+                    <div className="mt-4 px-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <HiLightBulb className="w-4 h-4 text-yellow-400" />
+                        <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Suggestions
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="p-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-sm text-yellow-800 dark:text-yellow-200">
+                          {currentSuggestion}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -527,3 +550,5 @@ export default function LeftColumn({
     </div>
   );
 }
+
+export default LeftColumn;
