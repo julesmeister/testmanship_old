@@ -37,6 +37,7 @@ import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
 import { toast } from 'sonner';
 import { useTestState } from '@/hooks/useTestState';
 import { PencilIcon, ClockIcon, CheckCircleIcon, ChatBubbleBottomCenterTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import Head from 'next/head';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -185,6 +186,8 @@ export default function Test({ user, userDetails }: Props) {
 
     // Set new timer
     idleTimerRef.current = setTimeout(() => {
+      if (!selectedChallenge) return;
+      
       toast.info("Generating writing suggestions...", {
         duration: 3000,
         position: 'bottom-right'
@@ -453,6 +456,11 @@ export default function Test({ user, userDetails }: Props) {
       title="Writing Assistant"
       description="Get instant feedback on your writing"
     >
+      <Head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+        <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet" />
+      </Head>
       <div className="flex flex-col lg:flex-row gap-4 w-full">
         <LeftColumn
           challenge={selectedChallenge}
@@ -526,7 +534,8 @@ export default function Test({ user, userDetails }: Props) {
                 lineHeight: '1.5rem',
                 paddingTop: '1.5rem',
                 paddingLeft: '4.5rem',
-                fontFamily: '"Times New Roman", Times, serif',
+                fontFamily: '"Special Elite", "Courier New", monospace',
+                fontWeight: '600',
                 fontSize: '1.125rem'
               }}
               className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 shadow-inner [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
