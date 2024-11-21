@@ -31,21 +31,23 @@ export async function POST(request: Request) {
       const messages = [
         {
           role: 'system' as const,
-          content: `You are an essay writing assistant for ${languageName}. Generate example sentences that could be added to the essay.
-- Write natural, flowing sentence that fit the essay's context
-- Match the style and tone of the existing content
-- Add relevant details that enrich the test
-- Keep responses to 1 sentence only`
+          content: `You are an essay writing assistant for ${languageName}. You must follow these rules exactly:
+1. ONLY GENERATE ONE SINGLE SENTENCE
+2. The sentence must be in ${languageName}
+3. The sentence must naturally fit the essay context
+4. Match the style and tone of existing content
+5. DO NOT explain or translate - just output the single sentence
+
+IMPORTANT: Your entire response must be exactly ONE sentence. No explanations, no translations, no additional text.`
         },
         {
           role: 'user' as const,
-          content: `Challenge: ${challenge.title}
-Instructions: ${challenge.instructions}
-Current content: ${content || '[No words written yet]'}
+          content: `Challenge Title: ${challenge.title}
+Challenge Instructions: ${challenge.instructions}
+Current Text: ${content || 'No content yet'}
 
-${content 
-  ? 'Write 1 sentence that could be naturally added to this essay.' 
-  : 'Write 1 sentence that could begin this essay.'}`
+TASK: Generate exactly ONE sentence in ${languageName} that would ${content ? 'naturally continue this text' : 'start this essay'}.
+REMEMBER: Respond with only ONE sentence. No explanations or additional text.`
         }
       ];
 

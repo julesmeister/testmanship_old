@@ -35,6 +35,7 @@ import { calculateMetrics } from '@/utils/metrics';
 import { createClient } from '@supabase/supabase-js';
 import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
 import { toast } from 'sonner';
+import { useTestState } from '@/hooks/useTestState';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -73,6 +74,7 @@ const extendChallenge = (challenge: Challenge | null, currentInputMessage: strin
 };
 
 export default function Test({ user, userDetails }: Props) {
+  const { showChallenges, showEvaluation, idleTimer, setIdleTimer, startChallenge } = useTestState();
   const [outputCode, setOutputCode] = useState<string>('');
   const [model, setModel] = useState<OpenAIModel>('gpt-3.5-turbo');
   const [loading, setLoading] = useState<boolean>(false);
@@ -85,6 +87,8 @@ export default function Test({ user, userDetails }: Props) {
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [currentSuggestion, setCurrentSuggestion] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [lastTyped, setLastTyped] = useState<number>(Date.now());
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debug logging for language selection
   const { selectedLanguageId, languages } = useLanguageStore();
@@ -131,21 +135,26 @@ export default function Test({ user, userDetails }: Props) {
   } = useFeedbackManager(generateFeedback);
 
   const {
-    isActive: isSuggestionsActive, 
-    stop: stopSuggestions,
-    start: startSuggestions,
+    isActive: isSuggestionActive,
     isRateLimited,
-    isDailyLimitReached
+    isDailyLimitReached,
+    stop: stopSuggestions,
+    generateSuggestion
   } = useTestAISuggestions({
     challenge: selectedChallenge,
     content: inputMessage,
-    enabled: !!selectedChallenge && !manuallyClosedFeedbackState && !isTimeUp,
+    enabled: !isTimeUp,
     targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN',
     onSuggestion: (suggestion) => {
-      console.log('[Index] Setting suggestion:', suggestion?.slice(0, 50) + '...');
       setCurrentSuggestion(suggestion);
+      // Reset idle timer when suggestion is received
+      setIdleTimer(null);
     },
-    onError: setError
+    onError: (error) => {
+      toast.error(error);
+      // Reset idle timer on error
+      setIdleTimer(null);
+    }
   });
 
   useEffect(() => {
@@ -162,48 +171,53 @@ export default function Test({ user, userDetails }: Props) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = sanitizeInput(e.target.value);
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setInputMessage(newValue);
+    setLastTyped(Date.now());
     
+    // Clear existing timer
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      setIdleTimer(null);
+    }
+
+    // Set new timer
+    idleTimerRef.current = setTimeout(() => {
+      generateSuggestion();
+    }, 20000); // 20 seconds
+
     // Stop existing suggestions when user starts typing
     console.log('[Index] Text changed, stopping suggestions');
     stopSuggestions();
     
-    // Update input message and stats
-    setInputMessage(newText);
-    handleTextStats(newText);
+    // Update stats
+    handleTextStats(newValue);
     
     // Auto-adjust height
     e.target.style.height = 'auto';
     e.target.style.height = `${e.target.scrollHeight}px`;
     
-    // Show feedback window on first typing if not manually closed
-    if (newText.length > 0 && !showFeedbackState && !manuallyClosedFeedbackState) {
+    // Show feedback state if needed
+    if (newValue.length > 0 && !showFeedbackState && !manuallyClosedFeedbackState) {
       setShowFeedbackState(true);
     }
     
     if (isTimeUp) return;
     
-    if (!isWriting && newText.length > 0 && !isTimeUp) {
+    if (!isWriting && newValue.length > 0 && !isTimeUp) {
       setIsWriting(true);
     }
 
     // Calculate current paragraph index by counting double newlines
-    const paragraphs = newText.split(/\n\s*\n/);
+    const paragraphs = newValue.split(/\n\s*\n/);
     const currentIndex = paragraphs.length - 1;
     
     // Only trigger paragraph change if content actually changed
-    if (newText !== inputMessage) {
-      handleParagraphChange(newText, inputMessage, currentIndex);
-      
-      // Restart suggestions after a delay
-      console.log('[Index] Scheduling suggestion restart');
-      setTimeout(() => {
-        console.log('[Index] Restarting suggestions');
-        startSuggestions();
-      }, 1000);
+    if (newValue !== inputMessage) {
+      handleParagraphChange(newValue, inputMessage, currentIndex);
     }
-  };
+  }, [generateSuggestion, handleTextStats, stopSuggestions, handleParagraphChange, inputMessage, isTimeUp, isWriting, manuallyClosedFeedbackState, showFeedbackState]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -226,12 +240,13 @@ export default function Test({ user, userDetails }: Props) {
   };
 
   const handleStartChallenge = (challenge: Challenge) => {
-    resetTimer();
-    setSelectedChallenge(extendChallenge(challenge, inputMessage));
+    startChallenge(); // This will reset idleTimer to 20 and set proper states
+    setSelectedChallenge(challenge);
     setInputMessage('');
     setOutputCode('');
     setManuallyClosedFeedbackState(false);
     setShowFeedbackState(false);
+    setCurrentSuggestion(''); // Clear current suggestion when starting new challenge
   };
 
   const handleStopChallenge = () => {
@@ -383,19 +398,36 @@ export default function Test({ user, userDetails }: Props) {
     }
   };
 
-  // Cleanup timeouts on unmount
+  // Update countdown timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (lastTyped) {
+      interval = setInterval(() => {
+        const elapsed = Date.now() - lastTyped;
+        const remaining = Math.max(0, 20 - Math.floor(elapsed / 1000));
+        
+        if (remaining > 0 && !isSuggestionActive) {
+          setIdleTimer(remaining);
+        } else {
+          setIdleTimer(null);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [lastTyped, isSuggestionActive]);
+
+  // Cleanup timers
   useEffect(() => {
     return () => {
-      cleanupFeedback();
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
     };
-  }, [cleanupFeedback]);
-
-  // Check for time up
-  useEffect(() => {
-    if (selectedChallenge && elapsedTime >= selectedChallenge.time_allocation * 60) {
-      setIsWriting(false);
-    }
-  }, [elapsedTime, selectedChallenge]);
+  }, []);
 
   const performanceMetrics = useMemo(() => ({
     wordCount,
@@ -494,6 +526,12 @@ export default function Test({ user, userDetails }: Props) {
           </div>
         </div>
       </div>
+      {/* Idle Timer Badge */}
+      {idleTimer !== null && selectedChallenge && !showChallenges && !showEvaluation && (
+        <div className="fixed bottom-4 right-4 py-1 px-3 bg-orange-500 text-white text-sm font-medium rounded-full shadow-lg">
+          Idle: {idleTimer}s
+        </div>
+      )}
     </DashboardLayout>
   );
 }

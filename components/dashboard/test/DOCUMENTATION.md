@@ -134,7 +134,184 @@ The writing challenge feature is a complex system that allows users to practice 
      - Normalizes other whitespace (spaces, tabs) for consistency
      - Uses DOMPurify for base sanitization
 
-   #### Writing Experience Improvements
+   ### Component Interactions
+
+   ### AI Suggestions System Architecture
+
+   The AI suggestions system consists of four main components working together:
+
+   #### 1. Test Component (`components/dashboard/test/index.tsx`)
+   The main orchestrator that:
+   - Initializes the suggestion system
+   - Manages user input and suggestion state
+   - Handles error display through toasts
+   ```typescript
+   const Test = () => {
+     const {
+       isActive,
+       isRateLimited,
+       isDailyLimitReached,
+       start: startSuggestions,
+       stop: stopSuggestions
+     } = useTestAISuggestions({
+       challenge: selectedChallenge,
+       content: inputMessage,
+       enabled: !!selectedChallenge && !manuallyClosedFeedbackState && !isTimeUp,
+       onSuggestion: (suggestion) => setCurrentSuggestion(suggestion),
+       onError: (error) => toast(error)
+     });
+     // ...
+   };
+   ```
+
+   #### 2. LeftColumn Component (`components/dashboard/test/LeftColumn.tsx`)
+   Responsible for:
+   - Displaying current suggestions
+   - Showing suggestion status
+   - Managing suggestion visibility
+   ```typescript
+   interface LeftColumnProps {
+     currentSuggestion?: string;
+     isRateLimited?: boolean;
+     isDailyLimitReached?: boolean;
+   }
+
+   const LeftColumn: React.FC<LeftColumnProps> = ({
+     currentSuggestion,
+     isRateLimited,
+     isDailyLimitReached
+   }) => {
+     // Renders suggestions and status
+   };
+   ```
+
+   #### 3. useTestAISuggestions Hook (`hooks/useTestAISuggestions.ts`)
+   The core suggestion management system that:
+   - Handles debouncing and API calls
+   - Manages rate limiting states
+   - Provides suggestion lifecycle methods
+   ```typescript
+   const useTestAISuggestions = ({
+     challenge,
+     content,
+     enabled,
+     onSuggestion,
+     onError
+   }) => {
+     // Manages suggestion generation and state
+   };
+   ```
+
+   #### 4. Test Suggestions API (`app/api/test-suggestions/route.ts`)
+   The backend API that:
+   - Processes suggestion requests
+   - Implements rate limiting
+   - Generates AI responses
+   ```typescript
+   export async function POST(req: Request) {
+     // Handles suggestion generation
+     // Implements rate limiting
+     // Returns AI-generated suggestions
+   }
+   ```
+
+   ### Data Flow
+
+   1. **User Input → Test Component**
+     ```
+     User types → Debounced input → useTestAISuggestions hook
+     ```
+
+   2. **Hook → API**
+     ```
+     Hook prepares request → API validates → AI generates → Response returned
+     ```
+
+   3. **API → UI**
+     ```
+     Hook processes response → Test updates state → LeftColumn displays suggestion
+     ```
+
+   ### State Management
+
+   1. **Test Component States**
+     - `currentSuggestion`: Latest AI suggestion
+     - `inputMessage`: Current user input
+     - `selectedChallenge`: Active challenge
+
+   2. **Hook States**
+     - `isActive`: Suggestion system status
+     - `isRateLimited`: Temporary rate limit
+     - `isDailyLimitReached`: Daily limit status
+
+   3. **API States**
+     - Rate limit tracking
+     - Request validation
+     - Error states
+
+   ### Error Handling Flow
+
+   1. **API Layer**
+     ```typescript
+     // app/api/test-suggestions/route.ts
+     if (isRateLimited) {
+       return new Response(
+         JSON.stringify({ error: { message: 'Rate limit exceeded' } }),
+         { status: 429 }
+       );
+     }
+     ```
+
+   2. **Hook Layer**
+     ```typescript
+     // hooks/useTestAISuggestions.ts
+     if (response.status === 429) {
+       const isDaily = responseData.error?.message?.includes('free-models-per-day');
+       // Handle rate limits with friendly messages
+     }
+     ```
+
+   3. **UI Layer**
+     ```typescript
+     // components/dashboard/test/index.tsx
+     onError: (error) => toast(error)
+     ```
+
+   ### Integration Points
+
+   1. **Test → Hook Integration**
+     - Initializes hook with challenge and content
+     - Receives suggestions and errors
+     - Controls suggestion lifecycle
+
+   2. **Hook → API Integration**
+     - Manages API requests and responses
+     - Handles rate limiting and errors
+     - Processes suggestions
+
+   3. **Test → LeftColumn Integration**
+     - Passes current suggestion state
+     - Updates suggestion display
+     - Shows rate limit status
+
+   ### Best Practices for Modifications
+
+   1. **Adding New Features**
+     - Update all affected components
+     - Maintain error handling chain
+     - Consider rate limiting impact
+
+   2. **Modifying Rate Limits**
+     - Update API rate limit logic
+     - Adjust hook error handling
+     - Update UI feedback
+
+   3. **Changing Suggestion Logic**
+     - Modify API generation
+     - Update hook processing
+     - Adjust UI display
+
+   ## Writing Experience Improvements
    - Proper paragraph separation with double newlines
    - Cursor position preservation after paragraph creation
    - Dynamic textarea height adjustment
@@ -681,29 +858,23 @@ The writing challenge feature is a complex system that allows users to practice 
      - Retry logic for AI requests
      - Rate limiting protection
    - **Response Format**:
-   ```typescript
-   interface EvaluationResponse {
-     performanceMetrics: {
-       wordCount: number;
-       paragraphCount: number;
-       timeSpent: number;
-       performanceScore: number;
-       improvedEssay: string;
-       metrics: {
-         grammar: number;
-         vocabulary: number;
-         fluency: number;
-         overall: number;
+     ```typescript
+     {
+       performanceMetrics: {
+         wordCount: number;
+         paragraphCount: number;
+         timeSpent: number;
+         performanceScore: number;
+         feedback: string;
+       };
+       skillMetrics: {
+         writingComplexity: number;
+         accuracy: number;
+         coherence: number;
+         style: number;
        }
-     };
-     skillMetrics: {
-       writingComplexity: number;
-       accuracy: number;
-       coherence: number;
-       style: number;
      }
-   }
-   ```
+     ```
 
    #### 2. State Management (`/hooks/useEvaluationState.ts`)
    - **Purpose**: Manages evaluation state and UI updates
@@ -713,15 +884,15 @@ The writing challenge feature is a complex system that allows users to practice 
      - Metrics state updates
      - Automatic evaluation triggers
    - **Usage**:
-   ```typescript
-   const {
-     showEvaluation,
-     performanceMetrics,
-     skillMetrics,
-     isLoading,
-     error
-   } = useEvaluationState(challenge, isTimeUp, content);
-   ```
+     ```typescript
+     const {
+       showEvaluation,
+       performanceMetrics,
+       skillMetrics,
+       isLoading,
+       error
+     } = useEvaluationState(challenge, isTimeUp, content);
+     ```
 
    #### 3. UI Components
 
@@ -780,283 +951,482 @@ The writing challenge feature is a complex system that allows users to practice 
       - Fallback content
       - Recovery mechanisms
 
-   ### Future Improvements
-   1. **Metrics Customization**:
-      - Configurable scoring weights
-      - Custom metric definitions
-      - Domain-specific evaluations
+   ### Integration Points
 
-   2. **UI Enhancements**:
-      - Advanced visualization options
-      - Detailed feedback breakdown
-      - Historical comparison
-      - Progress tracking
+   1. **Frontend Components**
+     - `EvaluationAccordion`: Displays evaluation results
+     - `FocusCard`: Shows strengths, weaknesses, and tips
+     - `MetricsCard`: Visualizes performance metrics
 
-   3. **Performance Optimization**:
-      - Caching strategies
-      - Batch processing
-      - Response optimization
+   2. **State Management**
+     - `useEvaluationState`: Manages evaluation data
+     - Handles loading and error states
+     - Updates UI based on response
 
-   ### Security Considerations
-   1. Input sanitization
-   2. Rate limiting
-   3. Error message obfuscation
-   4. API key protection
-
-   ### Related Files
-   - `/utils/ai.ts`: AI request utilities
-   - `/types/challenge.ts`: Type definitions
-   - `/components/card/MetricsCard.tsx`: Metrics display component
-   - `/hooks/useFeedbackManager.ts`: Feedback management
-
-   ## Important Notes
-
-   ### Feedback State Management
-   - Centralized in useAIFeedback hook
-   - Local state in LeftColumn for UI responsiveness
-   - Clear synchronization between components
-   - Rate limiting at API level
-
-   ### Feedback Window Behavior
-   - Shows automatically on first typing
-   - Stays closed if manually closed by user
-   - Can be reopened via sparkle button
-   - Resets state on new challenge
-   - Maintains position while dragging
-
-   ### Challenge State Management
-   - Challenge object is extended with inputMessage
-   - State is cleaned up on challenge completion
-   - Timer state affects input availability
-   - Proper cleanup on component unmount
-
-   ### Error Handling
-   - Improved rate limit error messages
-   - Better error state management
-   - Clear user feedback via toasts
-   - Comprehensive error logging
-   - Graceful degradation on API failures
-
-   ### Authentication and Security
-
-   #### Challenge Results Security
-   1. **Pre-submission Validation**
-      - Content security checks
-      - Rate limiting enforcement
-      - Authentication verification
-      - Access permission checks
-
-   2. **Data Security**
-      - Input sanitization
-      - Metadata tracking
-      - Session monitoring
-      - Audit logging
-
-   3. **Error Management**
-      - Granular error types
-      - User-friendly messages
-      - Error logging
-      - Recovery procedures
-
-   4. **Performance Monitoring**
-      - Submission metrics
-      - Error rates
-      - Response times
-      - User patterns
-
-   #### Database Security
-   1. **Access Control**
-      - Row-level security
-      - User permissions
-      - Challenge ownership
-      - Result isolation
-
-   2. **Data Integrity**
-      - Transaction safety
-      - Constraint enforcement
-      - Version control
-      - Backup procedures
-
-   3. **Monitoring**
-      - Activity logs
-      - Error tracking
-      - Performance metrics
-      - Security alerts
-
-   ## Evaluation Mechanism
-
-   ### Overview
-   The evaluation mechanism is a comprehensive system that provides AI-powered assessment of user submissions, offering detailed metrics and feedback. The system is designed to be modular, extensible, and user-friendly.
-
-   ### Components
-
-   #### 1. useEvaluationState Hook
-   - **Purpose**: Manages the evaluation state and API communication
-   - **Location**: `hooks/useEvaluationState.ts`
-   - **Key Features**:
-     - Maintains evaluation state (performance metrics, skill metrics, user progress)
-     - Handles API communication with error handling
-     - Provides loading and error states
-     - Manages evaluation visibility
-
-   #### 2. EvaluationAccordion Component
-   - **Location**: `components/dashboard/test/components/EvaluationAccordion.tsx`
-   - **Features**:
-     - Displays evaluation results in an expandable accordion
-     - Shows improved essay suggestions
-     - Provides exit challenge functionality
-     - Matches layout with InstructionsAccordion for consistency
-
-   ### API Integration
-
-   #### Challenge Evaluation API
-   - **Endpoint**: `/api/challenge-evaluation`
-   - **Location**: `app/api/challenge-evaluation/route.ts`
-   - **Request Format**:
-     ```typescript
-     {
-       challengeId: string;
-       content: string;
-       timeSpent: number;
-     }
-     ```
-   - **Response Format**:
-     ```typescript
-     {
-       performanceMetrics: {
-         wordCount: number;
-         paragraphCount: number;
-         timeSpent: number;
-         performanceScore: number;
-         feedback: string;
-       };
-       skillMetrics: {
-         grammar: number;
-         vocabulary: number;
-         structure: number;
-         creativity: number;
-         clarity: number;
-       };
-       userProgress: {
-         totalChallenges: number;
-         totalWords: number;
-         averageScore: number;
-         skillImprovements: Array<{
-           skill: string;
-           improvement: number;
-         }>;
-       };
-     }
-     ```
-
-   ### Integration Flow
-
-   1. **Trigger Points**:
-      - When time is up (`isTimeUp` becomes true)
-      - When user manually requests evaluation
-      - When challenge is completed
-
-   2. **Data Flow**:
+   3. **Data Flow**
      ```
      User Submission → API Request → AI Processing → 
      Validation → Response Formatting → State Update → UI Render
      ```
 
-   3. **Error Handling**:
-     - Rate limiting with friendly messages
-     - Network error recovery
-     - Invalid response handling
-     - Empty content validation
+   ### Best Practices
 
-   ### AI Integration
+   1. **Error Handling**
+     - Always validate API responses
+     - Provide clear error messages
+     - Implement retry mechanisms
+     - Log validation failures
 
-   #### makeAIRequest Utility
-   - **Location**: `utils/ai.ts`
-   - **Features**:
-     - Handles API communication with OpenAI/SambaNova
-     - Provides user-friendly error messages
-     - Implements rate limiting
-     - Manages API key validation
+   2. **Performance**
+     - Cache evaluation results
+     - Implement rate limiting
+     - Optimize response size
 
-   ### Usage in LeftColumn
+   3. **Security**
+     - Sanitize user input
+     - Validate request origins
+     - Protect sensitive data
 
-   The LeftColumn component (`components/dashboard/test/LeftColumn.tsx`) integrates the evaluation mechanism through:
+   ### Testing Checklist
 
-   1. **State Management**:
-     ```typescript
-     const {
-       showEvaluation,
-       performanceMetrics,
-       isLoading,
-       error
-     } = useEvaluationState(challenge, isTimeUp, content);
-     ```
+   - [ ] Input validation
+     - [ ] Empty content handling
+     - [ ] Invalid challenge ID
+     - [ ] Malformed requests
 
-   2. **UI Integration**:
-     - Renders EvaluationAccordion when evaluation is available
-     - Shows loading states during evaluation
-     - Displays error messages when needed
-     - Manages visibility of evaluation results
+   - [ ] Response validation
+     - [ ] Array structure
+     - [ ] Data completeness
+     - [ ] Type checking
+
+   - [ ] Error handling
+     - [ ] Rate limit responses
+     - [ ] Parsing failures
+     - [ ] Network errors
+
+   - [ ] Integration
+     - [ ] Frontend updates
+     - [ ] State management
+     - [ ] UI rendering
+
+   ### Known Issues and Solutions
+
+   1. **Empty Insight Arrays**
+     - Issue: FocusCards appearing blank
+     - Solution: Added strict array validation
+     - Prevention: Validate response structure
+
+   2. **Invalid Metrics**
+     - Issue: Scores outside 0-1 range
+     - Solution: Value normalization
+     - Prevention: Range validation
+
+   3. **Response Format**
+     - Issue: Inconsistent AI responses
+     - Solution: JSON extraction utility
+     - Prevention: Structured prompts
+
+   ### Maintenance Notes
+
+   1. **Regular Checks**
+     - Monitor error rates
+     - Review AI response quality
+     - Update validation rules
+
+   2. **Updates Required**
+     - Document API changes
+     - Test new validations
+     - Update error messages
+
+   3. **Performance Monitoring**
+     - Track response times
+     - Monitor rate limits
+     - Log validation failures
+
+   ## AI Suggestions System
+
+   ### Overview
+   The AI suggestions system provides real-time writing assistance through the `useTestAISuggestions` hook. This system is designed to offer contextual suggestions while maintaining a smooth user experience and managing API resources efficiently.
+
+   ### Key Components
+
+   #### 1. useTestAISuggestions Hook
+   Located in `hooks/useTestAISuggestions.ts`, this hook manages the entire suggestion lifecycle.
+
+   ##### Core Features
+   - **Debounced Suggestions**: Waits for 1 second of no typing before generating suggestions
+   - **Rate Limiting**: Handles both temporary and daily API rate limits
+   - **Request Management**: Automatically cancels stale requests
+   - **Error Handling**: Provides user-friendly error messages with emojis
+
+   ##### Usage Example
+   ```typescript
+   const {
+     isActive,
+     isRateLimited,
+     isDailyLimitReached,
+     start,
+     stop
+   } = useTestAISuggestions({
+     challenge: selectedChallenge,
+     content: inputMessage,
+     enabled: true,
+     onSuggestion: (suggestion) => setCurrentSuggestion(suggestion),
+     onError: (error) => toast(error),
+     targetLanguage: 'EN'
+   });
+   ```
+
+   ##### States
+   - `isActive`: Whether suggestions are currently active
+   - `isRateLimited`: Temporary rate limit status
+   - `isDailyLimitReached`: Daily API limit status
+
+   ##### Methods
+   - `start()`: Begin suggestion generation
+   - `stop()`: Stop suggestion generation and cleanup
+
+   ##### Error Messages
+   The hook provides friendly, encouraging error messages:
+   - Daily limit: "We've reached today's AI suggestion limit. Don't worry though - it'll reset tomorrow! 🌅"
+   - Rate limit: "Taking a quick breather to process suggestions. Keep writing! ✨"
+   - Generic error: "Having a bit of trouble with suggestions at the moment. Keep writing - you're doing great! 🌟"
+
+   #### 2. Integration with Test Component
+   The suggestions system is integrated into the main test component through:
+   - Automatic suggestion triggering after typing pauses
+   - Clear error feedback through toast messages
+   - Graceful degradation when limits are reached
+
+   ### Implementation Details
+
+   #### 1. Debouncing Logic
+   ```typescript
+   useEffect(() => {
+     if (!enabled) return;
+     
+     // Clear previous timer
+     if (debounceRef.current) {
+       clearTimeout(debounceRef.current);
+       debounceRef.current = null;
+     }
+
+     // Wait for typing to stop
+     debounceRef.current = setTimeout(() => {
+       start();
+     }, 1000);
+
+     return () => {
+       if (debounceRef.current) {
+         clearTimeout(debounceRef.current);
+         debounceRef.current = null;
+       }
+     };
+   }, [enabled, content, start]);
+   ```
+
+   #### 2. Request Management
+   - Uses AbortController to cancel pending requests
+   - Tracks last content to prevent duplicate suggestions
+   - Cleans up resources on component unmount
+
+   #### 3. Error Handling Strategy
+   - User-friendly messages with emojis
+   - Different handling for temporary vs daily limits
+   - Clear feedback through toast notifications
 
    ### Best Practices
 
-   1. **Error Handling**:
-     - Always provide user-friendly error messages
-     - Log technical details for debugging
-     - Implement proper rate limiting
-     - Handle network issues gracefully
+   1. **Rate Limit Handling**
+     - Don't retry automatically on rate limits
+     - Show clear feedback to users
+     - Differentiate between temporary and daily limits
 
-   2. **Performance**:
-     - Minimize unnecessary API calls
-     - Cache results when appropriate
-     - Implement proper loading states
-     - Handle large responses efficiently
+   2. **Resource Management**
+     - Cancel pending requests when new ones start
+     - Clean up timers and controllers on unmount
+     - Track and prevent duplicate suggestions
 
-   3. **User Experience**:
-     - Show clear loading indicators
-     - Provide helpful error messages
-     - Maintain consistent UI during evaluation
-     - Allow easy navigation between instructions and evaluation
+   3. **User Experience**
+     - Use friendly, encouraging error messages
+     - Maintain smooth typing experience
+     - Provide clear status indicators
 
-   4. **Security**:
-     - Validate all inputs
-     - Sanitize user content
-     - Protect sensitive data
-     - Implement proper rate limiting
+   ### Troubleshooting
 
-   ### Known Limitations
+   1. **Frequent Rate Limits**
+     - Check typing debounce timing
+     - Verify content change detection
+     - Review API usage patterns
 
-   1. **Rate Limiting**:
-     - AI service has request limits
-     - Implement proper queuing if needed
-     - Consider fallback options
+   2. **Stale Suggestions**
+     - Ensure proper request cancellation
+     - Check content tracking logic
+     - Verify cleanup on unmount
 
-   2. **Response Time**:
-     - AI processing can take time
-     - Show appropriate loading states
-     - Consider partial results display
+   3. **Performance Issues**
+     - Monitor debounce timing
+     - Check request cleanup
+     - Review state update frequency
 
-   3. **Content Size**:
-     - Large submissions may need chunking
-     - Consider implementing progress indicators
-     - Handle timeout scenarios
+   ## Recent Updates
 
-   ### Future Improvements
+   ### 1. Challenge State Management
+   - Added `currentSuggestion` clearing in `handleStartChallenge`
+   - Ensures clean state when starting new challenges
+   - Prevents suggestion persistence between challenges
 
-   1. **Metrics Enhancement**:
-     - Add more detailed writing metrics
-     - Implement historical comparison
-     - Add peer comparison features
+   ### 2. AI Suggestions System
 
-   2. **UI Improvements**:
-     - Add visual metrics representation
-     - Implement progress tracking
-     - Add export functionality
+   #### Response Format
+   The AI suggestions system has been updated to enforce single-sentence responses:
 
-   3. **Performance Optimization**:
-     - Implement response caching
-     - Add offline support
-     - Optimize large content handling
+   ```typescript
+   // System message enforces:
+   1. ONLY GENERATE ONE SINGLE SENTENCE
+   2. Language-specific output
+   3. Natural context fit
+   4. Style and tone matching
+   5. No explanations or translations
+   ```
+
+   #### Implementation Details
+   - Strict prompt formatting for consistent responses
+   - Clear task definition in user messages
+   - Explicit single-sentence enforcement
+   - Language-specific generation based on challenge context
+
+   ### 3. State Cleanup
+   The `handleStartChallenge` function now resets:
+   - Input message (`setInputMessage('')`)
+   - Output code (`setOutputCode('')`)
+   - Feedback state (`setShowFeedbackState(false)`)
+   - Manual feedback closure state (`setManuallyClosedFeedbackState(false)`)
+   - Current suggestion (`setCurrentSuggestion('')`)
+
+   This ensures a clean slate for each new challenge attempt.
+
+   ## TimerProgress Component
+
+   ### Overview
+   The TimerProgress component is a sophisticated progress indicator that transforms into a grade button based on specific conditions. It provides visual feedback for time remaining and word count progress.
+
+   ### Component Architecture
+
+   ##### GradeButton Subcomponent
+   ```typescript
+   interface GradeButtonProps {
+     onClick: () => void;
+     onMouseLeave?: () => void;
+     showWordCount?: boolean;
+     wordCount?: number;
+     requiredWordCount?: number;
+   }
+   ```
+   A reusable button component that displays grading options with:
+   - Gradient background and border effects
+   - Word count progress (optional)
+   - Hover animations
+   - Dark mode support
+
+   ##### TimerProgress Component
+   ```typescript
+   interface TimerProgressProps {
+     timeElapsed: number;
+     timeAllocation?: number;
+     mode: 'practice' | 'exam';
+     onGradeChallenge: () => void;
+     wordCount?: number;
+     requiredWordCount?: number;
+     showGradeButton?: boolean;
+   }
+   ```
+
+   ### Key Features
+
+   1. **Dynamic State Management**
+     - Tracks hover state for conditional button display
+     - Manages fill animation for progress bar
+     - Handles time-up conditions
+     - Monitors word count requirements
+
+   2. **Progress Bar Visualization**
+     - Smooth width transitions
+     - Mode-specific colors (exam/practice)
+     - Remaining time display
+     - Dark mode support
+
+   3. **Conditional Grade Button**
+     - Appears in two scenarios:
+       1. When time is up (automatic)
+       2. When hovered AND word count requirement is met
+     - Shows word count progress when applicable
+     - Maintains consistent styling with gradient effects
+
+   4. **Accessibility Features**
+     - Clear visual feedback
+     - Hover states for interactivity
+     - Readable time remaining display
+     - High contrast in both light/dark modes
+
+   ### Implementation Details
+
+   1. **Progress Calculation**
+   ```typescript
+   const progress = timeAllocation 
+     ? Math.max(0, 100 - (timeElapsed / (timeAllocation * 60)) * 100) 
+     : 0;
+   ```
+
+   2. **Time Formatting**
+   ```typescript
+   const formatTimeRemaining = (seconds: number) => {
+     if (!timeAllocation) return "∞";
+     const remainingSeconds = Math.max(0, (timeAllocation * 60) - seconds);
+     const minutes = Math.floor(remainingSeconds / 60);
+     const secs = Math.floor(remainingSeconds % 60);
+     return `${minutes}:${secs.toString().padStart(2, '0')}`;
+   };
+   ```
+
+   3. **Conditional Rendering Logic**
+   ```typescript
+   if (isTimeUp) {
+     return <GradeButton onClick={onGradeChallenge} />;
+   }
+
+   if (isHovered && showGradeButton) {
+     return (
+       <GradeButton 
+         onClick={onGradeChallenge}
+         onMouseLeave={() => setIsHovered(false)}
+         showWordCount
+         wordCount={wordCount}
+         requiredWordCount={requiredWordCount}
+       />
+     );
+   }
+   ```
+
+   ### Usage Guidelines
+
+   1. **Time Allocation**
+     - Optional parameter
+     - When undefined, shows "∞" for time remaining
+     - Specified in minutes, converted to seconds internally
+
+   2. **Word Count Requirements**
+     - Set `requiredWordCount` to enable word count checking
+     - Grade button appears only when `wordCount >= requiredWordCount`
+     - Word count display shows progress toward goal
+
+   3. **Mode-Specific Styling**
+     - 'exam' mode: Blue progress bar (#2563eb)
+     - 'practice' mode: Green progress bar (#059669)
+
+   4. **Event Handling**
+     - `onGradeChallenge`: Callback for grading action
+     - `onMouseEnter/onMouseLeave`: For hover state management
+     - Automatic cleanup of animation frames
+
+   ### Best Practices
+
+   1. **Performance Optimization**
+     - Use `useRef` for animation frame management
+     - Implement smooth transitions with CSS
+     - Avoid unnecessary re-renders
+
+   2. **Styling Consistency**
+     - Maintain gradient effects across states
+     - Use consistent spacing and sizing
+     - Follow dark mode guidelines
+
+   3. **Error Prevention**
+     - Handle undefined timeAllocation gracefully
+     - Prevent negative progress values
+     - Manage cleanup of animation frames
+
+   4. **Accessibility**
+     - Maintain readable contrast ratios
+     - Provide clear visual feedback
+     - Support keyboard navigation
+
+   ## Global State Management
+
+   ### 1. useTestState Hook (`hooks/useTestState.ts`)
+
+   #### Purpose
+   Centralized state management for test-related UI states and timers.
+
+   #### Key States
+   - `showChallenges`: Controls challenge selection visibility
+   - `showEvaluation`: Controls evaluation view visibility
+   - `idleTimer`: Manages user inactivity countdown
+
+   #### Core Functions
+   ```typescript
+   interface TestState {
+     showChallenges: boolean;
+     showEvaluation: boolean;
+     idleTimer: number | null;
+     setShowChallenges: (show: boolean) => void;
+     setShowEvaluation: (show: boolean) => void;
+     setIdleTimer: (time: number | null) => void;
+     startChallenge: () => void;
+     resetState: () => void;
+   }
+   ```
+
+   ##### `startChallenge()`
+   - Purpose: Initializes challenge state
+   - Actions:
+     - Sets showChallenges to false
+     - Sets showEvaluation to false
+     - Resets idleTimer to 20 seconds
+
+   ##### `resetState()`
+   - Purpose: Resets all states to default
+   - Actions:
+     - Clears all UI states
+     - Nullifies idleTimer
+
+   #### Integration Points
+   1. **Test Component** (`index.tsx`)
+     - Uses global states for UI visibility
+     - Manages idle timer through global state
+     - Calls startChallenge on new challenge initialization
+
+   2. **LeftColumn Component** (`LeftColumn.tsx`)
+     - Consumes global UI states
+     - Updates challenge visibility state
+     - Manages evaluation view state
+
+   #### State Flow
+   ```mermaid
+   graph TD
+       A[User Action] --> B[useTestState]
+       B --> C[Test Component]
+       B --> D[LeftColumn Component]
+       C --> E[UI Updates]
+       D --> E
+   ```
+
+   #### Best Practices
+   1. **State Updates**
+     - Always use provided state setters
+     - Avoid direct state manipulation
+     - Use startChallenge for initialization
+     - Use resetState for cleanup
+
+   2. **Timer Management**
+     - Reset timer through startChallenge
+     - Clear timer through resetState
+     - Update timer only through setIdleTimer
+
+   3. **Component Integration**
+     - Import only needed state and functions
+     - Use destructuring for clean code
+     - Maintain single source of truth
 
    ## Challenge Evaluation API
 
@@ -1081,13 +1451,7 @@ The writing challenge feature is a complex system that allows users to practice 
        paragraphCount: number;   // Number of paragraphs
        timeSpent: number;        // Time taken in seconds
        performanceScore: number; // Overall score (0-1)
-       improvedEssay: string;    // AI-enhanced version
-       metrics: {
-         grammar: number;        // Grammar score (0-1)
-         vocabulary: number;     // Vocabulary score (0-1)
-         fluency: number;        // Writing fluency (0-1)
-         overall: number;        // Combined score (0-1)
-       }
+       feedback: string;         // AI-generated feedback
      },
      skillMetrics: {
        writingComplexity: number; // Sentence complexity (0-1)
@@ -1239,147 +1603,625 @@ The writing challenge feature is a complex system that allows users to practice 
      - Monitor rate limits
      - Log validation failures
 
-   ## TimerProgress Component
+   ## AI Suggestions System
 
    ### Overview
-   The TimerProgress component is a sophisticated progress indicator that transforms into a grade button based on specific conditions. It provides visual feedback for time remaining and word count progress.
+   The AI suggestions system provides real-time writing assistance through the `useTestAISuggestions` hook. This system is designed to offer contextual suggestions while maintaining a smooth user experience and managing API resources efficiently.
 
-   ### Component Architecture
+   ### Key Components
 
-   ##### GradeButton Subcomponent
+   #### 1. useTestAISuggestions Hook
+   Located in `hooks/useTestAISuggestions.ts`, this hook manages the entire suggestion lifecycle.
+
+   ##### Core Features
+   - **Debounced Suggestions**: Waits for 1 second of no typing before generating suggestions
+   - **Rate Limiting**: Handles both temporary and daily API rate limits
+   - **Request Management**: Automatically cancels stale requests
+   - **Error Handling**: Provides user-friendly error messages with emojis
+
+   ##### Usage Example
    ```typescript
-   interface GradeButtonProps {
-     onClick: () => void;
-     onMouseLeave?: () => void;
-     showWordCount?: boolean;
-     wordCount?: number;
-     requiredWordCount?: number;
-   }
-   ```
-   A reusable button component that displays grading options with:
-   - Gradient background and border effects
-   - Word count progress (optional)
-   - Hover animations
-   - Dark mode support
-
-   ##### TimerProgress Component
-   ```typescript
-   interface TimerProgressProps {
-     timeElapsed: number;
-     timeAllocation?: number;
-     mode: 'practice' | 'exam';
-     onGradeChallenge: () => void;
-     wordCount?: number;
-     requiredWordCount?: number;
-     showGradeButton?: boolean;
-   }
+   const {
+     isActive,
+     isRateLimited,
+     isDailyLimitReached,
+     start,
+     stop
+   } = useTestAISuggestions({
+     challenge: selectedChallenge,
+     content: inputMessage,
+     enabled: true,
+     onSuggestion: (suggestion) => setCurrentSuggestion(suggestion),
+     onError: (error) => toast(error),
+     targetLanguage: 'EN'
+   });
    ```
 
-   ### Key Features
+   ##### States
+   - `isActive`: Whether suggestions are currently active
+   - `isRateLimited`: Temporary rate limit status
+   - `isDailyLimitReached`: Daily API limit status
 
-   1. **Dynamic State Management**
-     - Tracks hover state for conditional button display
-     - Manages fill animation for progress bar
-     - Handles time-up conditions
-     - Monitors word count requirements
+   ##### Methods
+   - `start()`: Begin suggestion generation
+   - `stop()`: Stop suggestion generation and cleanup
 
-   2. **Progress Bar Visualization**
-     - Smooth width transitions
-     - Mode-specific colors (exam/practice)
-     - Remaining time display
-     - Dark mode support
+   ##### Error Messages
+   The hook provides friendly, encouraging error messages:
+   - Daily limit: "We've reached today's AI suggestion limit. Don't worry though - it'll reset tomorrow! 🌅"
+   - Rate limit: "Taking a quick breather to process suggestions. Keep writing! ✨"
+   - Generic error: "Having a bit of trouble with suggestions at the moment. Keep writing - you're doing great! 🌟"
 
-   3. **Conditional Grade Button**
-     - Appears in two scenarios:
-       1. When time is up (automatic)
-       2. When hovered AND word count requirement is met
-     - Shows word count progress when applicable
-     - Maintains consistent styling with gradient effects
-
-   4. **Accessibility Features**
-     - Clear visual feedback
-     - Hover states for interactivity
-     - Readable time remaining display
-     - High contrast in both light/dark modes
+   #### 2. Integration with Test Component
+   The suggestions system is integrated into the main test component through:
+   - Automatic suggestion triggering after typing pauses
+   - Clear error feedback through toast messages
+   - Graceful degradation when limits are reached
 
    ### Implementation Details
 
-   1. **Progress Calculation**
+   #### 1. Debouncing Logic
    ```typescript
-   const progress = timeAllocation 
-     ? Math.max(0, 100 - (timeElapsed / (timeAllocation * 60)) * 100) 
-     : 0;
+   useEffect(() => {
+     if (!enabled) return;
+     
+     // Clear previous timer
+     if (debounceRef.current) {
+       clearTimeout(debounceRef.current);
+       debounceRef.current = null;
+     }
+
+     // Wait for typing to stop
+     debounceRef.current = setTimeout(() => {
+       start();
+     }, 1000);
+
+     return () => {
+       if (debounceRef.current) {
+         clearTimeout(debounceRef.current);
+         debounceRef.current = null;
+       }
+     };
+   }, [enabled, content, start]);
    ```
 
-   2. **Time Formatting**
-   ```typescript
-   const formatTimeRemaining = (seconds: number) => {
-     if (!timeAllocation) return "∞";
-     const remainingSeconds = Math.max(0, (timeAllocation * 60) - seconds);
-     const minutes = Math.floor(remainingSeconds / 60);
-     const secs = Math.floor(remainingSeconds % 60);
-     return `${minutes}:${secs.toString().padStart(2, '0')}`;
-   };
-   ```
+   #### 2. Request Management
+   - Uses AbortController to cancel pending requests
+   - Tracks last content to prevent duplicate suggestions
+   - Cleans up resources on component unmount
 
-   3. **Conditional Rendering Logic**
-   ```typescript
-   if (isTimeUp) {
-     return <GradeButton onClick={onGradeChallenge} />;
-   }
-
-   if (isHovered && showGradeButton) {
-     return (
-       <GradeButton 
-         onClick={onGradeChallenge}
-         onMouseLeave={() => setIsHovered(false)}
-         showWordCount
-         wordCount={wordCount}
-         requiredWordCount={requiredWordCount}
-       />
-     );
-   }
-   ```
-
-   ### Usage Guidelines
-
-   1. **Time Allocation**
-     - Optional parameter
-     - When undefined, shows "∞" for time remaining
-     - Specified in minutes, converted to seconds internally
-
-   2. **Word Count Requirements**
-     - Set `requiredWordCount` to enable word count checking
-     - Grade button appears only when `wordCount >= requiredWordCount`
-     - Word count display shows progress toward goal
-
-   3. **Mode-Specific Styling**
-     - 'exam' mode: Blue progress bar (#2563eb)
-     - 'practice' mode: Green progress bar (#059669)
-
-   4. **Event Handling**
-     - `onGradeChallenge`: Callback for grading action
-     - `onMouseEnter/onMouseLeave`: For hover state management
-     - Automatic cleanup of animation frames
+   #### 3. Error Handling Strategy
+   - User-friendly messages with emojis
+   - Different handling for temporary vs daily limits
+   - Clear feedback through toast notifications
 
    ### Best Practices
 
-   1. **Performance Optimization**
-     - Use `useRef` for animation frame management
-     - Implement smooth transitions with CSS
-     - Avoid unnecessary re-renders
+   1. **Rate Limit Handling**
+     - Don't retry automatically on rate limits
+     - Show clear feedback to users
+     - Differentiate between temporary and daily limits
 
-   2. **Styling Consistency**
-     - Maintain gradient effects across states
-     - Use consistent spacing and sizing
-     - Follow dark mode guidelines
+   2. **Resource Management**
+     - Cancel pending requests when new ones start
+     - Clean up timers and controllers on unmount
+     - Track and prevent duplicate suggestions
 
-   3. **Error Prevention**
-     - Handle undefined timeAllocation gracefully
-     - Prevent negative progress values
-     - Manage cleanup of animation frames
+   3. **User Experience**
+     - Use friendly, encouraging error messages
+     - Maintain smooth typing experience
+     - Provide clear status indicators
 
-   4. **Accessibility**
-     - Maintain readable contrast ratios
-     - Provide clear visual feedback
-     - Support keyboard navigation
+   ### Troubleshooting
+
+   1. **Frequent Rate Limits**
+     - Check typing debounce timing
+     - Verify content change detection
+     - Review API usage patterns
+
+   2. **Stale Suggestions**
+     - Ensure proper request cancellation
+     - Check content tracking logic
+     - Verify cleanup on unmount
+
+   3. **Performance Issues**
+     - Monitor debounce timing
+     - Check request cleanup
+     - Review state update frequency
+
+   ## Language Learning Feedback System
+
+   ### Overview
+   The language learning feedback system provides AI-powered feedback on user submissions, offering detailed metrics and suggestions. The system is designed to be modular, extensible, and user-friendly.
+
+   ### Feedback Format
+   The system provides three types of feedback markers:
+   ```
+   - Correct usage or instruction alignment
+   - Error identification or improvement area
+   - Translation or improvement suggestion
+   ```
+
+   ### Format Rules
+   1. **Marker Usage**
+     - Each marker appears exactly once
+     - No additional text in markers
+     - Consistent order: , 
+
+   2. **Content Requirements**
+     - Concise, specific feedback
+     - No questions or hypotheticals
+     - Translation required for non-target language
+
+   3. **Response Structure**
+     ```typescript
+     interface FeedbackResponse {
+       correctUsage: string;    - marker
+       errorPoint: string;      - marker
+       suggestion: string;      - marker
+     }
+     ```
+
+   4. **Implementation Notes**
+     - Validates target language usage
+     - Provides specific error context
+     - Ensures actionable improvements
+     - Maintains consistent formatting
+
+   ### Usage in LeftColumn
+
+   The LeftColumn component (`components/dashboard/test/LeftColumn.tsx`) integrates the feedback system through:
+
+   1. **State Management**
+     ```typescript
+     const {
+       showFeedback,
+       performanceMetrics,
+       isLoading,
+       error
+     } = useFeedbackState(challenge, isTimeUp, content);
+     ```
+
+   2. **UI Integration**
+     - Renders FeedbackAccordion when feedback is available
+     - Shows loading states during feedback generation
+     - Displays error messages when needed
+     - Manages visibility of feedback results
+
+   ### Best Practices
+
+   1. **Error Handling**
+     - Always provide user-friendly error messages
+     - Log technical details for debugging
+     - Implement proper rate limiting
+     - Handle network issues gracefully
+
+   2. **Performance**
+     - Minimize unnecessary API calls
+     - Cache results when appropriate
+     - Implement proper loading states
+     - Handle large responses efficiently
+
+   3. **User Experience**
+     - Show clear loading indicators
+     - Provide helpful error messages
+     - Maintain consistent UI during feedback generation
+     - Allow easy navigation between instructions and feedback
+
+   4. **Security**
+     - Validate all inputs
+     - Sanitize user content
+     - Protect sensitive data
+     - Implement proper rate limiting
+
+   ### Known Limitations
+
+   1. **Rate Limiting**
+     - AI service has request limits
+     - Implement proper queuing if needed
+     - Consider fallback options
+
+   2. **Response Time**
+     - AI processing can take time
+     - Show appropriate loading states
+     - Consider partial results display
+
+   3. **Content Size**
+     - Large submissions may need chunking
+     - Consider implementing progress indicators
+     - Handle timeout scenarios
+
+   ### Future Improvements
+
+   1. **Metrics Enhancement**
+     - Add more detailed writing metrics
+     - Implement historical comparison
+     - Add peer comparison features
+
+   2. **UI Improvements**
+     - Add visual metrics representation
+     - Implement progress tracking
+     - Add export functionality
+
+   3. **Performance Optimization**
+     - Implement response caching
+     - Add offline support
+     - Optimize large content handling
+
+   ## Global State Management
+
+   ### 1. useTestState Hook (`hooks/useTestState.ts`)
+
+   #### Purpose
+   Centralized state management for test-related UI states and timers.
+
+   #### Key States
+   - `showChallenges`: Controls challenge selection visibility
+   - `showEvaluation`: Controls evaluation view visibility
+   - `idleTimer`: Manages user inactivity countdown
+
+   #### Core Functions
+   ```typescript
+   interface TestState {
+     showChallenges: boolean;
+     showEvaluation: boolean;
+     idleTimer: number | null;
+     setShowChallenges: (show: boolean) => void;
+     setShowEvaluation: (show: boolean) => void;
+     setIdleTimer: (time: number | null) => void;
+     startChallenge: () => void;
+     resetState: () => void;
+   }
+   ```
+
+   ##### `startChallenge()`
+   - Purpose: Initializes challenge state
+   - Actions:
+     - Sets showChallenges to false
+     - Sets showEvaluation to false
+     - Resets idleTimer to 20 seconds
+
+   ##### `resetState()`
+   - Purpose: Resets all states to default
+   - Actions:
+     - Clears all UI states
+     - Nullifies idleTimer
+
+   #### Integration Points
+   1. **Test Component** (`index.tsx`)
+     - Uses global states for UI visibility
+     - Manages idle timer through global state
+     - Calls startChallenge on new challenge initialization
+
+   2. **LeftColumn Component** (`LeftColumn.tsx`)
+     - Consumes global UI states
+     - Updates challenge visibility state
+     - Manages evaluation view state
+
+   #### State Flow
+   ```mermaid
+   graph TD
+       A[User Action] --> B[useTestState]
+       B --> C[Test Component]
+       B --> D[LeftColumn Component]
+       C --> E[UI Updates]
+       D --> E
+   ```
+
+   #### Best Practices
+   1. **State Updates**
+     - Always use provided state setters
+     - Avoid direct state manipulation
+     - Use startChallenge for initialization
+     - Use resetState for cleanup
+
+   2. **Timer Management**
+     - Reset timer through startChallenge
+     - Clear timer through resetState
+     - Update timer only through setIdleTimer
+
+   3. **Component Integration**
+     - Import only needed state and functions
+     - Use destructuring for clean code
+     - Maintain single source of truth
+
+   ## Challenge Evaluation API
+
+   Located in `app/api/challenge-evaluation/route.ts`, this API endpoint handles the evaluation of writing challenges and provides comprehensive feedback.
+
+   ### API Structure
+
+   #### Request Format
+   ```typescript
+   {
+     challengeId: string;    // ID of the challenge being evaluated
+     content: string;        // The user's written content
+     timeSpent: number;      // Time spent on the challenge in seconds
+   }
+   ```
+
+   #### Response Format
+   ```typescript
+   {
+     performanceMetrics: {
+       wordCount: number;        // Total words in submission
+       paragraphCount: number;   // Number of paragraphs
+       timeSpent: number;        // Time taken in seconds
+       performanceScore: number; // Overall score (0-1)
+       feedback: string;         // AI-generated feedback
+     },
+     skillMetrics: {
+       writingComplexity: number; // Sentence complexity (0-1)
+       accuracy: number;          // Content accuracy (0-1)
+       coherence: number;         // Logical flow (0-1)
+       style: number;            // Writing style (0-1)
+     },
+     insights: {
+       strengths: string[];      // List of identified strengths
+       weaknesses: string[];     // Areas needing improvement
+       tips: string[];          // Actionable improvement suggestions
+     }
+   }
+   ```
+
+   ### Validation and Error Handling
+
+   #### Input Validation
+   - Ensures `challengeId` is provided
+   - Verifies `content` is non-empty
+   - Validates request structure
+
+   #### Response Validation
+   1. **JSON Extraction**
+     - Safely extracts JSON from AI response
+     - Handles potential formatting issues
+     - Validates JSON structure
+
+   2. **Array Validation**
+     ```typescript
+     // Validates insight arrays (strengths, weaknesses, tips)
+     const validateInsightArray = (arr: any[], name: string): string[] => {
+       if (!arr.every(item => typeof item === 'string' && item.trim())) {
+         throw new Error(`Invalid ${name} format`);
+       }
+       return arr.map(item => item.trim());
+     };
+     ```
+
+   3. **Data Requirements**
+     - Non-empty arrays for insights
+     - Valid numeric ranges for metrics
+     - Complete response structure
+
+   #### Error States
+   1. **400 Bad Request**
+     - Empty content
+     - Missing challenge ID
+     - Invalid request format
+
+   2. **429 Rate Limit**
+     - Too many requests
+     - AI service limitations
+
+   3. **500 Internal Error**
+     - AI response parsing failure
+     - Invalid response structure
+     - Missing required data
+
+   ### Integration Points
+
+   1. **Frontend Components**
+     - `EvaluationAccordion`: Displays evaluation results
+     - `FocusCard`: Shows strengths, weaknesses, and tips
+     - `MetricsCard`: Visualizes performance metrics
+
+   2. **State Management**
+     - `useEvaluationState`: Manages evaluation data
+     - Handles loading and error states
+     - Updates UI based on response
+
+   3. **Data Flow**
+     ```
+     User Submission → API Request → AI Processing → 
+     Validation → Response Formatting → State Update → UI Render
+     ```
+
+   ### Best Practices
+
+   1. **Error Handling**
+     - Always validate API responses
+     - Provide clear error messages
+     - Implement retry mechanisms
+     - Log validation failures
+
+   2. **Performance**
+     - Cache evaluation results
+     - Implement rate limiting
+     - Optimize response size
+
+   3. **Security**
+     - Sanitize user input
+     - Validate request origins
+     - Protect sensitive data
+
+   ### Testing Checklist
+
+   - [ ] Input validation
+     - [ ] Empty content handling
+     - [ ] Invalid challenge ID
+     - [ ] Malformed requests
+
+   - [ ] Response validation
+     - [ ] Array structure
+     - [ ] Data completeness
+     - [ ] Type checking
+
+   - [ ] Error handling
+     - [ ] Rate limit responses
+     - [ ] Parsing failures
+     - [ ] Network errors
+
+   - [ ] Integration
+     - [ ] Frontend updates
+     - [ ] State management
+     - [ ] UI rendering
+
+   ### Known Issues and Solutions
+
+   1. **Empty Insight Arrays**
+     - Issue: FocusCards appearing blank
+     - Solution: Added strict array validation
+     - Prevention: Validate response structure
+
+   2. **Invalid Metrics**
+     - Issue: Scores outside 0-1 range
+     - Solution: Value normalization
+     - Prevention: Range validation
+
+   3. **Response Format**
+     - Issue: Inconsistent AI responses
+     - Solution: JSON extraction utility
+     - Prevention: Structured prompts
+
+   ### Maintenance Notes
+
+   1. **Regular Checks**
+     - Monitor error rates
+     - Review AI response quality
+     - Update validation rules
+
+   2. **Updates Required**
+     - Document API changes
+     - Test new validations
+     - Update error messages
+
+   3. **Performance Monitoring**
+     - Track response times
+     - Monitor rate limits
+     - Log validation failures
+
+   ## AI Suggestions System
+
+   ### Overview
+   The AI suggestions system provides real-time writing assistance through the `useTestAISuggestions` hook. This system is designed to offer contextual suggestions while maintaining a smooth user experience and managing API resources efficiently.
+
+   ### Key Components
+
+   #### 1. useTestAISuggestions Hook
+   Located in `hooks/useTestAISuggestions.ts`, this hook manages the entire suggestion lifecycle.
+
+   ##### Core Features
+   - **Debounced Suggestions**: Waits for 1 second of no typing before generating suggestions
+   - **Rate Limiting**: Handles both temporary and daily API rate limits
+   - **Request Management**: Automatically cancels stale requests
+   - **Error Handling**: Provides user-friendly error messages with emojis
+
+   ##### Usage Example
+   ```typescript
+   const {
+     isActive,
+     isRateLimited,
+     isDailyLimitReached,
+     start,
+     stop
+   } = useTestAISuggestions({
+     challenge: selectedChallenge,
+     content: inputMessage,
+     enabled: true,
+     onSuggestion: (suggestion) => setCurrentSuggestion(suggestion),
+     onError: (error) => toast(error),
+     targetLanguage: 'EN'
+   });
+   ```
+
+   ##### States
+   - `isActive`: Whether suggestions are currently active
+   - `isRateLimited`: Temporary rate limit status
+   - `isDailyLimitReached`: Daily API limit status
+
+   ##### Methods
+   - `start()`: Begin suggestion generation
+   - `stop()`: Stop suggestion generation and cleanup
+
+   ##### Error Messages
+   The hook provides friendly, encouraging error messages:
+   - Daily limit: "We've reached today's AI suggestion limit. Don't worry though - it'll reset tomorrow! 🌅"
+   - Rate limit: "Taking a quick breather to process suggestions. Keep writing! ✨"
+   - Generic error: "Having a bit of trouble with suggestions at the moment. Keep writing - you're doing great! 🌟"
+
+   #### 2. Integration with Test Component
+   The suggestions system is integrated into the main test component through:
+   - Automatic suggestion triggering after typing pauses
+   - Clear error feedback through toast messages
+   - Graceful degradation when limits are reached
+
+   ### Implementation Details
+
+   #### 1. Debouncing Logic
+   ```typescript
+   useEffect(() => {
+     if (!enabled) return;
+     
+     // Clear previous timer
+     if (debounceRef.current) {
+       clearTimeout(debounceRef.current);
+       debounceRef.current = null;
+     }
+
+     // Wait for typing to stop
+     debounceRef.current = setTimeout(() => {
+       start();
+     }, 1000);
+
+     return () => {
+       if (debounceRef.current) {
+         clearTimeout(debounceRef.current);
+         debounceRef.current = null;
+       }
+     };
+   }, [enabled, content, start]);
+   ```
+
+   #### 2. Request Management
+   - Uses AbortController to cancel pending requests
+   - Tracks last content to prevent duplicate suggestions
+   - Cleans up resources on component unmount
+
+   #### 3. Error Handling Strategy
+   - User-friendly messages with emojis
+   - Different handling for temporary vs daily limits
+   - Clear feedback through toast notifications
+
+   ### Best Practices
+
+   1. **Rate Limit Handling**
+     - Don't retry automatically on rate limits
+     - Show clear feedback to users
+     - Differentiate between temporary and daily limits
+
+   2. **Resource Management**
+     - Cancel pending requests when new ones start
+     - Clean up timers and controllers on unmount
+     - Track and prevent duplicate suggestions
+
+   3. **User Experience**
+     - Use friendly, encouraging error messages
+     - Maintain smooth typing experience
+     - Provide clear status indicators
+
+   ### Troubleshooting
+
+   1. **Frequent Rate Limits**
+     - Check typing debounce timing
+     - Verify content change detection
+     - Review API usage patterns
+
+   2. **Stale Suggestions**
+     - Ensure proper request cancellation
+     - Check content tracking logic
+     - Verify cleanup on unmount
+
+   3. **Performance Issues**
+     - Monitor debounce timing
+     - Check request cleanup
+     - Review state update frequency

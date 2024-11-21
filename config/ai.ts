@@ -2,7 +2,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || process.env.NEXT_PU
 
 export const AI_CONFIG = {
   apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
-  model: 'meta-llama/llama-3.2-90b-vision-instruct:free',
+  model: 'microsoft/phi-3-mini-128k-instruct',
   temperature: 0.7,
   max_tokens: 1000,
   apiKey: OPENROUTER_API_KEY,

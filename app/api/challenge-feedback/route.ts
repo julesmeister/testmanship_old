@@ -57,9 +57,9 @@ export async function POST(request: Request) {
           content: `Generate language learning feedback for ${languageName} following these exact requirements:
 
 Format: Provide exactly three lines of feedback using these markers at the start of each line:
-   ✓ [point] - identify one correct language usage or alignment with challenge instructions (if text not in ${languageName} mark as incorrect)
-   ✗ [point] - identify one specific error or area for improvement (if text not in ${languageName}, point this out)
-   ! [suggestion] - provide the ${languageName} translation if not in ${languageName} otherwise just suggest improvement for the text
+   ✓ - identify one correct language usage or alignment with challenge instructions (if text not in ${languageName} mark as incorrect)
+   ✗ - identify one specific error or area for improvement (if text not in ${languageName}, point this out)
+   ! - provide the ${languageName} translation if not in ${languageName} otherwise just suggest improvement for the text
 
 Context:
 Challenge Title: ${challenge.title}
@@ -77,9 +77,9 @@ Requirements:
 7. The ! [suggestion] line MUST provide the ${languageName} translation if the text is not in ${languageName}
 
 Example format:
-✓ [point] {single correct usage observation}
-✗ [point] {single error identification}
-! [suggestion] {single improvement point or translation}
+✓ {single correct usage observation}
+✗ {single error identification}
+! {single improvement point or translation}
 
 Text to analyze: "${essayContent}"`
         }

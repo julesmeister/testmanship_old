@@ -41,6 +41,7 @@ import { InstructionsAccordion } from "./components/InstructionsAccordion";
 import EvaluationAccordion from "./components/EvaluationAccordion";
 import { type Challenge } from '@/types/challenge';
 import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
+import { useTestState } from '@/hooks/useTestState';
 
 interface LeftColumnProps {
   challenge: Challenge | null;
@@ -182,19 +183,17 @@ const LeftColumn = ({
   setShowFeedback,
   currentSuggestion,
 }: LeftColumnProps) => {
+  const { showChallenges, showEvaluation, setShowChallenges, setShowEvaluation } = useTestState();
+
   const {
     challenges,
     selectedLevel,
     searchQuery,
-    showChallenges,
-    showTip,
     currentPage,
     totalPages,
     setSelectedLevel,
     setSearchQuery,
-    setShowTip,
     setCurrentPage,
-    setShowChallenges,
     handleStartChallenge,
     handleBackToChallenges,
     fetchChallenges,
@@ -211,7 +210,6 @@ const LeftColumn = ({
   }, [challenge]);
 
   const {
-    showEvaluation,
     insights,
     isLoading: evaluationLoading,
     error: evaluationError,
@@ -242,6 +240,7 @@ const LeftColumn = ({
 
   // Combine real-time counts with evaluated metrics
   const performanceMetrics = {
+    ...initialPerformanceMetrics,
     ...evaluatedPerformanceMetrics,
     wordCount: initialPerformanceMetrics.wordCount,
     paragraphCount: initialPerformanceMetrics.paragraphCount,
@@ -258,15 +257,9 @@ const LeftColumn = ({
 
   useEffect(() => {
     if (evaluationLoading) {
-      const toastId = toast.loading('Evaluating your writing...', {
-        description: 'This may take a few moments',
-        dismissible: true,
-      });
-
-      // Cleanup the toast when loading is done
-      return () => {
-        toast.dismiss(toastId);
-      };
+      toast.loading('Evaluating your writing...');
+    } else {
+      toast.dismiss();
     }
   }, [evaluationLoading]);
 
@@ -310,15 +303,16 @@ const LeftColumn = ({
   }, [timeElapsed, timeAllocation, isTimeUp, inputMessage, handleFinishChallenge, onStopChallenge]);
 
   useEffect(() => {
-    if (isTimeUp && showEvaluation) {
+    if (isTimeUp) {
+      setShowEvaluation(true);
       setAccordionValue('evaluation');
     }
-  }, [isTimeUp, showEvaluation]);
+  }, [isTimeUp, setShowEvaluation]);
 
   return (
     <div className="w-full lg:w-1/3 flex flex-col">
-      {showTip && (
-        <TipBox onClose={() => setShowTip(false)} />
+      {showChallenges && (
+        <TipBox onClose={() => setShowChallenges(false)} />
       )}
 
       {/* Instructions & Criteria - Show when not evaluating */}
@@ -440,7 +434,7 @@ const LeftColumn = ({
             <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
               {/* Feedback Controls */}
               {inputMessage.trim() && (
-                <div className="flex items-start justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="flex items-start justify-between gap-2 p-3 border-b border-zinc-200 dark:border-zinc-800">
                   <div className="grid grid-cols-4 gap-2">
                     {inputMessage.split(/\n\s*\n/).map((paragraph, index) => 
                       paragraph.trim() && (

@@ -25,7 +25,7 @@ export default function Footer() {
       <div className="w-full mt-auto footer-admin">
         <div className="flex w-full flex-col items-center justify-between px-1 py-4 lg:px-8 xl:flex-row">
           <p className="mb-4 text-center text-sm text-gray-600 sm:!mb-0">
-            {new Date().getFullYear()} Testmanship. All Rights Reserved.
+          © {new Date().getFullYear()} Testmanship. All Rights Reserved.
           </p>
           <div className="flex flex-col items-center gap-4 sm:flex-row">
             <button

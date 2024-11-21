@@ -31,7 +31,7 @@ interface PerformanceMetrics {
   timeSpent: number;
   performanceScore: number;
   improvedEssay?: string;
-  metrics: {
+  metrics?: {
     grammar: number;
     vocabulary: number;
     fluency: number;
@@ -125,10 +125,10 @@ export default function EvaluationAccordion({
                 <MetricsCard
                   title="Performance Metrics"
                   items={[
-                    { label: "Grammar", value: performanceMetrics.metrics.grammar },
-                    { label: "Vocabulary", value: performanceMetrics.metrics.vocabulary },
-                    { label: "Fluency", value: performanceMetrics.metrics.fluency },
-                    { label: "Overall", value: performanceMetrics.metrics.overall },
+                    { label: "Grammar", value: performanceMetrics.metrics?.grammar ?? 0 },
+                    { label: "Vocabulary", value: performanceMetrics.metrics?.vocabulary ?? 0 },
+                    { label: "Fluency", value: performanceMetrics.metrics?.fluency ?? 0 },
+                    { label: "Overall", value: performanceMetrics.metrics?.overall ?? 0 },
                   ]}
                 />
 

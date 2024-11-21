@@ -1,33 +1,85 @@
+/**
+ * Custom React hook for managing AI-powered writing suggestions.
+ * 
+ * This hook provides real-time writing assistance by generating contextual suggestions
+ * while efficiently managing API resources and rate limits. It implements:
+ * - Debounced suggestions (1s after typing stops)
+ * - Rate limit handling (both temporary and daily)
+ * - Request cancellation for stale suggestions
+ * - User-friendly error messages
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *   isActive,
+ *   isRateLimited,
+ *   isDailyLimitReached,
+ *   stop,
+ *   generateSuggestion
+ * } = useTestAISuggestions({
+ *   challenge: selectedChallenge,
+ *   content: userText,
+ *   enabled: true,
+ *   onSuggestion: (suggestion) => setCurrentSuggestion(suggestion),
+ *   onError: (error) => toast(error)
+ * });
+ * ```
+ */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Challenge } from '@/types/challenge';
 
+/**
+ * Props for the useTestAISuggestions hook.
+ */
 export interface UseTestAISuggestionsProps {
+  /** The current challenge being attempted */
   challenge: Challenge | null;
+  /** The current text content being written */
   content: string;
+  /** Whether the suggestion system is enabled */
   enabled: boolean;
-  interval?: number;
+  /** Callback function to handle new suggestions */
   onSuggestion: (suggestion: string) => void;
+  /** Optional callback for error handling */
   onError?: (error: string) => void;
+  /** Target language code (default: 'EN') */
   targetLanguage?: string;
 }
 
+/**
+ * Custom React hook for managing AI-powered writing suggestions.
+ * 
+ * @param props - Hook props
+ * @returns An object containing the hook's state and methods
+ */
 export const useTestAISuggestions = ({
   challenge,
   content,
   enabled,
-  interval = 20000,
   onSuggestion,
   onError,
   targetLanguage = 'EN'
 }: UseTestAISuggestionsProps) => {
+  // Track active state and rate limits
   const [isActive, setIsActive] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [isDailyLimitReached, setIsDailyLimitReached] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const lastContentRef = useRef<string>('');
 
+  // Refs for managing requests and content
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const lastSentContentRef = useRef<string>('');
+
+  /**
+   * Checks if the content has changed since the last API call
+   */
+  const hasContentChanged = useCallback(() => {
+    return content !== lastSentContentRef.current;
+  }, [content]);
+
+  /**
+   * Generates a new AI suggestion based on current content.
+   * Handles API calls, rate limits, and error states.
+   */
   const generateSuggestion = useCallback(async () => {
     if (!challenge || !content.trim()) {
       console.log('[Hook] Skipping suggestion - no challenge or content');
@@ -44,12 +96,13 @@ export const useTestAISuggestions = ({
       return;
     }
 
-    // Don't generate if content hasn't changed
-    if (content === lastContentRef.current) {
-      console.log('[Hook] Skipping suggestion - content unchanged');
+    if (!hasContentChanged()) {
+      console.log('[Hook] Skipping suggestion - content unchanged since last call');
       return;
     }
-    lastContentRef.current = content;
+
+    // Update last sent content before making the API call
+    lastSentContentRef.current = content;
 
     // Cancel any pending request
     if (abortControllerRef.current) {
@@ -60,6 +113,7 @@ export const useTestAISuggestions = ({
     abortControllerRef.current = new AbortController();
 
     try {
+      setIsActive(true);
       const response = await fetch('/api/test-suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,9 +148,7 @@ export const useTestAISuggestions = ({
         throw new Error(error);
       }
 
-      console.log('[Hook] Received suggestion:', {
-        preview: responseData.suggestion?.slice(0, 50) + '...'
-      });
+      console.log('[Hook] Received suggestion');
       onSuggestion(responseData.suggestion);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
@@ -105,93 +157,35 @@ export const useTestAISuggestions = ({
       }
       console.error('[Hook] Error generating suggestion:', error);
       onError?.("Having a bit of trouble with suggestions at the moment. Keep writing - you're doing great! 🌟");
+    } finally {
+      setIsActive(false);
     }
-  }, [challenge, content, targetLanguage, onSuggestion, onError, enabled, isRateLimited, isDailyLimitReached]);
+  }, [challenge, content, targetLanguage, onSuggestion, onError, enabled, isRateLimited, isDailyLimitReached, hasContentChanged]);
 
-  const stop = useCallback(() => {
-    console.log('[Hook] Stopping suggestions');
-    setIsActive(false);
-    
-    // Clear interval
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    // Clear debounce
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-      debounceRef.current = null;
-    }
-
-    // Cancel pending request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-  }, []);
-
-  const start = useCallback(() => {
-    if (!enabled) {
-      console.log('[Hook] Not starting - disabled');
-      return;
-    }
-    if (!challenge) {
-      console.log('[Hook] Not starting - no challenge');
-      return;
-    }
-    if (!content.trim()) {
-      console.log('[Hook] Not starting - no content');
-      return;
-    }
-    if (isRateLimited || isDailyLimitReached) {
-      console.log('[Hook] Not starting - rate limited');
-      return;
-    }
-    
-    console.log('[Hook] Starting suggestions');
-    setIsActive(true);
-    generateSuggestion();
-  }, [enabled, challenge, content, generateSuggestion, isRateLimited, isDailyLimitReached]);
-
-  // Handle content changes with debounce
+  /**
+   * Cleanup effect that runs on unmount
+   */
   useEffect(() => {
-    if (!enabled) return;
-
-    // Clear previous debounce timer
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-      debounceRef.current = null;
-    }
-
-    // Set new debounce timer
-    debounceRef.current = setTimeout(() => {
-      start();
-    }, 1000);
-
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = null;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-    };
-  }, [enabled, content, start]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stop();
       setIsRateLimited(false);
       setIsDailyLimitReached(false);
-      lastContentRef.current = '';
+      lastSentContentRef.current = '';
     };
-  }, [stop]);
+  }, []);
 
   return {
     isActive,
     isRateLimited,
     isDailyLimitReached,
-    stop,
-    start
+    stop: useCallback(() => {
+      setIsActive(false);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    }, []),
+    generateSuggestion
   };
 };
