@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     const messages: Message[] = [
       {
         role: 'system',
-        content: 'You are a writing challenge generator for language learners. Always respond with valid JSON.'
+        content: `You are a writing challenge generator for language learners. Your task is to create challenges specifically in the format of "${format}" (e.g., blog posts, reviews, formal letters, etc.). Ensure all generated content follows the conventions and structure typical of this format. Always respond with valid JSON.`
       }
     ];
 
@@ -53,14 +53,14 @@ export async function POST(req: Request) {
       // Instruction generation mode
       messages.push({
         role: 'user',
-        content: `Generate clear and concise writing instructions for a ${difficulty} level challenge titled "${title}".
+        content: `Generate clear and concise writing instructions for a ${difficulty} level ${format} titled "${title}".
 
 Format the response as a JSON object with these properties:
 {
-  "instructions": "Brief, clear instructions focusing on the task and requirements. Do not mention time allocation or word count in the instructions.",
-  "keyPoints": ["3-4 key points to focus on"],
+  "instructions": "Brief, clear instructions focusing on the task and requirements, emphasizing the specific structure and style expected for a ${format}. Do not mention time allocation or word count in the instructions.",
+  "keyPoints": ["3-4 key points to focus on, including format-specific elements"],
   "grammarFocus": ["2-3 grammar points to practice"],
-  "vocabularyThemes": ["2-3 vocabulary themes relevant to the topic"]
+  "vocabularyThemes": ["2-3 vocabulary themes relevant to the topic and format"]
 }
 
 Return ONLY the JSON object, no additional text.`
@@ -69,19 +69,19 @@ Return ONLY the JSON object, no additional text.`
       // Challenge suggestion mode
       messages.push({
         role: 'user',
-        content: `Generate 3 unique writing challenge suggestions for language learners at ${difficulty} level.
+        content: `Generate 3 unique ${format} writing challenge suggestions for language learners at ${difficulty} level. Each suggestion should follow the typical structure and conventions of a ${format}.
 
 Format each suggestion as a JSON object within an array like this:
 {
   "suggestions": [
     {
-      "title": "Unique, engaging title (30-60 characters)",
-      "instructions": "Clear, detailed writing instructions (100-150 words)",
+      "title": "Unique, engaging title for a ${format} (30-60 characters)",
+      "instructions": "Clear, detailed writing instructions specific to creating a ${format} (100-150 words), including format-specific structure and style requirements",
       "word_count": ${wordCount},
       "time_allocation": ${timeAllocation},
       "difficulty_level": "${difficulty}",
       "grammar_focus": ["2-3 grammar points"],
-      "vocabulary_themes": ["2-3 vocabulary themes"]
+      "vocabulary_themes": ["2-3 vocabulary themes relevant to the ${format}"]
     }
   ]
 }
@@ -98,8 +98,16 @@ Return ONLY the JSON object, no additional text.`
     console.log('Received AI response:', aiResponse);
 
     try {
-      // Clean up the response - remove markdown formatting if present
-      const cleanedResponse = aiResponse.replace(/^```(?:json)?\n|\n```$/g, '').trim();
+      // Extract JSON from the response, handling various markdown formats
+      const jsonMatch = aiResponse.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
+                       aiResponse.match(/(\{[\s\S]*\})/);
+                       
+      if (!jsonMatch) {
+        console.error('Could not find valid JSON in response');
+        throw new Error('Invalid response format');
+      }
+
+      const cleanedResponse = jsonMatch[1].trim();
       console.log('Cleaned response:', cleanedResponse);
       
       const parsedResponse = JSON.parse(cleanedResponse);

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ChallengeFormat } from '@/types/challenge-generator';
-import { difficultyLevels } from '@/utils/constants';
+import { difficultyLevels, DifficultyLevel } from '@/utils/constants';
 
 interface FormatCache {
   [difficulty: string]: {
@@ -45,7 +45,7 @@ export function useChallengeFormats(supabase: SupabaseClient, initialDifficulty:
         return;
       }
 
-      const difficultyIndex = difficultyLevels.indexOf(difficulty);
+      const difficultyIndex = difficultyLevels.indexOf(difficulty as DifficultyLevel);
       const applicableLevels = difficultyLevels.slice(0, difficultyIndex + 1);
       
       const { data: formatsData, error } = await supabase
