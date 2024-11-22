@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { User } from '@supabase/auth-helpers-nextjs';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,76 +9,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Clock, Star, Users } from 'lucide-react';
 import DashboardLayout from '@/components/layout';
 import { formatDistanceToNow } from 'date-fns';
+import cn from 'classnames';
+import { WordsmithProps } from '@/types/wordsmith';
+import { useWordsmithUsers } from '@/hooks/useWordsmithUsers';
+import { useUserChallenges } from '@/hooks/useUserChallenges';
+import { UserChallengesDialog } from './UserChallengesDialog';
 
-// Raw data type from Supabase
-interface RawWordsmithUser {
-  id: string;
-  full_name: string;
-  avatar_url: string;
-  credits: number;
-  trial_credits: number;
-  target_language: { name: string }[] | null;
-  native_language: { name: string }[] | null;
-  updated_at: string;
-}
+export default function Wordsmiths({ user, userDetails }: WordsmithProps) {
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const { users, isLoading, searchQuery, setSearchQuery, stats } = useWordsmithUsers();
+  const { userChallenges, userProgress, isLoading: isLoadingChallenges } = useUserChallenges(selectedUser);
 
-// Processed data type for the component
-interface WordsmithUser {
-  id: string;
-  full_name: string;
-  avatar_url: string;
-  credits: number;
-  trial_credits: number;
-  target_language?: { name: string };
-  native_language?: { name: string };
-  updated_at: string;
-}
+  const handleUserClick = (userId: string) => {
+    setSelectedUser(userId === selectedUser ? null : userId);
+  };
 
-interface Props {
-  user: User | null | undefined;
-  userDetails: { [x: string]: any } | null;
-}
-
-export default function Wordsmiths({ user, userDetails }: Props) {
-  const supabase = createClientComponentClient();
-  const [users, setUsers] = useState<WordsmithUser[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchUsers() {
-      const { data: rawUsers, error } = await supabase
-        .from('users')
-        .select(`
-          id,
-          full_name,
-          avatar_url,
-          credits,
-          trial_credits,
-          target_language:target_language_id(name),
-          native_language:native_language_id(name),
-          updated_at
-        `)
-        .order('full_name');
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        return;
-      }
-
-      // Process the raw data to match our interface
-      const processedUsers: WordsmithUser[] = (rawUsers as RawWordsmithUser[]).map(user => ({
-        ...user,
-        target_language: user.target_language?.[0] || undefined,
-        native_language: user.native_language?.[0] || undefined
-      }));
-
-      setUsers(processedUsers);
-      setIsLoading(false);
-    }
-
-    fetchUsers();
-  }, [supabase]);
+  const selectedUserData = users.find(user => user.id === selectedUser);
 
   const filteredUsers = users.filter(user => 
     user.full_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -102,7 +46,7 @@ export default function Wordsmiths({ user, userDetails }: Props) {
           <CardContent className="flex items-center gap-4 p-4 sm:p-6">
             <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{users.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalUsers}</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Total Wordsmiths</p>
             </div>
           </CardContent>
@@ -112,7 +56,7 @@ export default function Wordsmiths({ user, userDetails }: Props) {
             <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             <div>
               <p className="text-xl sm:text-2xl font-bold text-foreground">
-                {users.reduce((sum, user) => sum + user.credits, 0)}
+                {stats.totalCredits}
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground">Total Credits</p>
             </div>
@@ -123,7 +67,7 @@ export default function Wordsmiths({ user, userDetails }: Props) {
             <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             <div>
               <p className="text-xl sm:text-2xl font-bold text-foreground">
-                {users.filter(u => new Date(u.updated_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}
+                {stats.activeThisWeek}
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground">Active This Week</p>
             </div>
@@ -148,7 +92,14 @@ export default function Wordsmiths({ user, userDetails }: Props) {
       {filteredUsers.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 sm:gap-4 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {filteredUsers.map((user) => (
-            <Card key={user.id} className="group overflow-hidden transition-colors hover:border-primary">
+            <Card 
+              key={user.id} 
+              className={cn(
+                "group overflow-hidden transition-colors hover:border-primary cursor-pointer",
+                selectedUser === user.id && "border-primary bg-primary/5"
+              )}
+              onClick={() => handleUserClick(user.id)}
+            >
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start gap-3 sm:gap-4">
                   <Avatar className="h-12 w-12 sm:h-14 sm:w-14 ring-2 ring-background">
@@ -241,12 +192,22 @@ export default function Wordsmiths({ user, userDetails }: Props) {
           )}
         </Card>
       )}
+
+      {/* User Challenges Dialog */}
+      <UserChallengesDialog
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        userProgress={userProgress}
+        userChallenges={userChallenges}
+        isLoading={isLoadingChallenges}
+        userName={selectedUserData?.full_name || ''}
+      />
     </div>
   );
 
   return (
-    <DashboardLayout 
-      user={user} 
+    <DashboardLayout
+      user={user}
       userDetails={userDetails}
       title="Wordsmiths"
       description="Discover and connect with fellow language learners in our community."
