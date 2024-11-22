@@ -455,7 +455,7 @@ export default function Test({ user, userDetails }: Props) {
       title="Writing Assistant"
       description="Get instant feedback on your writing"
     >
-      <div className="flex flex-col lg:flex-row gap-4 w-full">
+      <div className="flex flex-col lg:flex-row gap-4 w-full h-[calc(100vh-10rem)]">
         <LeftColumn
           challenge={selectedChallenge}
           outputCode={feedback}
@@ -480,9 +480,9 @@ export default function Test({ user, userDetails }: Props) {
         />
 
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col space-y-4 w-full lg:w-2/3">
+        <div className="flex-1 flex flex-col space-y-4 w-full lg:w-2/3 h-full overflow-hidden">
           {!selectedChallenge ? (
-            <Tabs defaultValue="practice" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
+            <Tabs defaultValue="practice" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>            
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger 
                   value="practice" 
@@ -534,13 +534,14 @@ export default function Test({ user, userDetails }: Props) {
                 paddingLeft: '4.5rem',
                 fontFamily: '"Special Elite", "Courier New", monospace',
                 fontWeight: '600',
-                fontSize: '1.125rem'
+                fontSize: '1.125rem',
+                height: '100%'
               }}
-              className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 min-h-[200px] scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 shadow-inner [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
+              className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 shadow-inner [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
               disabled={isTimeUp}
             />
           ) : (
-            <div className="flex-1 w-full min-h-[200px] rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center p-8 space-y-4">
+            <div className="flex-1 w-full h-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center p-8 space-y-4">
               <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                 <PencilIcon className="w-8 h-8 text-zinc-400 dark:text-zinc-500" />
               </div>

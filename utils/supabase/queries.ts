@@ -39,14 +39,25 @@ export const getUserDetails = cache(async (supabase: SupabaseClient) => {
     if (fetchError) {
       console.error('Error fetching user details:', fetchError);
       if (fetchError.code === 'PGRST116') {
+        // Get name from metadata or email
+        const fullName = authUser.user_metadata?.full_name || 
+                        authUser.user_metadata?.name || 
+                        (authUser.email ? authUser.email.split('@')[0] : 'Anonymous User');
+        
+        // Get avatar from metadata or auth user
+        const avatarUrl = authUser.user_metadata?.avatar_url || 
+                         authUser.user_metadata?.picture || 
+                         authUser.identities?.[0]?.identity_data?.avatar_url || 
+                         '';
+
         // Record not found, try to create it
         const { data: newUser, error: insertError } = await supabase
           .from('users')
           .insert([
             {
               id: authUser.id,
-              full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || 'Anonymous User',
-              avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '',
+              full_name: fullName,
+              avatar_url: avatarUrl,
               credits: 0,
               trial_credits: 3
             }
