@@ -192,7 +192,7 @@ export default function Test({ user, userDetails }: Props) {
         position: 'bottom-right'
       });
       generateSuggestion();
-    }, 200000); // 20 seconds
+    }, 20000); // 20 seconds
 
     // Stop existing suggestions when user starts typing
     console.log('[Index] Text changed, stopping suggestions');
@@ -372,36 +372,16 @@ export default function Test({ user, userDetails }: Props) {
 
     try {
       setLoading(true);
-
-      // Trigger evaluation
-      const response = await fetch('/api/challenge-evaluation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          challengeId: selectedChallenge.id,
-          challenge: selectedChallenge,
-          content: inputMessage,
-          timeSpent: selectedChallenge.time_allocation || 1800,
-          targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to evaluate challenge');
-      }
       
-      toast.success('Challenge completed! Viewing evaluation...');
+      // Force evaluation by setting isTimeUp
+      // This will trigger useEvaluationState's evaluation logic
+      setIsWriting(false);
       
-      // Let the timer handle setting isTimeUp
-      if (!isTimeUp) {
-        handleBackToChallenges();
-      }
+      toast.success('Challenge submitted! Viewing evaluation...');
+      
     } catch (error) {
-      console.error('Error grading challenge:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to grade challenge');
+      console.error('Error submitting challenge:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to submit challenge');
     } finally {
       setLoading(false);
     }

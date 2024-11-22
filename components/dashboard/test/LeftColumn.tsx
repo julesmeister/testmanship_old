@@ -9,38 +9,20 @@ import { useEvaluationState } from '@/hooks/useEvaluationState';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { difficultyLevels } from '@/utils/constants';
-import { generateInsights } from '@/utils/insights';
 import { 
   HiXMark, 
   HiLightBulb, 
-  HiClock, 
-  HiDocumentText, 
-  HiCheckCircle, 
-  HiBookOpen,
   HiSparkles,
-  HiPlay,
-  HiStop,
   HiArrowPath,
-  HiMiniArrowLeftOnRectangle,
-  HiClipboardDocument
 } from 'react-icons/hi2';
-import {
-  GradientCard,
-  InstructionsCard,
-  InfoCard,
-  FocusCard,
-  FooterStats,
-} from '../../card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, XCircle, MessageSquare, AlertCircle, Loader2Icon } from 'lucide-react';
-import { DraggableWindow, LoadingState, EmptyState } from './components';
+import { CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
+import { DraggableWindow, LoadingState, EmptyState, EvaluationLoading } from './components';
 import { InstructionsAccordion } from "./components/InstructionsAccordion";
 import EvaluationAccordion from "./components/EvaluationAccordion";
 import { type Challenge } from '@/types/challenge';
-import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
 import { useTestState } from '@/hooks/useTestState';
 
 interface LeftColumnProps {
@@ -155,20 +137,6 @@ const Pagination = ({
   </div>
 );
 
-const DifficultyBadge = ({ level }: { level: string }) => {
-  const colors = {
-    Beginner: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-    Intermediate: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
-    Advanced: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-  };
-
-  return (
-    <span className={cn("px-2 py-1 rounded-md text-xs font-medium", colors[level as keyof typeof colors])}>
-      {level}
-    </span>
-  );
-};
-
 const LeftColumn = ({
   challenge,
   outputCode,
@@ -239,13 +207,6 @@ const LeftColumn = ({
     }
   };
 
-  const initialSkillMetrics = {
-    writingComplexity: 0,
-    accuracy: 0,
-    coherence: 0,
-    style: 0
-  };
-
   // Combine real-time counts with evaluated metrics
   const performanceMetrics = {
     ...initialPerformanceMetrics,
@@ -286,8 +247,6 @@ const LeftColumn = ({
     setLocalOutputCode('');
     toast.success('Feedback cleared');
   }, []);
-
-  const accordionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLocalOutputCode(outputCode);
@@ -334,21 +293,24 @@ const LeftColumn = ({
         />
       )}
 
-     {showEvaluation && challenge && (
-       <EvaluationAccordion
-         challenge={challenge}
-         performanceMetrics={performanceMetrics}
-         skillMetrics={skillMetrics}
-         insights={insights}
-         showChallenges={showChallenges}
-         accordionValue={accordionValue}
-         onAccordionValueChange={setAccordionValue}
-         onBackToChallenges={() => {
-           onStopChallenge();
-           setShowChallenges(true);
-         }}
-       />
-     )}
+      {showEvaluation && challenge && !evaluationLoading && (
+        <EvaluationAccordion
+          challenge={challenge}
+          performanceMetrics={performanceMetrics}
+          skillMetrics={skillMetrics}
+          insights={insights}
+          showChallenges={showChallenges}
+          accordionValue={accordionValue}
+          onAccordionValueChange={setAccordionValue}
+          onBackToChallenges={() => {
+            onStopChallenge();
+            setShowChallenges(true);
+          }}
+        />
+      )}
+      {showEvaluation && challenge && evaluationLoading && (
+       <EvaluationLoading />
+      )}
 
       {/* Challenge Selection */}
       <div className={(!challenge || showChallenges) ? "space-y-4" : ""}>

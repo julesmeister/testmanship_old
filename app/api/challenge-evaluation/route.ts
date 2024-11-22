@@ -8,7 +8,7 @@ import { makeAIRequest } from '@/utils/ai';
 
 const EVALUATION_PROMPT = `You are a writing evaluation assistant specializing in language learning assessment. Analyze the given text based on the provided challenge context and respond ONLY with a valid JSON object. Do not include any additional text or explanations.
 
-For any text, evaluate based on the challenge instructions, target language, difficulty level, and specified grammar/vocabulary focus areas. Respond with a JSON object in this exact format:
+For any text, evaluate based on the challenge instructions, target language, difficulty level, and specified grammar/vocabulary focus areas. IMPORTANT: When providing an improved version, maintain the original topic and core content - only fix grammar, vocabulary, and structure issues. Do not change the subject matter or introduce new topics. Respond with a JSON object in this exact format:
 {
   "metrics": {
     "grammar": number (0-100, based on grammar rules specific to the target language),
@@ -24,14 +24,18 @@ For any text, evaluate based on the challenge instructions, target language, dif
   },
   "insights": {
     "strengths": [
-      "Specific grammar strengths (e.g., 'Correct use of past tense forms')",
-      "Vocabulary achievements (e.g., 'Effective use of theme-specific vocabulary')",
-      "Writing skills (e.g., 'Clear paragraph structure and transitions')"
+      "Grammar mastery (e.g., 'Correct use of articles with food items like der Apfel, die Suppe, das Brot')",
+      "Vocabulary richness (e.g., 'Using specific cooking verbs like braten, kochen, backen instead of basic machen')",
+      "Sentence variety (e.g., 'Good use of time expressions like manchmal, jeden Tag, zum Frühstück')",
+      "Word order (e.g., 'Correct placement of verbs in subordinate clauses after weil, wenn, dass')",
+      "Expression usage (e.g., 'Natural use of food idioms like Das ist nicht mein Geschmack, Guten Appetit')"
     ],
     "weaknesses": [
-      "Grammar issues (e.g., 'Inconsistent verb tense usage')",
-      "Vocabulary gaps (e.g., 'Limited use of topic-specific terms')",
-      "Structural problems (e.g., 'Paragraph organization needs improvement')"
+      "Grammar issues (e.g., 'Missing articles before nouns' or 'Incorrect word order in subordinate clauses')",
+      "Vocabulary gaps (e.g., 'Using basic words like 'gut' instead of descriptive food adjectives like 'lecker', 'schmackhaft')",
+      "Sentence structure (e.g., 'Using simple sentences without conjunctions like weil, dass, oder')",
+      "Verb conjugation (e.g., 'Incorrect conjugation of modal verbs like mögen, können')",
+      "Preposition usage (e.g., 'Missing or incorrect prepositions with locations like im Restaurant, bei mir zuhause')"
     ],
     "tips": [
       "Grammar-focused tip (e.g., 'Review and practice [specific grammar point]')",
@@ -39,7 +43,7 @@ For any text, evaluate based on the challenge instructions, target language, dif
       "Writing advice (e.g., 'Structure paragraphs with clear topic sentences')"
     ]
   },
-  "improvedEssay": "Improved version of the text that maintains the writer's voice while fixing identified issues"
+  "improvedEssay": "Improved version that maintains the SAME TOPIC and core content, using ONLY vocabulary and grammar structures appropriate for the specified difficulty level (e.g., A1 should only use basic present tense and simple conjunctions, while B1 can use more complex structures)"
 }
 
 If the text is too short or unclear, respond with this exact JSON:
