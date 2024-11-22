@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { type Challenge } from '@/types/challenge';
 import { type EvaluationState, type PerformanceMetrics, type SkillMetrics, type Insights } from '@/types/evaluation';
 import { useLanguageStore } from '@/stores/language';
+import { useEvaluationSubmission } from './useEvaluationSubmission';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const defaultState: EvaluationState = {
   showEvaluation: false,
@@ -43,6 +45,8 @@ export function useEvaluationState(
 ): EvaluationState {
   const [state, setState] = useState<EvaluationState>(defaultState);
   const { selectedLanguageId, languages } = useLanguageStore();
+  const { submitEvaluation, isSubmitting } = useEvaluationSubmission();
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const evaluateChallenge = async () => {
@@ -74,6 +78,25 @@ export function useEvaluationState(
           throw new Error(data.error || 'Failed to evaluate challenge');
         }
 
+        // Store evaluation data
+        await submitEvaluation({
+          supabase,
+          data: {
+            challengeId: challenge.id,
+            content,
+            timeSpent: challenge.time_allocation || 1800,
+            evaluation: {
+              metrics: data.performanceMetrics.metrics,
+              skills: data.skillMetrics,
+              improvedEssay: data.performanceMetrics.improvedEssay
+            },
+            performanceMetrics: {
+              wordCount: data.performanceMetrics.wordCount,
+              paragraphCount: data.performanceMetrics.paragraphCount
+            }
+          }
+        });
+
         setState(prev => ({
           ...prev,
           showEvaluation: true,
@@ -83,11 +106,8 @@ export function useEvaluationState(
           isLoading: false
         }));
       } catch (error) {
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error.message : 'Failed to evaluate challenge',
-          isLoading: false
-        }));
+        console.error('Evaluation error:', error);
+        setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Failed to evaluate challenge', isLoading: false }));
       }
     };
 
