@@ -102,7 +102,7 @@ export function useEvaluationMetrics(challenge: Challenge | null) {
             strongestSkills: progressData.strongest_skills || [],
             weakestSkills: progressData.weakest_skills || [],
             preferredTopics: progressData.preferred_topics || [],
-            lastActiveLevel: progressData.last_level || challenge.difficulty
+            lastActiveLevel: progressData.last_level || challenge.difficulty_level
           });
         }
       } catch (error) {

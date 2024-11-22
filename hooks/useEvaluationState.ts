@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { type Challenge } from '@/types/challenge';
 import { type EvaluationState, type PerformanceMetrics, type SkillMetrics, type Insights } from '@/types/evaluation';
+import { useLanguageStore } from '@/stores/language';
 
 const defaultState: EvaluationState = {
   showEvaluation: false,
@@ -41,6 +42,7 @@ export function useEvaluationState(
   insights?: Insights
 ): EvaluationState {
   const [state, setState] = useState<EvaluationState>(defaultState);
+  const { selectedLanguageId, languages } = useLanguageStore();
 
   useEffect(() => {
     const evaluateChallenge = async () => {
@@ -52,10 +54,18 @@ export function useEvaluationState(
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
+        const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
+
         const response = await fetch('/api/challenge-evaluation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ challengeId: challenge.id, content })
+          body: JSON.stringify({
+            challengeId: challenge.id,
+            challenge,
+            content,
+            timeSpent: challenge.time_allocation || 1800,
+            targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
+          })
         });
 
         const data = await response.json();
@@ -82,7 +92,7 @@ export function useEvaluationState(
     };
 
     evaluateChallenge();
-  }, [challenge, isTimeUp, content]);
+  }, [challenge, isTimeUp, content, selectedLanguageId, languages]);
 
   return state;
 };

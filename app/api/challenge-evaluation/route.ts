@@ -6,9 +6,43 @@
 import { NextResponse } from 'next/server';
 import { makeAIRequest } from '@/utils/ai';
 
-const EVALUATION_PROMPT = `You are a writing evaluation assistant. Your task is to analyze the given text and respond ONLY with a valid JSON object. Do not include any additional text or explanations.
+const EVALUATION_PROMPT = `You are a writing evaluation assistant specializing in language learning assessment. Analyze the given text based on the provided challenge context and respond ONLY with a valid JSON object. Do not include any additional text or explanations.
 
-If the input text is too short or unclear, respond with this exact JSON:
+For any text, evaluate based on the challenge instructions, target language, difficulty level, and specified grammar/vocabulary focus areas. Respond with a JSON object in this exact format:
+{
+  "metrics": {
+    "grammar": number (0-100, based on grammar rules specific to the target language),
+    "vocabulary": number (0-100, based on vocabulary usage and specified themes),
+    "fluency": number (0-100, based on natural flow and expression),
+    "overall": number (0-100, weighted average considering difficulty level)
+  },
+  "skills": {
+    "writingComplexity": number (0-100, sentence structure variety and complexity),
+    "accuracy": number (0-100, adherence to challenge requirements and language rules),
+    "coherence": number (0-100, logical flow and organization),
+    "style": number (0-100, appropriate tone and register for the context)
+  },
+  "insights": {
+    "strengths": [
+      "Specific grammar strengths (e.g., 'Correct use of past tense forms')",
+      "Vocabulary achievements (e.g., 'Effective use of theme-specific vocabulary')",
+      "Writing skills (e.g., 'Clear paragraph structure and transitions')"
+    ],
+    "weaknesses": [
+      "Grammar issues (e.g., 'Inconsistent verb tense usage')",
+      "Vocabulary gaps (e.g., 'Limited use of topic-specific terms')",
+      "Structural problems (e.g., 'Paragraph organization needs improvement')"
+    ],
+    "tips": [
+      "Grammar-focused tip (e.g., 'Review and practice [specific grammar point]')",
+      "Vocabulary suggestion (e.g., 'Incorporate more [theme] related terms')",
+      "Writing advice (e.g., 'Structure paragraphs with clear topic sentences')"
+    ]
+  },
+  "improvedEssay": "Improved version of the text that maintains the writer's voice while fixing identified issues"
+}
+
+If the text is too short or unclear, respond with this exact JSON:
 {
   "metrics": {
     "grammar": 0,
@@ -23,33 +57,11 @@ If the input text is too short or unclear, respond with this exact JSON:
     "style": 0
   },
   "insights": {
-    "strengths": ["Text too short to evaluate"],
-    "weaknesses": ["Text needs to be longer for proper evaluation"],
-    "tips": ["Please provide a longer text for evaluation"]
+    "strengths": ["Text too short for proper evaluation"],
+    "weaknesses": ["Insufficient content to assess language skills"],
+    "tips": ["Write at least 3-4 complete sentences for better evaluation"]
   },
   "improvedEssay": ""
-}
-
-For valid text, respond with a JSON object in this exact format:
-{
-  "metrics": {
-    "grammar": number (0-100),
-    "vocabulary": number (0-100),
-    "fluency": number (0-100),
-    "overall": number (0-100)
-  },
-  "skills": {
-    "writingComplexity": number (0-100),
-    "accuracy": number (0-100),
-    "coherence": number (0-100),
-    "style": number (0-100)
-  },
-  "insights": {
-    "strengths": ["list of 2-3 specific strengths"],
-    "weaknesses": ["list of 2-3 areas to improve"],
-    "tips": ["2-3 actionable tips"]
-  },
-  "improvedEssay": "improved version of the text"
 }`;
 
 // Extract JSON from a string that might contain additional text
@@ -148,7 +160,7 @@ interface EvaluationResponse {
 
 export async function POST(request: Request) {
   try {
-    const { challengeId, content, timeSpent } = await request.json();
+    const { challengeId, challenge, content, timeSpent, targetLanguage } = await request.json();
 
     if (!content?.trim()) {
       return NextResponse.json(
@@ -157,16 +169,28 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!challengeId) {
+    if (!challengeId || !challenge) {
       return NextResponse.json(
-        { error: 'Challenge ID is required' },
+        { error: 'Challenge information is required' },
         { status: 400 }
       );
     }
 
     const messages = [
       { role: 'system' as const, content: EVALUATION_PROMPT },
-      { role: 'user' as const, content: content }
+      { 
+        role: 'user' as const, 
+        content: `
+Challenge Instructions: ${challenge.instructions}
+Target Language: ${targetLanguage || 'EN'}
+Difficulty Level: ${challenge.difficulty_level}
+Grammar Focus: ${challenge.grammar_focus?.join(', ') || 'Not specified'}
+Vocabulary Themes: ${challenge.vocabulary_themes?.join(', ') || 'Not specified'}
+
+Student's Response:
+${content}
+`
+      }
     ];
 
     const aiResponse = await makeAIRequest(messages);
