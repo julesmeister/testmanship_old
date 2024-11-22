@@ -98,7 +98,11 @@ Return ONLY the JSON object, no additional text.`
     console.log('Received AI response:', aiResponse);
 
     try {
-      const parsedResponse = JSON.parse(aiResponse);
+      // Clean up the response - remove markdown formatting if present
+      const cleanedResponse = aiResponse.replace(/^```(?:json)?\n|\n```$/g, '').trim();
+      console.log('Cleaned response:', cleanedResponse);
+      
+      const parsedResponse = JSON.parse(cleanedResponse);
       console.log('Parsed response:', parsedResponse);
 
       if (title) {
