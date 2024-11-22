@@ -140,6 +140,18 @@ export async function signInWithPassword(formData: FormData) {
       };
     }
 
+    // Update the user's updated_at timestamp
+    console.log('Updating last active timestamp...');
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', data.user.id);
+
+    if (updateError) {
+      console.error('Error updating timestamp:', updateError);
+      // Don't return error, still allow sign in
+    }
+
     console.log('Sign in successful:', data.user.id);
     console.log('Redirecting to:', redirectTo);
     
