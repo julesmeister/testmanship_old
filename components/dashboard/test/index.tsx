@@ -192,7 +192,7 @@ export default function Test({ user, userDetails }: Props) {
         position: 'bottom-right'
       });
       generateSuggestion();
-    }, 20000); // 20 seconds
+    }, 200000); // 20 seconds
 
     // Stop existing suggestions when user starts typing
     console.log('[Index] Text changed, stopping suggestions');
@@ -455,7 +455,7 @@ export default function Test({ user, userDetails }: Props) {
       title="Writing Assistant"
       description="Get instant feedback on your writing"
     >
-      <div className="flex flex-col lg:flex-row gap-4 w-full h-[calc(100vh-10rem)]">
+      <div className="flex flex-col lg:flex-row gap-4 w-full min-h-[calc(100vh-10rem)]">
         <LeftColumn
           challenge={selectedChallenge}
           outputCode={feedback}
@@ -480,7 +480,7 @@ export default function Test({ user, userDetails }: Props) {
         />
 
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col space-y-4 w-full lg:w-2/3 h-full overflow-hidden">
+        <div className="flex-1 flex flex-col space-y-4 w-full lg:w-2/3 h-auto min-h-full">
           {!selectedChallenge ? (
             <Tabs defaultValue="practice" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>            
               <TabsList className="grid w-full grid-cols-2">
@@ -535,7 +535,8 @@ export default function Test({ user, userDetails }: Props) {
                 fontFamily: '"Special Elite", "Courier New", monospace',
                 fontWeight: '600',
                 fontSize: '1.125rem',
-                height: '100%'
+                height: '100%',
+                minHeight: 'calc(100vh - 14rem)' // Account for header and padding
               }}
               className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 shadow-inner [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
               disabled={isTimeUp}
