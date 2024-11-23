@@ -271,7 +271,7 @@ export default function Test({ user, userDetails }: Props) {
     handleStopChallenge();
   };
 
-  const handleGenerateFeedback = (paragraph: string) => {
+  const handleGenerateFeedback = async (paragraph: string): Promise<string> => {
     if (isGeneratingFeedback) {
       throw new Error('Feedback generation already in progress');
     }
@@ -291,9 +291,12 @@ export default function Test({ user, userDetails }: Props) {
     }
 
     setIsGeneratingFeedback(true);
-    generateFeedback(sanitizedParagraph).finally(() => {
+    try {
+      const feedback = await generateFeedback(sanitizedParagraph);
+      return feedback;
+    } finally {
       setIsGeneratingFeedback(false);
-    });
+    }
   };
 
   const validateSubmission = (content: string): boolean => {
