@@ -198,7 +198,6 @@ ${content}
     ];
 
     const aiResponse = await makeAIRequest(messages);
-    console.log('AI API Response:', aiResponse);
 
     // Try to parse the direct response first
     let evaluation;
@@ -207,7 +206,6 @@ ${content}
     } catch {
       // If direct parsing fails, try to extract JSON
       const jsonStr = extractJSON(aiResponse);
-      console.log('Extracted JSON:', jsonStr);
 
       if (!jsonStr) {
         console.error('Failed to extract JSON from AI response:', aiResponse);
@@ -237,8 +235,6 @@ ${content}
         );
       }
     }
-
-    console.log('Parsed evaluation:', evaluation);
     
     // Validate the response structure and ensure arrays are not empty
     if (!evaluation.metrics || !evaluation.skills || !evaluation.improvedEssay || 
@@ -256,7 +252,6 @@ ${content}
 
     // Ensure all arrays have at least one item and are strings
     const validateInsightArray = (arr: any[], name: string): string[] => {
-      console.log(`Validating ${name} array:`, arr);
       if (!arr.every(item => typeof item === 'string' && item.trim())) {
         throw new Error(`Invalid ${name} format`);
       }
@@ -268,8 +263,6 @@ ${content}
       weaknesses: validateInsightArray(evaluation.insights.weaknesses, 'weaknesses'),
       tips: validateInsightArray(evaluation.insights.tips, 'tips')
     };
-    console.log('Processed insights:', insights);
-
     const evaluationResponse: EvaluationResponse = {
       performanceMetrics: {
         wordCount: content.split(/\s+/).length,

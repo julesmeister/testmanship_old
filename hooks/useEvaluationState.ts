@@ -59,6 +59,11 @@ export function useEvaluationState(
 
       try {
         const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
+        console.log('[useEvaluationState] Starting evaluation:', {
+          selectedLanguage,
+          challengeId: challenge.id,
+          contentLength: content?.length
+        });
 
         const response = await fetch('/api/challenge-evaluation', {
           method: 'POST',
@@ -73,13 +78,37 @@ export function useEvaluationState(
         });
 
         const data = await response.json();
+        console.log('[useEvaluationState] API Response:', {
+          status: response.status,
+          ok: response.ok,
+          hasPerformanceMetrics: !!data.performanceMetrics,
+          hasSkillMetrics: !!data.skillMetrics,
+          error: data.error
+        });
 
-        if (!response.ok) {
+        if (!response.ok || data.error) {
           throw new Error(data.error || 'Failed to evaluate challenge');
         }
 
-        // Store evaluation data
-        await submitEvaluation({
+        // Validate required data
+        if (!data.performanceMetrics?.metrics || !data.skillMetrics) {
+          console.error('[useEvaluationState] Invalid response data:', {
+            hasPerformanceMetrics: !!data.performanceMetrics,
+            hasMetrics: !!data.performanceMetrics?.metrics,
+            hasSkillMetrics: !!data.skillMetrics
+          });
+          throw new Error('Evaluation response is missing required data');
+        }
+
+        console.log('[useEvaluationState] Attempting to submit evaluation:', {
+          challengeId: challenge.id,
+          hasContent: !!content,
+          timeSpent: challenge.time_allocation || 1800,
+          metrics: data.performanceMetrics.metrics,
+          skills: data.skillMetrics
+        });
+
+        const submissionResult = await submitEvaluation({
           supabase,
           data: {
             challengeId: challenge.id,
@@ -88,14 +117,16 @@ export function useEvaluationState(
             evaluation: {
               metrics: data.performanceMetrics.metrics,
               skills: data.skillMetrics,
-              improvedEssay: data.performanceMetrics.improvedEssay
+              improvedEssay: data.performanceMetrics.improvedEssay || ''
             },
             performanceMetrics: {
-              wordCount: data.performanceMetrics.wordCount,
-              paragraphCount: data.performanceMetrics.paragraphCount
+              wordCount: data.performanceMetrics.wordCount || 0,
+              paragraphCount: data.performanceMetrics.paragraphCount || 0
             }
           }
         });
+
+        console.log('[useEvaluationState] Submission result:', submissionResult);
 
         setState(prev => ({
           ...prev,
@@ -103,11 +134,20 @@ export function useEvaluationState(
           performanceMetrics: data.performanceMetrics,
           skillMetrics: data.skillMetrics,
           insights: data.insights,
-          isLoading: false
+          isLoading: false,
+          error: null
         }));
       } catch (error) {
-        console.error('Evaluation error:', error);
-        setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Failed to evaluate challenge', isLoading: false }));
+        console.error('[useEvaluationState] Evaluation error:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        setState(prev => ({ 
+          ...prev, 
+          error: error instanceof Error ? error.message : 'Failed to evaluate challenge', 
+          isLoading: false 
+        }));
       }
     };
 
