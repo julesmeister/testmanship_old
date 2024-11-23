@@ -17,6 +17,7 @@ import { useLanguageStore } from '@/stores/language';
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TimerProgress from './TimerProgress';
@@ -36,6 +37,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useTestAISuggestions } from '@/hooks/useTestAISuggestions';
 import { toast } from 'sonner';
 import { useTestState } from '@/hooks/useTestState';
+import { useEvaluationState } from '@/hooks/useEvaluationState';
 import { PencilIcon, ClockIcon, CheckCircleIcon, ChatBubbleBottomCenterTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 // Initialize Supabase client
@@ -269,14 +271,14 @@ export default function Test({ user, userDetails }: Props) {
     handleStopChallenge();
   };
 
-  const handleGenerateFeedback = async (paragraph: string): Promise<string> => {
+  const handleGenerateFeedback = (paragraph: string) => {
     if (isGeneratingFeedback) {
       throw new Error('Feedback generation already in progress');
     }
 
     // Check rate limit before proceeding
     try {
-      await checkRateLimit();
+      checkRateLimit();
     } catch (error) {
       setRateLimitExceeded(true);
       throw new Error('Too many feedback requests. Please wait a moment.');
@@ -289,11 +291,9 @@ export default function Test({ user, userDetails }: Props) {
     }
 
     setIsGeneratingFeedback(true);
-    try {
-      return await generateFeedback(sanitizedParagraph);
-    } finally {
+    generateFeedback(sanitizedParagraph).finally(() => {
       setIsGeneratingFeedback(false);
-    }
+    });
   };
 
   const validateSubmission = (content: string): boolean => {
@@ -346,7 +346,7 @@ export default function Test({ user, userDetails }: Props) {
   });
 
   // Rate limiting function
-  const checkRateLimit = useCallback(async () => {
+  const checkRateLimit = useCallback(() => {
     const key = user?.id || 'anonymous';
     if (rateLimit.isLimited(key)) {
       setRateLimitExceeded(true);
@@ -355,36 +355,52 @@ export default function Test({ user, userDetails }: Props) {
     setRateLimitExceeded(false);
   }, [user?.id]);
 
-  const handleGradeChallenge = async () => {
-    setSecurityError(null);
+  const {
+    insights,
+    isLoading: evaluationLoading,
+    error: evaluationError,
+    performanceMetrics: evaluatedPerformanceMetrics,
+    skillMetrics: evaluatedSkillMetrics
+  } = useEvaluationState(selectedChallenge, isTimeUp, inputMessage);
+
+  // Calculate initial metrics for display before evaluation
+  const initialPerformanceMetrics = {
+    wordCount: inputMessage ? inputMessage.split(/\s+/).filter(word => word.length > 0).length : 0,
+    paragraphCount: inputMessage ? inputMessage.split(/\n\s*\n/).filter(para => para.trim().length > 0).length : 0,
+    timeSpent: elapsedTime || 0,
+    performanceScore: 0,
+    metrics: {
+      grammar: 0,
+      vocabulary: 0,
+      fluency: 0,
+      overall: 0
+    }
+  };
+
+  // Combine real-time counts with evaluated metrics
+  const performanceMetrics = {
+    ...initialPerformanceMetrics,
+    ...evaluatedPerformanceMetrics,
+    wordCount: initialPerformanceMetrics.wordCount,
+    paragraphCount: initialPerformanceMetrics.paragraphCount,
+    timeSpent: initialPerformanceMetrics.timeSpent,
+  };
+
+  const skillMetrics = evaluatedSkillMetrics;
+
+  const handleGradeChallenge = () => {
+    // Force evaluation completion
+    setIsWriting(false);
     
-    // Authentication check
-    if (!user?.id || !selectedChallenge?.id) {
-      toast.error('Authentication required to save results');
-      return;
-    }
-
-    // Rate limit check
-    if (rateLimitExceeded) {
-      toast.error('Please wait before submitting another challenge');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      // Force evaluation by setting isTimeUp
-      // This will trigger useEvaluationState's evaluation logic
-      setIsWriting(false);
-      
-      toast.success('Challenge submitted! Viewing evaluation...');
-      
-    } catch (error) {
-      console.error('Error submitting challenge:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit challenge');
-    } finally {
-      setLoading(false);
-    }
+    // Create the URL parameters
+    const searchParams = new URLSearchParams({
+      insights: JSON.stringify(insights),
+      performanceMetrics: JSON.stringify(performanceMetrics),
+      skillMetrics: JSON.stringify(skillMetrics)
+    });
+    
+    // Use window.location for client-side navigation
+    window.location.href = `/dashboard/recording-evaluation?${searchParams.toString()}`;
   };
 
   // Update countdown timer
@@ -418,18 +434,6 @@ export default function Test({ user, userDetails }: Props) {
     };
   }, []);
 
-  const performanceMetrics = useMemo(() => ({
-    wordCount,
-    paragraphCount,
-    timeSpent: elapsedTime,
-    metrics: {
-      grammar: 0.85,
-      vocabulary: 0.78,
-      fluency: 0.82,
-      overall: 0.82
-    }
-  }), [wordCount, paragraphCount, elapsedTime]);
-
   return (
     <DashboardLayout
       user={user}
@@ -440,7 +444,7 @@ export default function Test({ user, userDetails }: Props) {
       <div className="flex flex-col lg:flex-row gap-4 w-full min-h-[calc(100vh-10rem)]">
         <LeftColumn
           challenge={selectedChallenge}
-          outputCode={feedback}
+          outputCode={outputCode}
           onStartChallenge={handleStartChallenge}
           onStopChallenge={handleStopChallenge}
           onGenerateFeedback={handleGenerateFeedback}
@@ -459,6 +463,13 @@ export default function Test({ user, userDetails }: Props) {
           setCurrentSuggestion={setCurrentSuggestion}
           generateSuggestion={generateSuggestion}
           isSuggestionActive={isSuggestionActive}
+          insights={insights}
+          evaluationLoading={evaluationLoading}
+          evaluationError={evaluationError}
+          evaluatedPerformanceMetrics={evaluatedPerformanceMetrics}
+          evaluatedSkillMetrics={evaluatedSkillMetrics}
+          performanceMetrics={performanceMetrics}
+          skillMetrics={skillMetrics}
         />
 
         {/* Writing Area */}

@@ -240,12 +240,24 @@ ${content}
     if (!evaluation.metrics || !evaluation.skills || !evaluation.improvedEssay || 
         !evaluation.insights || !evaluation.insights.strengths || !evaluation.insights.weaknesses || 
         !evaluation.insights.tips || !Array.isArray(evaluation.insights.strengths) || 
-        !Array.isArray(evaluation.insights.weaknesses) || !Array.isArray(evaluation.insights.tips) ||
-        evaluation.insights.strengths.length === 0 || evaluation.insights.weaknesses.length === 0 || 
-        evaluation.insights.tips.length === 0) {
-      console.error('Invalid evaluation structure or empty arrays:', evaluation);
+        !Array.isArray(evaluation.insights.weaknesses) || !Array.isArray(evaluation.insights.tips)) {
+      console.error('Invalid evaluation structure:', evaluation);
       return NextResponse.json(
-        { error: 'The evaluation format was unexpected or missing required data. Please try again.' },
+        { error: 'The evaluation format was unexpected. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    // For short responses, we still want feedback but don't require non-empty arrays
+    const isShortResponse = content.split(/\s+/).length < 10;
+    if (!isShortResponse && (
+        evaluation.insights.strengths.length === 0 || 
+        evaluation.insights.weaknesses.length === 0 || 
+        evaluation.insights.tips.length === 0
+    )) {
+      console.error('Empty insight arrays for non-short response:', evaluation);
+      return NextResponse.json(
+        { error: 'The evaluation is missing required feedback. Please try again.' },
         { status: 500 }
       );
     }

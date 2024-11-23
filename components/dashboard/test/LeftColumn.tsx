@@ -46,6 +46,13 @@ interface LeftColumnProps {
   setCurrentSuggestion: (value: string) => void;
   generateSuggestion: () => void;
   isSuggestionActive: boolean;
+  insights: any;
+  evaluationLoading: boolean;
+  evaluationError: string | null;
+  evaluatedPerformanceMetrics: any;
+  evaluatedSkillMetrics: any;
+  performanceMetrics: any;
+  skillMetrics: any;
 }
 
 const TipBox = ({ onClose }: { onClose: () => void }) => (
@@ -158,6 +165,13 @@ const LeftColumn = ({
   setCurrentSuggestion,
   generateSuggestion,
   isSuggestionActive,
+  insights,
+  evaluationLoading,
+  evaluationError,
+  evaluatedPerformanceMetrics,
+  evaluatedSkillMetrics,
+  performanceMetrics,
+  skillMetrics
 }: LeftColumnProps) => {
   const { showChallenges, showEvaluation, setShowChallenges, setShowEvaluation } = useTestState();
 
@@ -185,38 +199,8 @@ const LeftColumn = ({
     }
   }, [challenge]);
 
-  const {
-    insights,
-    isLoading: evaluationLoading,
-    error: evaluationError,
-    performanceMetrics: evaluatedPerformanceMetrics,
-    skillMetrics: evaluatedSkillMetrics
-  } = useEvaluationState(challenge, isTimeUp, inputMessage);
 
-  // Calculate initial metrics for display before evaluation
-  const initialPerformanceMetrics = {
-    wordCount: inputMessage ? inputMessage.split(/\s+/).filter(word => word.length > 0).length : 0,
-    paragraphCount: inputMessage ? inputMessage.split(/\n\s*\n/).filter(para => para.trim().length > 0).length : 0,
-    timeSpent: timeElapsed || 0,
-    performanceScore: 0,
-    metrics: {
-      grammar: 0,
-      vocabulary: 0,
-      fluency: 0,
-      overall: 0
-    }
-  };
-
-  // Combine real-time counts with evaluated metrics
-  const performanceMetrics = {
-    ...initialPerformanceMetrics,
-    ...evaluatedPerformanceMetrics,
-    wordCount: initialPerformanceMetrics.wordCount,
-    paragraphCount: initialPerformanceMetrics.paragraphCount,
-    timeSpent: initialPerformanceMetrics.timeSpent,
-  };
-
-  const skillMetrics = evaluatedSkillMetrics;
+ 
 
   useEffect(() => {
     if (evaluationError) {

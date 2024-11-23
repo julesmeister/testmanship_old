@@ -1,17 +1,13 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSupabase } from '@/app/supabase-provider';
-import RecordingEvaluation from '@/components/dashboard/recording-evaluation';
-import { useEvaluationState } from '@/hooks/useEvaluationState';
-import { createClient } from '@/utils/supabase/server';
 import { getUserDetails, getUser } from '@/utils/supabase/queries';
+import RecordingEvaluation from '@/components/dashboard/recording-evaluation';
 import { redirect } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
 
-
-export default async function RecordingEvaluationPage() {
-  const router = useRouter();
+export default async function RecordingEvaluationPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
   const supabase = await createClient();
   const [user, userDetails] = await Promise.all([
     getUser(supabase),
@@ -22,15 +18,25 @@ export default async function RecordingEvaluationPage() {
     return redirect('/dashboard/signin');
   }
 
+  // Parse the URL parameters
+  const insights = searchParams.insights ? JSON.parse(decodeURIComponent(searchParams.insights as string)) : null;
+  const performanceMetrics = searchParams.performanceMetrics ? JSON.parse(decodeURIComponent(searchParams.performanceMetrics as string)) : null;
+  const skillMetrics = searchParams.skillMetrics ? JSON.parse(decodeURIComponent(searchParams.skillMetrics as string)) : null;
+
+  // Log the parsed metrics
+  console.log('Recording Evaluation Metrics:', {
+    insights,
+    performanceMetrics,
+    skillMetrics
+  });
+
   return (
-    <RecordingEvaluation
+    <RecordingEvaluation 
       user={user}
       userDetails={userDetails}
       insights={insights}
-      isLoading={evaluationLoading}
-      error={evaluationError}
-      performanceMetrics={evaluatedPerformanceMetrics}
-      skillMetrics={evaluatedSkillMetrics}i
+      performanceMetrics={performanceMetrics}
+      skillMetrics={skillMetrics}
     />
   );
 }
