@@ -16,14 +16,12 @@ import DashboardLayout from '@/components/layout';
 import { useLanguageStore } from '@/stores/language';
 import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
-import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TimerProgress from './TimerProgress';
 import { Card, CardContent } from '@/components/ui/card';
 import LeftColumn from './LeftColumn';
-import { makeAIRequest } from '@/utils/ai';
+import { startProgress } from '@/components/ui/progress-bar';
 import { useAIFeedback } from '@/hooks/useAIFeedback';
 import { type Challenge } from '@/types/challenge';
 import { useTextEditor } from '@/hooks/useTextEditor';
@@ -39,6 +37,7 @@ import { toast } from 'sonner';
 import { useTestState } from '@/hooks/useTestState';
 import { useEvaluationState } from '@/hooks/useEvaluationState';
 import { PencilIcon, ClockIcon, CheckCircleIcon, ChatBubbleBottomCenterTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { Content } from 'next/font/google';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -391,13 +390,20 @@ export default function Test({ user, userDetails }: Props) {
 
   const skillMetrics = evaluatedSkillMetrics;
 
-  const handleGradeChallenge = () => {
-    // Force evaluation completion
-    setIsWriting(false);
-    
+  const handleGradeChallenge = async () => {
+    if (!insights || !performanceMetrics || !skillMetrics) {
+      console.error('Missing required evaluation data');
+      return;
+    }
+
+    // Start progress before navigation
+    startProgress();
+
     // Create the URL parameters
     const searchParams = new URLSearchParams({
-      insights: JSON.stringify(insights),
+      content: inputMessage, // Use the actual textarea content
+      insights: JSON.stringify({insights}),
+      challengeId: selectedChallenge?.id || '00000000-0000-0000-0000-000000000001',  // Use UUID format
       performanceMetrics: JSON.stringify(performanceMetrics),
       skillMetrics: JSON.stringify(skillMetrics)
     });

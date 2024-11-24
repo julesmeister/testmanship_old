@@ -99,35 +99,7 @@ export function useEvaluationState(
           });
           throw new Error('Evaluation response is missing required data');
         }
-
-        console.log('[useEvaluationState] Attempting to submit evaluation:', {
-          challengeId: challenge.id,
-          hasContent: !!content,
-          timeSpent: challenge.time_allocation || 1800,
-          metrics: data.performanceMetrics.metrics,
-          skills: data.skillMetrics
-        });
-
-        const submissionResult = await submitEvaluation({
-          supabase,
-          data: {
-            challengeId: challenge.id,
-            content,
-            timeSpent: challenge.time_allocation || 1800,
-            evaluation: {
-              metrics: data.performanceMetrics.metrics,
-              skills: data.skillMetrics,
-              improvedEssay: data.performanceMetrics.improvedEssay || ''
-            },
-            performanceMetrics: {
-              wordCount: data.performanceMetrics.wordCount || 0,
-              paragraphCount: data.performanceMetrics.paragraphCount || 0
-            }
-          }
-        });
-
-        console.log('[useEvaluationState] Submission result:', submissionResult);
-
+        
         setState(prev => ({
           ...prev,
           showEvaluation: true,
@@ -141,12 +113,14 @@ export function useEvaluationState(
         console.error('[useEvaluationState] Evaluation error:', {
           error,
           message: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined
+          stack: error instanceof Error ? error.stack : undefined,
+          
         });
         setState(prev => ({ 
           ...prev, 
           error: error instanceof Error ? error.message : 'Failed to evaluate challenge', 
-          isLoading: false 
+          isLoading: true,
+          showEvaluation: false 
         }));
       }
     };

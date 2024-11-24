@@ -6,6 +6,8 @@ import { User } from '@supabase/supabase-js';
 import { UserDetails } from '@/types/types';
 import React from 'react';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
+import { useEvaluationSubmission } from '@/hooks/useEvaluationSubmission';
+import { toast } from 'sonner';
 
 interface RecordingEvaluationProps {
   user: User;
@@ -18,6 +20,8 @@ interface RecordingEvaluationProps {
   error?: any;
   performanceMetrics?: any;
   skillMetrics?: any;
+  challengeId?: string;
+  content?: string;
 }
 
 export default function RecordingEvaluation({ 
@@ -30,10 +34,74 @@ export default function RecordingEvaluation({
   isLoading = true,
   error,
   performanceMetrics,
-  skillMetrics
+  skillMetrics,
+  challengeId,
+  content
 }: RecordingEvaluationProps) {
   const { supabase } = useSupabase();
   useAuthCheck({ user, userDetails, supabase });
+  const { submitEvaluation, isSubmitting } = useEvaluationSubmission();
+
+  const handleSubmitEvaluation = async () => {
+    if (!insights || !performanceMetrics || !skillMetrics) {
+      console.error('Missing required evaluation data:', { insights, performanceMetrics, skillMetrics });
+      toast.error('Missing required evaluation data');
+      return;
+    }
+
+    try {
+      const submissionData = {
+        challengeId: challengeId || '00000000-0000-0000-0000-000000000001',
+        content: content || '',
+        timeSpent: performanceMetrics.timeSpent || 0,
+        evaluation: {
+          metrics: {
+            grammar: performanceMetrics.metrics.grammar,
+            vocabulary: performanceMetrics.metrics.vocabulary,
+            fluency: performanceMetrics.metrics.fluency,
+            overall: performanceMetrics.metrics.overall
+          },
+          skills: {
+            writingComplexity: skillMetrics.writingComplexity,
+            accuracy: skillMetrics.accuracy,
+            coherence: skillMetrics.coherence,
+            style: skillMetrics.style
+          },
+          improvedEssay: performanceMetrics.improvedEssay
+        },
+        performanceMetrics: {
+          wordCount: performanceMetrics.wordCount,
+          paragraphCount: performanceMetrics.paragraphCount
+        },
+        insights: insights
+      };
+
+      console.log('Preparing to submit evaluation with data:', JSON.stringify(submissionData, null, 2));
+
+      const result = await submitEvaluation({
+        supabase,
+        data: submissionData
+      });
+
+      if (result.success) {
+        toast.success('Evaluation submitted successfully');
+      } else {
+        const errorMessage = result.error instanceof Error 
+          ? result.error.message 
+          : 'Failed to submit evaluation';
+        
+        console.error('Submission failed:', result.error);
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error in handleSubmitEvaluation:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'An unexpected error occurred';
+      
+      toast.error(errorMessage);
+    }
+  };
 
   return (
     <DashboardLayout
@@ -73,6 +141,15 @@ export default function RecordingEvaluation({
                     <div className="h-2 w-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                   </div>
                 </div>
+                <button
+                  onClick={handleSubmitEvaluation}
+                  disabled={isSubmitting || !insights || !performanceMetrics || !skillMetrics}
+                  className={`mt-4 px-4 py-2 rounded-md text-white ${
+                    isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Evaluation'}
+                </button>
               </div>
             </div>
           </div>
