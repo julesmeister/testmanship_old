@@ -24,7 +24,7 @@ export default function Settings(props: Props) {
           <MainChart />
         </div>
         <div className="w-full rounded-lg">
-          <MainDashboardTable />
+          <MainDashboardTable user={props.user} />
         </div>
       </div>
     </DashboardLayout>

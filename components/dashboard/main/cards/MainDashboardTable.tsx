@@ -13,7 +13,7 @@ import {
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs';
 import toast from 'react-hot-toast';
 import { Loader2, ClipboardList } from "lucide-react";
 
@@ -32,7 +32,11 @@ type Challenge = {
   format: string;
 };
 
-const MainDashboardTable = () => {
+interface Props {
+  user: User | null | undefined;
+}
+
+const MainDashboardTable = ({ user }: Props) => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -67,6 +71,7 @@ const MainDashboardTable = () => {
               challenge_title,
               format_name
             `)
+            .eq('user_id', user?.id)
           .order('completed_at', { ascending: false })
           .range((page - 1) * pageSize, (page * pageSize) - 1);
 
