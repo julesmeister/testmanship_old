@@ -27,11 +27,13 @@ import { useTestState } from '@/hooks/useTestState';
 
 interface LeftColumnProps {
   challenge: Challenge | null;
+  format: string;
   outputCode: string;
   onStartChallenge: (challenge: Challenge) => void;
   onStopChallenge: () => void;
   onGenerateFeedback: (paragraph: string) => Promise<string>;
   isGeneratingFeedback: boolean;
+  onRefreshEvaluation: () => void;
   isTimeUp: boolean;
   mode: 'practice' | 'exam';
   timeElapsed: number;
@@ -146,11 +148,13 @@ const Pagination = ({
 
 const LeftColumn = ({
   challenge,
+  format,
   outputCode,
   onStartChallenge,
   onStopChallenge,
   onGenerateFeedback,
   isGeneratingFeedback,
+  onRefreshEvaluation,
   isTimeUp,
   mode,
   timeElapsed,
@@ -198,9 +202,6 @@ const LeftColumn = ({
       setAccordionValue("instructions");
     }
   }, [challenge]);
-
-
- 
 
   useEffect(() => {
     if (evaluationError) {
@@ -270,6 +271,7 @@ const LeftColumn = ({
       {challenge && !showChallenges && !showEvaluation && (
         <InstructionsAccordion
           challenge={challenge}
+          format={format || 'Unknown Format'}
           showChallenges={showChallenges}
           accordionValue={accordionValue}
           onAccordionValueChange={setAccordionValue}
@@ -293,7 +295,10 @@ const LeftColumn = ({
         />
       )}
       {showEvaluation && challenge && evaluationLoading && (
-       <EvaluationLoading />
+       <EvaluationLoading 
+          onRefresh={onRefreshEvaluation}
+          isTimeUp={isTimeUp}
+        />
       )}
 
       {/* Challenge Selection */}

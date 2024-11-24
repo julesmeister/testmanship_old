@@ -39,9 +39,7 @@ export function useEvaluationState(
   challenge: Challenge | null,
   isTimeUp: boolean,
   content?: string,
-  performanceMetrics?: PerformanceMetrics,
-  skillMetrics?: SkillMetrics,
-  insights?: Insights
+  format?: String,
 ): EvaluationState {
   const [state, setState] = useState<EvaluationState>(defaultState);
   const { selectedLanguageId, languages } = useLanguageStore();
@@ -69,11 +67,11 @@ export function useEvaluationState(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            challengeId: challenge.id,
             challenge,
             content,
             timeSpent: challenge.time_allocation || 1800,
-            targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
+            targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN',
+            format: format
           })
         });
 

@@ -22,6 +22,7 @@ import { Challenge } from "@/types/challenge";
 
 interface InstructionsAccordionProps {
   challenge: Challenge;
+  format: string;
   showChallenges: boolean;
   accordionValue?: string;
   onAccordionValueChange: (value: string) => void;
@@ -30,6 +31,7 @@ interface InstructionsAccordionProps {
 
 export function InstructionsAccordion({
   challenge,
+  format,
   showChallenges,
   accordionValue = "instructions",
   onAccordionValueChange,
@@ -107,7 +109,7 @@ export function InstructionsAccordion({
           </div>
           <AccordionContent className="px-4 pb-4">
             <div className="space-y-4">
-              <GradientCard title={challenge.title} subtitle="Writing Challenge" />
+              <GradientCard title={challenge.title} subtitle={format} />
               <InstructionsCard instructions={challenge.instructions} />
 
               <div className="grid grid-cols-2 gap-3">
@@ -126,7 +128,6 @@ export function InstructionsAccordion({
                   />
                 )}
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {Array.isArray(challenge.grammar_focus) && challenge.grammar_focus.length > 0 && (
                   <FocusCard 

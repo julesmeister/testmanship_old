@@ -36,7 +36,8 @@ export async function POST(request: Request) {
 2. The sentence must be in ${languageName}
 3. The sentence must naturally fit the essay context
 4. Match the style and tone of existing content
-5. DO NOT explain or translate - just output the single sentence
+5. If the last sentence in the content is incomplete, complete that thought instead of generating a new sentence
+6. DO NOT explain or translate - just output the single sentence
 
 IMPORTANT: Your entire response must be exactly ONE sentence. No explanations, no translations, no additional text.`
         },

@@ -43,29 +43,12 @@ For any text, evaluate based on the challenge instructions, target language, dif
       "Writing advice (e.g., 'Structure paragraphs with clear topic sentences')"
     ]
   },
-  "improvedEssay": "Improved version that maintains the SAME TOPIC and core content, using ONLY vocabulary and grammar structures appropriate for the specified difficulty level (e.g., A1 should only use basic present tense and simple conjunctions, while B1 can use more complex structures)"
-}
-
-If the text is too short or unclear, respond with this exact JSON:
-{
-  "metrics": {
-    "grammar": 0,
-    "vocabulary": 0,
-    "fluency": 0,
-    "overall": 0
-  },
-  "skills": {
-    "writingComplexity": 0,
-    "accuracy": 0,
-    "coherence": 0,
-    "style": 0
-  },
-  "insights": {
-    "strengths": ["Text too short for proper evaluation"],
-    "weaknesses": ["Insufficient content to assess language skills"],
-    "tips": ["Write at least 3-4 complete sentences for better evaluation"]
-  },
-  "improvedEssay": ""
+  "improvedEssay": "Improved version that maintains the SAME TOPIC and core content, following the specified writing format. The response must:
+1. Adhere to all conventions and structures typical of this format (e.g., proper salutations and closings for letters, appropriate headings and sections for blog posts, etc.)
+2. Use ONLY vocabulary and grammar structures appropriate for the specified difficulty level (e.g., A1 should only use basic present tense and simple conjunctions, while B1 can use more complex structures)
+3. Complete any missing format elements (e.g., if a formal letter is missing a closing, add it; if a blog post needs an introduction, add it)
+4. Break the content into appropriate paragraphs with proper spacing and structure
+5. Ensure the final essay is complete and well-structured, adding connecting content where necessary while maintaining the original message",
 }`;
 
 // Extract JSON from a string that might contain additional text
@@ -164,7 +147,7 @@ interface EvaluationResponse {
 
 export async function POST(request: Request) {
   try {
-    const { challengeId, challenge, content, timeSpent, targetLanguage } = await request.json();
+    const { challenge, content, timeSpent, targetLanguage, format } = await request.json();
 
     if (!content?.trim()) {
       return NextResponse.json(
@@ -173,7 +156,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!challengeId || !challenge) {
+    if (!challenge) {
       return NextResponse.json(
         { error: 'Challenge information is required' },
         { status: 400 }
@@ -190,6 +173,7 @@ Target Language: ${targetLanguage || 'EN'}
 Difficulty Level: ${challenge.difficulty_level}
 Grammar Focus: ${challenge.grammar_focus?.join(', ') || 'Not specified'}
 Vocabulary Themes: ${challenge.vocabulary_themes?.join(', ') || 'Not specified'}
+Writing Format: ${format || 'Unknown Format'} (eg. Blog Post, Formal Letter, Email, etc.)	
 
 Student's Response:
 ${content}

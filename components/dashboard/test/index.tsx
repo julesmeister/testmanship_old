@@ -90,6 +90,7 @@ export default function Test({ user, userDetails }: Props) {
   const [currentSuggestion, setCurrentSuggestion] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [lastTyped, setLastTyped] = useState<number>(Date.now());
+  const [format, setFormat] = useState<string>('');
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debug logging for language selection
@@ -137,6 +138,14 @@ export default function Test({ user, userDetails }: Props) {
   } = useFeedbackManager(generateFeedback);
 
   const {
+    insights,
+    isLoading: evaluationLoading,
+    error: evaluationError,
+    performanceMetrics: evaluatedPerformanceMetrics,
+    skillMetrics: evaluatedSkillMetrics
+  } = useEvaluationState(selectedChallenge, isTimeUp, inputMessage, format);
+
+  const {
     isActive: isSuggestionActive,
     isRateLimited,
     isDailyLimitReached,
@@ -145,7 +154,7 @@ export default function Test({ user, userDetails }: Props) {
   } = useTestAISuggestions({
     challenge: selectedChallenge,
     content: inputMessage,
-    enabled: !isTimeUp,
+    enabled: !isTimeUp && !evaluationLoading && !showEvaluation,
     targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN',
     onSuggestion: (suggestion) => {
       setCurrentSuggestion(suggestion);
@@ -171,6 +180,32 @@ export default function Test({ user, userDetails }: Props) {
     }
   }, [error, isDailyLimitReached]);
 
+  useEffect(() => {
+    const fetchFormat = async () => {
+      if (selectedChallenge?.format_id) {
+        console.log('Fetching format for format_id:', selectedChallenge.format_id);
+        const { data: formatData, error } = await supabase
+          .from('challenge_formats')
+          .select('name')
+          .eq('id', selectedChallenge.format_id)
+          .single();
+        
+        if (formatData) {
+          console.log('Format fetched successfully:', formatData.name);
+          setFormat(formatData.name);
+        } else if (error) {
+          console.error('Error fetching format:', error);
+          setFormat('Unknown Format');
+        }
+      } else {
+        console.log('No format_id available in selectedChallenge');
+        setFormat('Unknown Format');
+      }
+    };
+    
+    fetchFormat();
+  }, [selectedChallenge?.format_id, supabase]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -180,20 +215,38 @@ export default function Test({ user, userDetails }: Props) {
     
     // Clear existing timer
     if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
+      clearInterval(idleTimerRef.current);
+      idleTimerRef.current = null;
       setIdleTimer(null);
     }
 
-    // Set new timer
-    idleTimerRef.current = setTimeout(() => {
-      if (!selectedChallenge && isTimeUp) return;
+    // Only set new timer if suggestions are enabled
+    if (!isTimeUp && !evaluationLoading && !showEvaluation) {
+      let countdown = 20;
+      setIdleTimer(countdown);
       
-      toast.info("Generating writing suggestions...", {
-        duration: 3000,
-        position: 'bottom-right'
-      });
-      generateSuggestion();
-    }, 20000); // 20 seconds
+      idleTimerRef.current = setInterval(() => {
+        countdown -= 1;
+        if (countdown <= 0) {
+          if (idleTimerRef.current) {
+            clearInterval(idleTimerRef.current);
+            idleTimerRef.current = null;
+          }
+          setIdleTimer(null);
+          
+          // Only generate if still enabled
+          if (!isTimeUp && !evaluationLoading && !showEvaluation && selectedChallenge) {
+            toast.info("Generating writing suggestions...", {
+              duration: 3000,
+              position: 'bottom-right'
+            });
+            generateSuggestion();
+          }
+        } else {
+          setIdleTimer(countdown);
+        }
+      }, 1000);
+    }
 
     // Stop existing suggestions when user starts typing
     console.log('[Index] Text changed, stopping suggestions');
@@ -357,13 +410,7 @@ export default function Test({ user, userDetails }: Props) {
     setRateLimitExceeded(false);
   }, [user?.id]);
 
-  const {
-    insights,
-    isLoading: evaluationLoading,
-    error: evaluationError,
-    performanceMetrics: evaluatedPerformanceMetrics,
-    skillMetrics: evaluatedSkillMetrics
-  } = useEvaluationState(selectedChallenge, isTimeUp, inputMessage);
+  
 
   // Calculate initial metrics for display before evaluation
   const initialPerformanceMetrics = {
@@ -412,6 +459,14 @@ export default function Test({ user, userDetails }: Props) {
     window.location.href = `/dashboard/recording-evaluation?${searchParams.toString()}`;
   };
 
+  // Function to trigger fresh evaluation
+  const handleRefreshEvaluation = useCallback(() => {
+    if (selectedChallenge && inputMessage && isTimeUp) {
+      // Force a fresh evaluation by creating a new state object
+      setSelectedChallenge({...selectedChallenge});
+    }
+  }, [selectedChallenge, inputMessage, isTimeUp]);
+
   // Update countdown timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -438,7 +493,7 @@ export default function Test({ user, userDetails }: Props) {
   useEffect(() => {
     return () => {
       if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
+        clearInterval(idleTimerRef.current);
       }
     };
   }, []);
@@ -453,11 +508,13 @@ export default function Test({ user, userDetails }: Props) {
       <div className="flex flex-col lg:flex-row gap-4 w-full min-h-[calc(100vh-10rem)]">
         <LeftColumn
           challenge={selectedChallenge}
+          format={format}
           outputCode={outputCode}
           onStartChallenge={handleStartChallenge}
           onStopChallenge={handleStopChallenge}
           onGenerateFeedback={handleGenerateFeedback}
           isGeneratingFeedback={isGeneratingFeedback}
+          onRefreshEvaluation={handleRefreshEvaluation}
           isTimeUp={isTimeUp}
           mode={mode}
           timeElapsed={elapsedTime}
@@ -505,15 +562,17 @@ export default function Test({ user, userDetails }: Props) {
               </TabsList>
             </Tabs>
           ) : (
-            <TimerProgress
-              timeElapsed={elapsedTime}
-              timeAllocation={selectedChallenge.time_allocation}
-              mode={mode}
-              onGradeChallenge={handleGradeChallenge}
-              wordCount={wordCount}
-              requiredWordCount={selectedChallenge.word_count}
-              showGradeButton={wordCount >= (selectedChallenge.word_count || 0)}
-            />
+            selectedChallenge && !evaluationLoading && (
+              <TimerProgress
+                timeElapsed={elapsedTime}
+                timeAllocation={selectedChallenge.time_allocation}
+                mode={mode}
+                onGradeChallenge={handleGradeChallenge}
+                wordCount={wordCount}
+                requiredWordCount={selectedChallenge.word_count}
+                showGradeButton={wordCount >= (selectedChallenge.word_count || 0)}
+              />
+            )
           )}
           {selectedChallenge ? (
             <textarea
@@ -619,7 +678,7 @@ export default function Test({ user, userDetails }: Props) {
       {/* Idle Timer Badge */}
       {idleTimer !== null && selectedChallenge && !showChallenges && !showEvaluation && (
         <div className="fixed bottom-4 right-4 py-1 px-3 bg-orange-500 text-white text-sm font-medium rounded-full shadow-lg">
-          Idle: {idleTimer}s
+          Suggesting in: {idleTimer}s
         </div>
       )}
     </DashboardLayout>
