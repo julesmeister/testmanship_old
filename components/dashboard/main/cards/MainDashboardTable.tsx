@@ -51,7 +51,7 @@ const MainDashboardTable = ({ user }: Props) => {
         // Get total count
         const { count } = await supabase
           .from('challenge_attempt_details')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true }).eq('user_id', user?.id);
 
         setTotalCount(count || 0);
 
