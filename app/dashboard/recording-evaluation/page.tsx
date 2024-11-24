@@ -25,6 +25,7 @@ export default async function RecordingEvaluationPage({
   let skillMetrics: any = undefined;
   let challengeId: string | undefined = undefined;
   let content: string | undefined = undefined;
+  let difficulty_level: string | undefined = undefined;
 
   const params = await Promise.resolve(searchParams);
 
@@ -44,6 +45,9 @@ export default async function RecordingEvaluationPage({
     if (typeof params.content === 'string') {
       content = params.content || undefined;
     }
+    if (typeof params.difficulty_level === 'string') {
+      difficulty_level = params.difficulty_level || undefined;
+    }
   } catch (error) {
     console.error('Error parsing URL parameters:', error);
   }
@@ -57,6 +61,7 @@ export default async function RecordingEvaluationPage({
       skillMetrics={skillMetrics}
       content={content}
       challengeId={challengeId || undefined}
+      difficulty_level={difficulty_level}
     />
   );
 }

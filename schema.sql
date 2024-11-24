@@ -201,6 +201,7 @@ create table challenge_attempts (
   user_id uuid references auth.users not null,
   challenge_id uuid references challenges not null,
   content text not null,
+  difficulty_level difficulty_level_enum DEFAULT 'B1',
   word_count integer not null,
   paragraph_count integer not null,
   time_spent integer not null, -- in minutes
@@ -370,6 +371,31 @@ SELECT
 FROM challenge_attempts
 GROUP BY date_trunc('week', completed_at)
 ORDER BY week DESC;
+
+-- Create view for challenge attempts with related information
+CREATE OR REPLACE VIEW challenge_attempt_details AS
+SELECT 
+    ca.id as attempt_id,
+    ca.user_id,
+    ca.challenge_id,
+    ca.content,
+    ca.difficulty_level,
+    ca.word_count,
+    ca.paragraph_count,
+    ca.time_spent,
+    ca.performance_score,
+    ca.completed_at,
+    ca.feedback,
+    c.title as challenge_title,
+    cf.name as format_name,
+    cf.description as format_description
+FROM challenge_attempts ca
+LEFT JOIN challenges c ON ca.challenge_id = c.id
+LEFT JOIN challenge_formats cf ON c.format_id = cf.id;
+
+-- Security is inherited from the underlying tables
+-- challenge_attempts already has RLS enabled with user_id check
+-- challenges and challenge_formats have public read access
 
 -- Function to update user language with proper permissions
 CREATE OR REPLACE FUNCTION public.update_user_language(user_id UUID, language_id UUID)

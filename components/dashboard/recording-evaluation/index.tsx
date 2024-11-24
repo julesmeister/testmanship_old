@@ -22,6 +22,7 @@ interface RecordingEvaluationProps {
   skillMetrics?: any;
   challengeId?: string;
   content?: string;
+  difficulty_level?: string;
 }
 
 export default function RecordingEvaluation({ 
@@ -36,7 +37,8 @@ export default function RecordingEvaluation({
   performanceMetrics,
   skillMetrics,
   challengeId,
-  content
+  content,
+  difficulty_level
 }: RecordingEvaluationProps) {
   const { supabase } = useSupabase();
   useAuthCheck({ user, userDetails, supabase });
@@ -73,7 +75,8 @@ export default function RecordingEvaluation({
           wordCount: performanceMetrics.wordCount,
           paragraphCount: performanceMetrics.paragraphCount
         },
-        insights: insights
+        insights: insights,
+        difficulty_level: difficulty_level || 'A1'
       };
 
       console.log('Preparing to submit evaluation with data:', JSON.stringify(submissionData, null, 2));

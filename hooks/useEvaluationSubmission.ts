@@ -33,6 +33,7 @@ interface EvaluationSubmissionParams {
         weaknesses: string[];
       };
     };
+    difficulty_level: string;
   };
 }
 
@@ -81,7 +82,8 @@ export const useEvaluationSubmission = () => {
         paragraph_count: data.performanceMetrics.paragraphCount,
         time_spent: data.timeSpent,
         performance_score: data.evaluation.metrics.overall,
-        feedback: data.evaluation.improvedEssay
+        feedback: data.evaluation.improvedEssay,
+        difficulty_level: data.difficulty_level
       };
 
       console.log('Attempting to insert record with data:', attemptData);

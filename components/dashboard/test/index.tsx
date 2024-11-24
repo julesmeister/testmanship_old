@@ -449,6 +449,7 @@ export default function Test({ user, userDetails }: Props) {
     // Create the URL parameters
     const searchParams = new URLSearchParams({
       content: inputMessage, // Use the actual textarea content
+      difficulty_level: selectedChallenge?.difficulty_level || 'A1',
       insights: JSON.stringify({insights}),
       challengeId: selectedChallenge?.id || '00000000-0000-0000-0000-000000000001',  // Use UUID format
       performanceMetrics: JSON.stringify(performanceMetrics),
