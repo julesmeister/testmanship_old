@@ -131,7 +131,8 @@ create table challenges (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
   word_count INTEGER,
   grammar_focus TEXT[],
-  vocabulary_themes TEXT[]
+  vocabulary_themes TEXT[],
+  checklist TEXT[]
 );
 alter table challenges enable row level security;
 create policy "Challenges are viewable by everyone." 
@@ -152,6 +153,7 @@ create policy "Users can update their own challenges."
 COMMENT ON COLUMN challenges.word_count IS 'Expected word count range for the challenge';
 COMMENT ON COLUMN challenges.grammar_focus IS 'Array of grammar points to focus on';
 COMMENT ON COLUMN challenges.vocabulary_themes IS 'Array of vocabulary themes to incorporate';
+COMMENT ON COLUMN challenges.checklist IS 'Array of checklist items for the challenge';
 
 -- Function to update the updated_at timestamp
 create or replace function update_updated_at_column()

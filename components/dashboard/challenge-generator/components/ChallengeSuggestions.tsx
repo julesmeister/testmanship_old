@@ -67,6 +67,23 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
                 </ul>
               </div>
             )}
+
+            {suggestion.checklist && (
+              <div className="space-y-3">
+                <h5 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Icon icon={ListTodo} size="sm" className="text-blue-500" />
+                  Submission Checklist
+                </h5>
+                <ul className="space-y-2">
+                  {suggestion.checklist.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-zinc-700 dark:text-zinc-300">
+                      <Icon icon={Check} size="sm" className="mt-1 flex-shrink-0 text-blue-500" />
+                      <span className="text-sm leading-relaxed">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800">
@@ -105,12 +122,16 @@ export function ChallengeSuggestions({ suggestions, setSuggestions, form }: Chal
                 if (suggestion.vocabularyThemes) {
                   form.setValue('vocabularyThemes', suggestion.vocabularyThemes);
                 }
+                if (suggestion.checklist) {
+                  form.setValue('checklist', suggestion.checklist);
+                }
                 form.trigger('title');
                 form.trigger('instructions');
                 form.trigger('timeAllocation');
                 form.trigger('wordCount');
                 form.trigger('grammarFocus');
                 form.trigger('vocabularyThemes');
+                form.trigger('checklist');
                 setSuggestions([]);
                 toast.success('Challenge updated', {
                   description: 'Challenge details have been added to the form.',

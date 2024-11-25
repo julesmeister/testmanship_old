@@ -78,7 +78,6 @@ const extendChallenge = (challenge: Challenge | null, currentInputMessage: strin
 export default function Test({ user, userDetails }: Props) {
   const { showChallenges, showEvaluation, idleTimer, setIdleTimer, startChallenge } = useTestState();
   const [outputCode, setOutputCode] = useState<string>('');
-  const [model, setModel] = useState<OpenAIModel>('gpt-3.5-turbo');
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [mode, setMode] = useState<'practice' | 'exam'>('exam');

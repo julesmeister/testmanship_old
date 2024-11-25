@@ -26,5 +26,6 @@ export const formSchema = z.object({
     }),
   wordCount: z.number().min(50, "Word count must be at least 50").max(500, "Word count cannot exceed 500"),
   grammarFocus: z.array(z.string()),
-  vocabularyThemes: z.array(z.string())
+  vocabularyThemes: z.array(z.string()),
+  checklist: z.array(z.string())
 });

@@ -12,7 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { HiMiniArrowLeftOnRectangle, HiClock, HiDocumentText, HiCheckCircle, HiBookOpen } from "react-icons/hi2";
+import { HiMiniArrowLeftOnRectangle, HiClock, HiDocumentText, HiCheckCircle, HiBookOpen, HiClipboardDocumentCheck } from "react-icons/hi2";
 import { GradientCard } from "@/components/card/GradientCard";
 import { InstructionsCard } from "@/components/card/InstructionsCard";
 import { InfoCard } from "@/components/card/InfoCard";
@@ -146,6 +146,16 @@ export function InstructionsAccordion({
                   />
                 )}
               </div>
+              {Array.isArray(challenge.checklist) && challenge.checklist.length > 0 && (
+                <div className="mt-3">
+                  <FocusCard 
+                    title="Submission Checklist"
+                    items={challenge.checklist}
+                    icon={HiClipboardDocumentCheck}
+                    colorScheme="amber"
+                  />
+                </div>
+              )}
 
               <FooterStats 
                 timeAllocation={challenge.time_allocation}

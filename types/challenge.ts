@@ -19,6 +19,7 @@ export interface Challenge {
   word_count?: number;
   grammar_focus?: string[];
   vocabulary_themes?: string[];
+  checklist?: string[];
   example_response?: string;
   targetLanguage?: string;
   created_at?: string;

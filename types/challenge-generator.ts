@@ -16,6 +16,7 @@ export interface Suggestion {
   difficultyLevel: string;
   grammarFocus: string[];
   vocabularyThemes: string[];
+  checklist: string[];
 }
 
 export interface ChallengeGeneratorViewProps {

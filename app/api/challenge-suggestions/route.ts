@@ -45,7 +45,78 @@ export async function POST(req: Request) {
     const messages: Message[] = [
       {
         role: 'system',
-        content: `You are a writing challenge generator for language learners. Your task is to create challenges specifically in the format of "${format}" (e.g., blog posts, reviews, formal letters, etc.). Ensure all generated content follows the conventions and structure typical of this format. Always respond with valid JSON.`
+        content: `You are a writing challenge generator for language learners. Your task is to create challenges specifically in the format of "${format}". The checklist must ONLY include concrete, measurable content requirements that can be objectively verified in the submission.
+
+GRAMMAR FOCUS RULES:
+For each difficulty level, use these specific grammar points:
+- A1 (Beginner):
+  * Personal pronouns (I, you, he, she, it)
+  * Basic present tense of "to be"
+  * Simple present tense
+  * Basic questions (what, where, when)
+  * Possessive adjectives (my, your, his, her)
+
+- A2 (Elementary):
+  * Present continuous tense
+  * Past simple of regular verbs
+  * Comparative adjectives
+  * Basic prepositions (in, on, at)
+  * Can/can't for ability
+
+- B1 (Intermediate):
+  * Past continuous tense
+  * Present perfect simple
+  * First conditional
+  * Relative clauses with who/which/that
+  * Modal verbs for obligation (must/have to)
+
+- B2 (Upper Intermediate):
+  * Past perfect tense
+  * Second conditional
+  * Passive voice
+  * Reported speech
+  * Used to/would for past habits
+
+- C1 (Advanced):
+  * Third conditional
+  * Mixed conditionals
+  * Complex passive structures
+  * Inversion with negative adverbials
+  * Advanced modal perfect forms
+
+- C2 (Mastery):
+  * Mixed verb forms
+  * Advanced clause structures
+  * Subjunctive mood
+  * Complex tense relationships
+  * Advanced modals and conditionals
+
+Examples of GOOD checklist items:
+- "Include the restaurant's name and location"
+- "Describe at least two dishes ordered"
+- "State the movie's release year"
+- "List three main ingredients"
+- "Closing remark"
+- "Include the date and time of the event"
+- "Salutation"
+- "Introduction"
+- "Conclusion"
+- "Summary"
+- "Explain the purpose of the event"
+
+Examples of BAD checklist items (DO NOT USE THESE):
+- "Use simple vocabulary"
+- "Write short sentences"
+- "Use proper grammar"
+- "Be descriptive"
+- "Proofread your work"
+- "Use formal tone"
+
+Focus exclusively on WHAT specific content needs to be included, not HOW it should be written. Always respond with valid JSON.`
+      },
+      {
+        role: 'system',
+        content: `For difficulty level "${difficulty}", focus on grammar points appropriate for that CEFR level. Do not suggest grammar points from higher levels.`
       }
     ];
 
@@ -59,8 +130,9 @@ Format the response as a JSON object with these properties:
 {
   "instructions": "Brief, clear instructions focusing on the task and requirements, emphasizing the specific structure and style expected for a ${format}. Do not mention time allocation or word count in the instructions.",
   "keyPoints": ["3-4 key points to focus on, including format-specific elements"],
-  "grammarFocus": ["2-3 grammar points to practice"],
-  "vocabularyThemes": ["2-3 vocabulary themes relevant to the topic and format"]
+  "grammarFocus": ["2-3 specific grammar points appropriate for ${difficulty} CEFR level"],
+  "vocabularyThemes": ["2-3 vocabulary themes relevant to the topic and format"],
+  "checklist": ["sometimes use 3, sometimes 4, 5, 6, or 7 items. DO NOT default to using all 7 format-specific items that can be objectively verified to check before submission"]
 }
 
 Return ONLY the JSON object, no additional text.`
@@ -80,8 +152,9 @@ Format each suggestion as a JSON object within an array like this:
       "word_count": ${wordCount},
       "time_allocation": ${timeAllocation},
       "difficulty_level": "${difficulty}",
-      "grammar_focus": ["2-3 grammar points"],
-      "vocabulary_themes": ["2-3 vocabulary themes relevant to the ${format}"]
+      "grammar_focus": ["2-3 specific grammar points appropriate for ${difficulty} CEFR level"],
+      "vocabulary_themes": ["2-3 vocabulary themes relevant to the ${format}"],
+      "checklist": ["sometimes use 3, sometimes 4, 5, 6, or 7 items. DO NOT default to using all 7 format-specific items that can be objectively verified to check before submission"]
     }
   ]
 }
@@ -141,7 +214,8 @@ Return ONLY the JSON object, no additional text.`
           timeAllocation: suggestion.time_allocation,
           difficultyLevel: suggestion.difficulty_level,
           grammarFocus: suggestion.grammar_focus,
-          vocabularyThemes: suggestion.vocabulary_themes
+          vocabularyThemes: suggestion.vocabulary_themes,
+          checklist: suggestion.checklist
         }));
 
         return NextResponse.json({ suggestions: transformedSuggestions });

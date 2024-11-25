@@ -363,6 +363,30 @@ export function ChallengeInstructions({
                 />
               </div>
 
+              <FormField
+                  control={form.control}
+                  name="checklist"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-base font-semibold text-zinc-900 dark:text-white">
+                        Checklist
+                      </FormLabel>
+                      <FormControl>
+                        <TagInput
+                          placeholder="Add checklist items and press Enter"
+                          tags={field.value}
+                          className="border-0 shadow-none bg-white dark:bg-zinc-900 focus-within:ring-2 focus-within:ring-blue-500"
+                          onTagsChange={(tags) => field.onChange(tags)}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Add items that need to be checked off for submission.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )} 
+                />
+
               <div className="grid gap-6">
                 <FormField
                   control={form.control}

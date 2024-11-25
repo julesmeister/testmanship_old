@@ -14,6 +14,7 @@ interface SubmitChallengeParams {
     word_count: number;
     grammar_focus: string[];
     vocabulary_themes: string[];
+    checklist: string[];
     [key: string]: any;
   };
   isEditMode?: boolean;
@@ -49,7 +50,8 @@ export const useChallengeSubmission = () => {
             word_count: data.word_count,
             grammar_focus: data.grammar_focus,
             vocabulary_themes: data.vocabulary_themes,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            checklist: data.checklist
           })
           .eq('id', challengeId);
 
@@ -64,7 +66,8 @@ export const useChallengeSubmission = () => {
           time_allocation: data.time_allocation,
           word_count: data.word_count,
           grammar_focus: data.grammar_focus,
-          vocabulary_themes: data.vocabulary_themes
+          vocabulary_themes: data.vocabulary_themes,
+          checklist: data.checklist
         };
 
         const { error } = await supabase
