@@ -21,7 +21,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Caprasimo&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Lobster&display=swap" rel="stylesheet" />
         <title>
           Testmanship - Elevate Your Writing with AI-Powered Feedback
         </title>

@@ -31,14 +31,14 @@ export const LanguageScroll = () => {
         {languages.map((language) => (
           <div
             key={language}
-            className="h-12 flex items-center justify-center font-['Caprasimo'] text-2xl tracking-wide whitespace-nowrap text-blue-600 font-light"
+            className="h-12 flex items-center justify-center font-['Lobster'] text-2xl tracking-wide whitespace-nowrap text-blue-600 font-semibold"
           >
             {language}
           </div>
         ))}
         {/* Duplicate first item to make the loop seamless */}
         <div 
-          className="h-12 flex items-center justify-center font-['Caprasimo'] text-2xl tracking-wide whitespace-nowrap text-blue-300 font-light"
+          className="h-12 flex items-center justify-center font-['Lobster'] text-2xl tracking-wide whitespace-nowrap text-blue-300 font-semibold"
         >
           {languages[0]}
         </div>

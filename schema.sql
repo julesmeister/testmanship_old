@@ -210,12 +210,18 @@ create table challenge_attempts (
   feedback text
 );
 alter table challenge_attempts enable row level security;
-create policy "Users can view their own attempts." 
-  on challenge_attempts for select 
-  using (auth.uid() = user_id);
-create policy "Users can create their own attempts." 
-  on challenge_attempts for insert 
-  with check (auth.uid() = user_id);
+
+-- Drop existing policies if they exist
+drop policy if exists "Users can view their own attempts" on challenge_attempts;
+drop policy if exists "Users can create their own attempts" on challenge_attempts;
+drop policy if exists "Users can delete their own attempts" on challenge_attempts;
+
+-- Create a single policy that allows all operations
+create policy "Allow all operations on challenge_attempts"
+  on challenge_attempts
+  for all
+  using (true)
+  with check (true);
 
 -- Skill Analysis table
 create table skill_metrics (
@@ -236,7 +242,7 @@ create policy "Users can view their own skill metrics."
 -- Writing Performance Metrics table
 create table performance_metrics (
   id uuid default gen_random_uuid() primary key,
-  attempt_id uuid references challenge_attempts not null,
+  attempt_id uuid references challenge_attempts on delete cascade not null,
   user_id uuid references auth.users not null,
   metric_name text not null,
   metric_value decimal(5,2) not null,

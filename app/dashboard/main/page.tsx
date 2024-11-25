@@ -9,7 +9,7 @@ export default async function Account() {
   try {
     // Get authenticated user
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-
+    
     if (!authUser || authError) {
       console.error('Auth error or no user:', authError);
       return redirect('/dashboard/signin');

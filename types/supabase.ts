@@ -6,6 +6,15 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type UserDetails = {
+  id: string;
+  email?: string;
+  name?: string;
+  // Add any other user-specific details you need
+  subscription_tier?: string;
+  created_at?: string;
+}
+
 export interface Database {
   public: {
     Tables: { 
