@@ -242,7 +242,7 @@ Return ONLY the JSON array, no additional text or explanations.${topics.length >
 
 export async function POST_essayAnalysis(req: Request) {
   try {
-    const { essayContent, challengeId, targetLanguage, isFullEssay } = await req.json();
+    const { essayContent, targetLanguage, isFullEssay } = await req.json();
 
     if (!essayContent) {
       return NextResponse.json(

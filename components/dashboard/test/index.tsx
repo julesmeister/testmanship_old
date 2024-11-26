@@ -37,7 +37,6 @@ import { toast } from 'sonner';
 import { useTestState } from '@/hooks/useTestState';
 import { useEvaluationState } from '@/hooks/useEvaluationState';
 import { PencilIcon, ClockIcon, CheckCircleIcon, ChatBubbleBottomCenterTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import { Content } from 'next/font/google';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -78,7 +77,6 @@ const extendChallenge = (challenge: Challenge | null, currentInputMessage: strin
 export default function Test({ user, userDetails }: Props) {
   const { showChallenges, showEvaluation, idleTimer, setIdleTimer, startChallenge } = useTestState();
   const [outputCode, setOutputCode] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [mode, setMode] = useState<'practice' | 'exam'>('exam');
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
@@ -90,6 +88,7 @@ export default function Test({ user, userDetails }: Props) {
   const [error, setError] = useState<string>('');
   const [lastTyped, setLastTyped] = useState<number>(Date.now());
   const [format, setFormat] = useState<string>('');
+  const [checkedPhrases, setCheckedPhrases] = useState<boolean[]>([]);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debug logging for language selection
@@ -208,10 +207,18 @@ export default function Test({ user, userDetails }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setInputMessage(newValue);
+    const newText = e.target.value;
+    setInputMessage(newText);
     setLastTyped(Date.now());
     
+    // Check for phrases if we have a challenge selected
+    if (selectedChallenge?.checklist) {
+      const newCheckedPhrases = selectedChallenge.checklist.map(phrase => 
+        newText.toLowerCase().includes(phrase.toLowerCase())
+      );
+      setCheckedPhrases(newCheckedPhrases);
+    }
+
     // Clear existing timer
     if (idleTimerRef.current) {
       clearInterval(idleTimerRef.current);
@@ -252,32 +259,32 @@ export default function Test({ user, userDetails }: Props) {
     stopSuggestions();
     
     // Update stats
-    handleTextStats(newValue);
+    handleTextStats(newText);
     
     // Auto-adjust height
     e.target.style.height = 'auto';
     e.target.style.height = `${e.target.scrollHeight}px`;
     
     // Show feedback state if needed
-    if (newValue.length > 0 && !showFeedbackState && !manuallyClosedFeedbackState) {
+    if (newText.length > 0 && !showFeedbackState && !manuallyClosedFeedbackState) {
       setShowFeedbackState(true);
     }
     
     if (isTimeUp) return;
     
-    if (!isWriting && newValue.length > 0 && !isTimeUp) {
+    if (!isWriting && newText.length > 0 && !isTimeUp) {
       setIsWriting(true);
     }
 
     // Calculate current paragraph index by counting double newlines
-    const paragraphs = newValue.split(/\n\s*\n/);
+    const paragraphs = newText.split(/\n\s*\n/);
     const currentIndex = paragraphs.length - 1;
     
     // Only trigger paragraph change if content actually changed
-    if (newValue !== inputMessage) {
-      handleParagraphChange(newValue, inputMessage, currentIndex);
+    if (newText !== inputMessage) {
+      handleParagraphChange(newText, inputMessage, currentIndex);
     }
-  }, [generateSuggestion, handleTextStats, stopSuggestions, handleParagraphChange, inputMessage, isTimeUp, isWriting, manuallyClosedFeedbackState, showFeedbackState]);
+  }, [generateSuggestion, handleTextStats, stopSuggestions, handleParagraphChange, inputMessage, isTimeUp, isWriting, manuallyClosedFeedbackState, showFeedbackState, selectedChallenge?.checklist]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -316,10 +323,6 @@ export default function Test({ user, userDetails }: Props) {
     setOutputCode('');
     setShowFeedbackState(false);
     setManuallyClosedFeedbackState(false);
-  };
-
-  const handleBackToChallenges = () => {
-    handleStopChallenge();
   };
 
   const handleGenerateFeedback = async (paragraph: string): Promise<string> => {
@@ -536,6 +539,7 @@ export default function Test({ user, userDetails }: Props) {
           evaluatedSkillMetrics={evaluatedSkillMetrics}
           performanceMetrics={performanceMetrics}
           skillMetrics={skillMetrics}
+          checkedPhrases={checkedPhrases}
         />
 
         {/* Writing Area */}

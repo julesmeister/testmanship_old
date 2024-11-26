@@ -55,6 +55,7 @@ interface LeftColumnProps {
   evaluatedSkillMetrics: any;
   performanceMetrics: any;
   skillMetrics: any;
+  checkedPhrases?: boolean[];
 }
 
 const TipBox = ({ onClose }: { onClose: () => void }) => (
@@ -175,7 +176,8 @@ const LeftColumn = ({
   evaluatedPerformanceMetrics,
   evaluatedSkillMetrics,
   performanceMetrics,
-  skillMetrics
+  skillMetrics,
+  checkedPhrases,
 }: LeftColumnProps) => {
   const { showChallenges, showEvaluation, setShowChallenges, setShowEvaluation } = useTestState();
 
@@ -276,6 +278,7 @@ const LeftColumn = ({
           accordionValue={accordionValue}
           onAccordionValueChange={setAccordionValue}
           onBackToChallenges={handleBackToChallenges}
+          checkedPhrases={checkedPhrases}
         />
       )}
 

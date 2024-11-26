@@ -19,23 +19,26 @@ import { InfoCard } from "@/components/card/InfoCard";
 import { FocusCard } from "@/components/card/FocusCard";
 import { FooterStats } from "@/components/card/FooterStats";
 import { Challenge } from "@/types/challenge";
+import { ChecklistCard } from '@/components/card/ChecklistCard';
 
 interface InstructionsAccordionProps {
   challenge: Challenge;
   format: string;
   showChallenges: boolean;
-  accordionValue?: string;
+  accordionValue: string;
   onAccordionValueChange: (value: string) => void;
   onBackToChallenges: () => void;
+  checkedPhrases?: boolean[];
 }
 
 export function InstructionsAccordion({
   challenge,
   format,
   showChallenges,
-  accordionValue = "instructions",
+  accordionValue,
   onAccordionValueChange,
   onBackToChallenges,
+  checkedPhrases
 }: InstructionsAccordionProps) {
   const accordionRef = useRef<HTMLDivElement>(null);
 
@@ -148,11 +151,12 @@ export function InstructionsAccordion({
               </div>
               {Array.isArray(challenge.checklist) && challenge.checklist.length > 0 && (
                 <div className="mt-3">
-                  <FocusCard 
-                    title="Submission Checklist"
+                  <ChecklistCard 
+                    title="Useful Phrases"
                     items={challenge.checklist}
                     icon={HiClipboardDocumentCheck}
-                    colorScheme="amber"
+                    colorScheme="slate"
+                    checked={checkedPhrases || challenge.checklist.map(() => false)}
                   />
                 </div>
               )}
