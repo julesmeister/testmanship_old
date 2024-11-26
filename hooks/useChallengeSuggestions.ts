@@ -4,6 +4,7 @@ import { ChallengeFormat, Suggestion } from '@/types/challenge-generator';
 import { UseFormGetValues } from 'react-hook-form';
 import { z } from 'zod';
 import { formSchema } from '@/components/dashboard/challenge-generator/schema';
+import { useLanguageStore } from '@/stores/language';
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -11,6 +12,7 @@ export function useChallengeSuggestions(
   getFormValues: UseFormGetValues<FormValues>,
   formats: ChallengeFormat[]
 ) {
+  const { languages, selectedLanguageId } = useLanguageStore();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [usedTitles, setUsedTitles] = useState<Set<string>>(new Set());
   const [isGenerating, setIsGenerating] = useState(false);
@@ -20,6 +22,7 @@ export function useChallengeSuggestions(
       const difficulty = getFormValues('difficulty');
       const format = formats.find(f => f.id === getFormValues('format'));
       const timeAllocation = getFormValues('timeAllocation');
+      const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
 
       if (!format) {
         toast.error('Please select a format');
@@ -40,7 +43,8 @@ export function useChallengeSuggestions(
           difficulty, 
           format: format.name, 
           timeAllocation,
-          usedTitles: Array.from(usedTitles)
+          usedTitles: Array.from(usedTitles),
+          targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'	,
         }),
       });
 

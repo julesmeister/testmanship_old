@@ -16,6 +16,7 @@
 import { NextResponse } from 'next/server';
 import { makeAIRequest } from '@/utils/ai';
 import { getWordCountRange, isValidDifficulty } from '@/types/difficulty';
+import { getLanguageName } from '@/types/language';
 
 export async function POST(req: Request) {
   console.log('API Route started');
@@ -23,7 +24,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log('Request body:', body);
     
-    const { difficulty, format, timeAllocation, topics = [], usedTitles = [], title = '' } = body;
+    const { difficulty, format, timeAllocation, topics = [], usedTitles = [], title = '', targetLanguage = 'EN' } = body;
+    const languageName = getLanguageName(targetLanguage);
 
     if (!isValidDifficulty(difficulty)) {
       console.error('Invalid difficulty in request');
@@ -91,26 +93,31 @@ For each difficulty level, use these specific grammar points:
   * Complex tense relationships
   * Advanced modals and conditionals
 
-Examples of GOOD checklist items:
-- "Include the restaurant's name and location"
-- "Describe at least two dishes ordered"
-- "State the movie's release year"
-- "List three main ingredients"
-- "Closing remark"
-- "Include the date and time of the event"
-- "Salutation"
-- "Introduction"
-- "Conclusion"
-- "Summary"
-- "Explain the purpose of the event"
+Examples of GOOD checklist items for different formats:
+- Formal formats (Letter, Email, Formal Letter, Formal Email):
+  - "Sehr geehrte Damen und Herren"
+  - "Mit freundlichen Grüßen"
+  - "Dear Sir/Madam"
+  - "Best regards"
+  - "Thank you for your consideration"
+  - "Yours sincerely"
+  - "As per our conversation"
+  - "In response to your inquiry"
+  - "I am writing to apply for"
+
+- General formats:
+  - "Guten Tag"
+  - "I am so excited about"
+  - "We are going to"
+  - "I would like to"
 
 Examples of BAD checklist items (DO NOT USE THESE):
-- "Use simple vocabulary"
-- "Write short sentences"
-- "Use proper grammar"
-- "Be descriptive"
-- "Proofread your work"
-- "Use formal tone"
+- "Include a greeting"
+- "Add a signature"
+- "Write formally"
+- "Be polite"
+- "Show enthusiasm"
+- "Be professional"
 
 Focus exclusively on WHAT specific content needs to be included, not HOW it should be written. Always respond with valid JSON.`
       },
@@ -132,10 +139,10 @@ Format the response as a JSON object with these properties:
   "keyPoints": ["3-4 key points to focus on, including format-specific elements"],
   "grammarFocus": ["2-3 specific grammar points appropriate for ${difficulty} CEFR level"],
   "vocabularyThemes": ["2-3 vocabulary themes relevant to the topic and format"],
-  "checklist": ["sometimes use 3, sometimes 4, 5, 6, or 7 items. DO NOT default to using all 7 format-specific items that can be objectively verified to check before submission"]
+  "checklist": ["3-7 exact phrases that must appear in the text. If ${format} is a formal format, include appropriate formal phrases. All phrases must be in ${languageName}."]
 }
 
-Return ONLY the JSON object, no additional text.`
+Return ONLY the JSON object, no additional text or explanations.`
       });
     } else {
       // Challenge suggestion mode
@@ -154,15 +161,12 @@ Format each suggestion as a JSON object within an array like this:
       "difficulty_level": "${difficulty}",
       "grammar_focus": ["2-3 specific grammar points appropriate for ${difficulty} CEFR level"],
       "vocabulary_themes": ["2-3 vocabulary themes relevant to the ${format}"],
-      "checklist": ["sometimes use 3, sometimes 4, 5, 6, or 7 items. DO NOT default to using all 7 format-specific items that can be objectively verified to check before submission"]
+      "checklist": ["3-7 exact phrases that must appear in the text. If ${format} is a formal format, include appropriate formal phrases. All phrases must be in ${languageName}."]
     }
   ]
 }
 
-${topics.length > 0 ? `Focus on these topics:\n${topics.join('\n')}\n` : ''}
-${usedTitles.length > 0 ? `\n\nDo NOT use any of these titles:\n${usedTitles.join('\n')}\n` : ''}
-
-Return ONLY the JSON object, no additional text.`
+Return ONLY the JSON array, no additional text or explanations.${topics.length > 0 ? `\nFocus on these topics:\n${topics.join('\n')}` : ''}`
       });
     }
 
