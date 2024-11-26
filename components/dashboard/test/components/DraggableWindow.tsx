@@ -8,16 +8,37 @@ interface DraggableWindowProps {
 }
 
 export function DraggableWindow({ children, onClose }: DraggableWindowProps) {
+  const initialWidth = 400;
+  const padding = 100;
+  
+  // Calculate initial position from the right side of the screen
+  const getInitialX = () => {
+    if (typeof window === 'undefined') return padding;
+    // Subtract the initial width to ensure the window is fully visible
+    return window.innerWidth - initialWidth - padding;
+  };
+
+  const getInitialHeight = () => {
+    if (typeof window === 'undefined') return 500;
+    return Math.floor(window.innerHeight / 2);
+  };
+
   const { dragProps, isDragging } = useDraggable({
-    initialPosition: { x: 20, y: 20 }
+    initialPosition: { 
+      x: getInitialX(),
+      y: padding 
+    }
   });
 
   const { size, resizeProps, containerStyle } = useResizable({
-    initialSize: { width: 400, height: window.innerHeight - 100 },
+    initialSize: { 
+      width: initialWidth, 
+      height: getInitialHeight()
+    },
     minWidth: 300,
     minHeight: 200,
     maxWidth: 800,
-    maxHeight: window.innerHeight - 50
+    maxHeight: typeof window !== 'undefined' ? Math.floor(window.innerHeight * 0.8) : 500
   });
 
   return (
@@ -28,8 +49,7 @@ export function DraggableWindow({ children, onClose }: DraggableWindowProps) {
         width: containerStyle.width,
         height: containerStyle.height,
         position: 'fixed',
-        top: '20px',
-        left: '88px', // Account for collapsed sidebar width
+        maxWidth: `calc(100vw - ${padding * 2}px)`,
         zIndex: 50
       }}
       className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm rounded-lg border border-zinc-200/50 dark:border-zinc-700/50 shadow-lg transition-all relative"

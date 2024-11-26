@@ -377,7 +377,7 @@ const LeftColumn = ({
       </div>
 
       {/* Toggle Feedback Button */}
-      {challenge && !showFeedback && (
+      {challenge && !showFeedback && mode === 'practice' && (
         <button
           onClick={() => setShowFeedback(true)}
           className="fixed bottom-4 right-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:opacity-90 transition-opacity"
@@ -387,7 +387,7 @@ const LeftColumn = ({
       )}
 
       {/* AI Feedback Window */}
-      {challenge && showFeedback && (
+      {challenge && showFeedback && mode === 'practice' && (
         <DraggableWindow onClose={() => {
           setManuallyClosedFeedback(true);
           setShowFeedback(false);
