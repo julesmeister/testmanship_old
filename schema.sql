@@ -132,7 +132,8 @@ create table challenges (
   word_count INTEGER,
   grammar_focus TEXT[],
   vocabulary_themes TEXT[],
-  checklist TEXT[]
+  checklist TEXT[],
+  lang text not null
 );
 alter table challenges enable row level security;
 create policy "Challenges are viewable by everyone." 

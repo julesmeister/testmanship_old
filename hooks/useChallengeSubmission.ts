@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useLanguageStore } from '@/stores/language';
+import { getLanguageName } from '@/types/language';
 
 interface SubmitChallengeParams {
   supabase: SupabaseClient;
@@ -24,13 +26,15 @@ interface SubmitChallengeParams {
 export const useChallengeSubmission = () => {
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+  const { languages, selectedLanguageId } = useLanguageStore();
 
   const submitChallenge = async ({ supabase, data, isEditMode, challengeId }: SubmitChallengeParams) => {
     setIsSaving(true);
     try {
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
+
       if (!session?.user) {
         toast.error('Please sign in to save challenges', {
           id: 'saving-challenge',
@@ -51,7 +55,8 @@ export const useChallengeSubmission = () => {
             grammar_focus: data.grammar_focus,
             vocabulary_themes: data.vocabulary_themes,
             updated_at: new Date().toISOString(),
-            checklist: data.checklist
+            checklist: data.checklist,
+            lang: getLanguageName(selectedLanguage?.code?.toUpperCase() || 'EN')
           })
           .eq('id', challengeId);
 
@@ -67,7 +72,8 @@ export const useChallengeSubmission = () => {
           word_count: data.word_count,
           grammar_focus: data.grammar_focus,
           vocabulary_themes: data.vocabulary_themes,
-          checklist: data.checklist
+          checklist: data.checklist,
+          lang: getLanguageName(selectedLanguage?.code?.toUpperCase() || 'EN')
         };
 
         const { error } = await supabase

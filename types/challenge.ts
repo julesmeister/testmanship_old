@@ -20,6 +20,7 @@ export interface Challenge {
   grammar_focus?: string[];
   vocabulary_themes?: string[];
   checklist?: string[];
+  lang: string;
   example_response?: string;
   targetLanguage?: string;
   created_at?: string;

@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { HiClock, HiDocumentText, HiPlay } from 'react-icons/hi2';
+import { HiClock, HiDocumentText, HiPlay, HiLanguage } from 'react-icons/hi2';
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from '@/stores/sidebar';
 
@@ -15,6 +15,7 @@ interface Challenge {
   word_count?: number;
   grammar_focus?: string[];
   vocabulary_themes?: string[];
+  lang: string;
 }
 
 interface ChallengeCardProps {
@@ -56,6 +57,11 @@ export const ChallengeCard = ({ challenge, onStart }: ChallengeCardProps) => {
                   </div>
                 </>
               )}
+              <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+              <div className="flex items-center gap-1">
+                <HiLanguage className="h-3.5 w-3.5" />
+                {challenge.lang}
+              </div>
             </div>
           </div>
           <TooltipProvider>
