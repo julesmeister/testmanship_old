@@ -20,6 +20,7 @@ import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs
 import { toast } from 'sonner';
 import { Loader2, ClipboardList, Eye, Trash2, AlertTriangle, AlertCircle, X } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { Sparkles, PenSquare } from "lucide-react";
 
 type DifficultyLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
@@ -225,10 +226,23 @@ const MainDashboardTable = ({ user, userDetails, session }: Props) => {
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <ClipboardList className="h-8 w-8 text-zinc-400 mb-4" />
                     <div className="space-y-1">
-                      <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">No challenges completed yet</h3>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-                        Begin your learning journey by attempting your first writing challenge. Track your progress and improve your skills.
-                      </p>
+                      <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-8">No challenges completed yet</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                        <div className="flex flex-col items-center p-6 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                          <Sparkles className="w-8 h-8 text-indigo-500 mb-4" />
+                          <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2">Generate a Challenge</h3>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
+                            Create a personalized writing challenge using our AI-powered Challenge Generator. Customize the topic, difficulty, and format to match your learning goals.
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-center p-6 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                          <PenSquare className="w-8 h-8 text-indigo-500 mb-4" />
+                          <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2">Take a Challenge</h3>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
+                            Visit the Test section to start your writing journey. Choose from your generated challenges or explore challenges created by other learners in the community.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </TableCell>
@@ -352,11 +366,24 @@ const MainDashboardTable = ({ user, userDetails, session }: Props) => {
           <div className="rounded-lg border p-4 space-y-3">
             <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
               <ClipboardList className="h-8 w-8 text-zinc-400" />
-              <div>
-                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">No challenges completed yet</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Start your learning journey by attempting your first challenge.
-                </p>
+              <div className="space-y-1">
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-8">No challenges completed yet</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                  <div className="flex flex-col items-center p-6 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                    <Sparkles className="w-8 h-8 text-indigo-500 mb-4" />
+                    <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2">Generate a Challenge</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
+                      Create a personalized writing challenge using our AI-powered Challenge Generator. Customize the topic, difficulty, and format to match your learning goals.
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center p-6 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                    <PenSquare className="w-8 h-8 text-indigo-500 mb-4" />
+                    <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2">Take a Challenge</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
+                      Visit the Test section to start your writing journey. Choose from your generated challenges or explore challenges created by other learners in the community.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
