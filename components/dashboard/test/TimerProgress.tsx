@@ -7,6 +7,7 @@ interface GradeButtonProps {
   showWordCount?: boolean;
   wordCount?: number;
   requiredWordCount?: number;
+  text: string;
 }
 
 const GradeButton: React.FC<GradeButtonProps> = ({ 
@@ -14,7 +15,8 @@ const GradeButton: React.FC<GradeButtonProps> = ({
   onMouseLeave,
   showWordCount,
   wordCount,
-  requiredWordCount
+  requiredWordCount,
+  text,
 }) => (
   <button
     onClick={onClick}
@@ -31,7 +33,7 @@ const GradeButton: React.FC<GradeButtonProps> = ({
     
     {/* Content with hover effects */}
     <span className="relative z-10 transform transition-transform duration-200">
-      Grade and Record Challenge
+      {text}
       {showWordCount && ` (${wordCount}/${requiredWordCount} words)`}
     </span>
     <CheckCircle 
@@ -45,6 +47,7 @@ interface TimerProgressProps {
   timeAllocation?: number;
   mode: 'practice' | 'exam';
   onGradeChallenge: () => void;
+  onForceTimeUp: () => void;
   wordCount?: number;
   requiredWordCount?: number;
   showGradeButton?: boolean;
@@ -55,6 +58,7 @@ export default function TimerProgress({
   timeAllocation, 
   mode,
   onGradeChallenge,
+  onForceTimeUp,
   wordCount = 0,
   requiredWordCount = 0,
   showGradeButton = false
@@ -114,17 +118,18 @@ export default function TimerProgress({
   const backgroundColor = mode === 'exam' ? '#2563eb' : '#059669';
 
   if (isTimeUp) {
-    return <GradeButton onClick={onGradeChallenge} />;
+    return <GradeButton onClick={onGradeChallenge} text="Grade and Record Challenge" />;
   }
 
   if (isHovered && showGradeButton) {
     return (
       <GradeButton 
-        onClick={onGradeChallenge}
+        onClick={onForceTimeUp}
         onMouseLeave={() => setIsHovered(false)}
         showWordCount
         wordCount={wordCount}
         requiredWordCount={requiredWordCount}
+        text='Evaluate'
       />
     );
   }

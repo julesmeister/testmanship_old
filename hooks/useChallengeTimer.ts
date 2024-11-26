@@ -50,6 +50,14 @@ export const useChallengeTimer = (challenge: Challenge | null) => {
     startTimeRef.current = null;
   };
 
+  const forceTimeUp = useCallback(() => {
+    if (!challenge) return;
+    const timeAllocationInSeconds = challenge.time_allocation * 60;
+    setElapsedTime(timeAllocationInSeconds);
+    setIsTimeUp(true);
+    setIsWriting(false);
+  }, [challenge]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -77,6 +85,7 @@ export const useChallengeTimer = (challenge: Challenge | null) => {
     isWriting,
     startTimer,
     resetTimer,
-    setIsWriting
+    setIsWriting,
+    forceTimeUp
   };
 };

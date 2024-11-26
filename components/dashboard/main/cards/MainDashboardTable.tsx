@@ -195,14 +195,14 @@ const MainDashboardTable = ({ user, userDetails, session }: Props) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Challenge</TableHead>
-              <TableHead className="text-right">Difficulty</TableHead>
-              <TableHead className="text-right">Performance</TableHead>
-              <TableHead className="text-right">Paragraphs</TableHead>
-              <TableHead className="text-right">Words</TableHead>
-              <TableHead className="text-right">Time Spent</TableHead>
-              <TableHead className="text-right">Date</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead className="w-[300px] text-zinc-900 dark:text-zinc-100">Challenge</TableHead>
+              <TableHead className="text-right text-zinc-900 dark:text-zinc-100">Difficulty</TableHead>
+              <TableHead className="text-right text-zinc-900 dark:text-zinc-100">Performance</TableHead>
+              <TableHead className="text-right text-zinc-900 dark:text-zinc-100">Paragraphs</TableHead>
+              <TableHead className="text-right text-zinc-900 dark:text-zinc-100">Words</TableHead>
+              <TableHead className="text-right text-zinc-900 dark:text-zinc-100">Time Spent</TableHead>
+              <TableHead className="text-right text-zinc-900 dark:text-zinc-100">Date</TableHead>
+              <TableHead className="text-center text-zinc-900 dark:text-zinc-100">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

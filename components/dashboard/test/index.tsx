@@ -129,8 +129,13 @@ export default function Test({ user, userDetails }: Props) {
     isWriting,
     startTimer,
     resetTimer,
-    setIsWriting
+    setIsWriting,
+    forceTimeUp
   } = useChallengeTimer(selectedChallenge);
+
+  const handleForceTimeUp = () => {
+    forceTimeUp();
+  };
 
   const {
     handleParagraphChange
@@ -576,6 +581,7 @@ export default function Test({ user, userDetails }: Props) {
                 timeAllocation={selectedChallenge.time_allocation}
                 mode={mode}
                 onGradeChallenge={handleGradeChallenge}
+                onForceTimeUp={handleForceTimeUp}
                 wordCount={wordCount}
                 requiredWordCount={selectedChallenge.word_count}
                 showGradeButton={wordCount >= (selectedChallenge.word_count || 0)}

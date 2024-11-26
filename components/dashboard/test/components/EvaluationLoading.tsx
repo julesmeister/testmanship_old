@@ -27,7 +27,7 @@ export const EvaluationLoading = ({ onRefresh, isTimeUp }: EvaluationLoadingProp
               className="flex items-center space-x-2 px-3 py-1 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
             >
               <HiArrowPath className="h-4 w-4" />
-              <span>Refresh</span>
+              <span>Reevaluate</span>
             </button>
           )}
         </div>

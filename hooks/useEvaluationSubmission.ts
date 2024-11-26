@@ -118,29 +118,6 @@ export const useEvaluationSubmission = () => {
         style: parseFloat(data.evaluation.skills.style.toString())
       };
 
-      // Validate all metric values
-      Object.entries(metricsData).forEach(([key, value]) => {
-        if (isNaN(value)) {
-          throw new Error(`Invalid metric value for ${key}`);
-        }
-        if (value < -999.99 || value > 999.99) {
-          throw new Error(`Metric value out of range for ${key}`);
-        }
-      });
-
-      const performanceMetric = {
-        attempt_id: attemptRecord.id,
-        user_id: session.user.id,
-        metrics: metricsData
-      };
-
-      const { error: metricsError } = await supabase
-        .from('performance_metrics')
-        .insert(performanceMetric);
-
-      if (metricsError) {
-        throw new Error(`Failed to insert performance metrics: ${metricsError.message}`);
-      }
 
       // 3. Update user progress with insights and metrics
       // First, get the current progress
