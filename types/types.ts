@@ -1,4 +1,5 @@
 import { ComponentType, ReactNode } from 'react';
+import { User } from '@supabase/auth-helpers-nextjs';
 
 export type OpenAIModel =
   | 'gpt-3.5-turbo'
@@ -28,6 +29,12 @@ export interface PageMeta {
   title: string;
   description: string;
   cardImage: string;
+}
+
+export interface User {
+  user: User;
+  userDetails: UserDetails;
+  session: any;
 }
 
 export interface UserDetails {

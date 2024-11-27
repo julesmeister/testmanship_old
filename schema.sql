@@ -270,9 +270,9 @@ create table user_progress (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 alter table user_progress enable row level security;
-create policy "Users can view their own progress." 
-  on user_progress for select 
-  using (auth.uid() = user_id);
+create policy "Allow all operations on user_progress" 
+  on user_progress for all 
+  using (true);
 
 -- Function to update user progress after each challenge attempt
 create or replace function update_user_progress()

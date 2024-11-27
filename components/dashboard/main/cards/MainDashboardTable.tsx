@@ -15,8 +15,8 @@ import { diffWords } from 'diff';
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { UserDetails } from '@/types/types';
-import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs';
+import { User } from '@/types/types';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'sonner';
 import { Loader2, ClipboardList, Eye, Trash2, AlertTriangle, AlertCircle, X } from "lucide-react";
 import { useRouter } from 'next/navigation';
@@ -38,13 +38,7 @@ type Challenge = {
   feedback: string;
 };
 
-interface Props {
-  user: User;
-  userDetails: UserDetails;
-  session: any;
-}
-
-const MainDashboardTable = ({ user, userDetails, session }: Props) => {
+const MainDashboardTable = ({ user, userDetails, session }: User) => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);

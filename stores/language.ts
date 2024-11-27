@@ -8,6 +8,11 @@ interface Language {
   name: string;
 }
 
+interface RpcResponse {
+  success: boolean;
+  error?: string;
+}
+
 interface LanguageState {
   selectedLanguageId: string | null;
   showDialog: boolean;
@@ -34,10 +39,7 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   showDialog: false,
   languages: [],
   setSelectedLanguageId: (id) => {
-    console.log('[Language Store] Setting selectedLanguageId:', {
-      newId: id,
-      currentState: get()
-    });
+    
     set({ selectedLanguageId: id });
     // Force a store update to notify subscribers
     set(state => ({ ...state }));
@@ -46,7 +48,6 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   setLanguages: (languages) => set({ languages }),
   loadLanguages: async () => {
     try {
-      console.log('[Language Store] Loading languages...');
       const supabase = getSupabase();
       const { data: languagesData, error: languagesError } = await supabase
         .from('supported_languages')
@@ -60,7 +61,6 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
       }
 
       if (languagesData) {
-        console.log('[Language Store] Languages loaded:', languagesData);
         set({ languages: languagesData });
       }
     } catch (error) {
@@ -71,8 +71,12 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   updateUserLanguage: async (userId: string, languageId: string) => {
     try {
       const supabase = getSupabase();
-      const { data: response, error: rpcError } = await supabase.rpc(
-        'update_user_language',
+      if (!supabase) {
+        toast.error("Supabase client not initialized");
+        return false;
+      }
+
+      const { data: rpcData, error: rpcError } = await supabase.rpc('update_user_language', 
         { 
           user_id: userId,
           language_id: languageId
@@ -84,6 +88,8 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
         toast.error("Failed to save language preference");
         return false;
       }
+
+      const response = rpcData as RpcResponse;
 
       if (!response?.success) {
         console.error('Update failed:', response?.error || 'Unknown error');
@@ -100,6 +106,7 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
       if (language) {
         toast.success(`Learning language set to ${language.name}!`);
       }
+
       return true;
     } catch (error) {
       console.error('Error saving language:', error);

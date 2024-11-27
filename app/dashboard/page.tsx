@@ -5,7 +5,6 @@ import { getUserDetails } from '@/utils/supabase/queries';
 
 async function ensureUserRecord(supabase: any, authUser: any) {
   try {
-    console.log('Ensuring user record for:', authUser.id);
     
     // Check if user record exists
     const { data: existingUser, error: fetchError } = await supabase
@@ -50,9 +49,7 @@ async function ensureUserRecord(supabase: any, authUser: any) {
 }
 
 export default async function Dashboard() {
-  try {
-    console.log('=== Dashboard Page Start ===');
-    
+  try {    
     const supabase = await createClient();
     
     // Get authenticated user
@@ -68,8 +65,6 @@ export default async function Dashboard() {
       return redirect('/dashboard/signin');
     }
 
-    console.log('Authenticated user:', authUser.id);
-
     // Ensure user record exists in public.users table
     const recordCreated = await ensureUserRecord(supabase, authUser);
     
@@ -83,7 +78,6 @@ export default async function Dashboard() {
     // Get user details
     const userDetails = await getUserDetails(supabase);
     
-    console.log('=== Dashboard Page End ===');
     
     // Render the main component directly instead of redirecting
     return <Main user={authUser} userDetails={userDetails} />;

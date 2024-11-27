@@ -13,11 +13,6 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Session } from '@supabase/supabase-js';
 
-interface Props {
-  user: User;
-  userDetails: UserDetails;
-}
-
 export default function Main({user, userDetails}) {
   const { supabase } = useSupabase();
   const [session, setSession] = useState<Session | null>(null);
@@ -49,7 +44,7 @@ export default function Main({user, userDetails}) {
     >
       <div className="min-h-screen w-full">
         <div className="mb-5 flex gap-5 flex-col xl:flex-row w-full">
-          <MainChart />
+          <MainChart user={user} userDetails={userDetails} session={session} />
         </div>
         <div className="w-full rounded-lg">
           <MainDashboardTable user={user} userDetails={userDetails} session={session} />

@@ -5,7 +5,6 @@ import { cookies } from 'next/headers';
 
 export const createClient = async (isAdmin: boolean = false) => {
   try {
-    console.log('=== Creating Supabase Client ===');
     
     const cookieStore = await cookies();
     
@@ -23,12 +22,6 @@ export const createClient = async (isAdmin: boolean = false) => {
       });
       throw new Error('Missing required Supabase configuration');
     }
-
-    console.log('Creating client with config:', {
-      url: supabaseUrl,
-      hasKey: !!supabaseKey,
-      isAdmin
-    });
 
     const client = createServerClient(
       supabaseUrl,

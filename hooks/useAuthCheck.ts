@@ -14,8 +14,7 @@ export function useAuthCheck({ user, userDetails, supabase }: AuthCheckProps) {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('Current auth session:', session);
-        console.log('User prop:', user);
-        console.log('User details:', userDetails);
+       
         if (error) {
           console.error('Auth check error:', error);
         }

@@ -1,11 +1,65 @@
 import { Card } from '@/components/ui/card';
 import { Bar, BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useState, useEffect } from 'react';
+import { useSupabase } from '@/app/supabase-provider';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { UserDetails, User } from '@/types/types';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { MdArrowUpward } from 'react-icons/md';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState } from 'react';
+import { Loader2, AlertCircle, RefreshCw, Pencil } from 'lucide-react';
 
-export default function MainChart() {
+export default function MainChart({ user, userDetails, session }: User) {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("week");
+  const [weakestSkills, setWeakestSkills] = useState<string[]>([]);
+  const [selectedSkill, setSelectedSkill] = useState<string>('');
+  const [currentSkillIndex, setCurrentSkillIndex] = useState(0);
+  const [exerciseInput, setExerciseInput] = useState('');
+  const supabase = createClientComponentClient();
+
+  const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills });
+
+  useEffect(() => {
+    const fetchWeakestSkills = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_progress')
+          .select('weakest_skills')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        if (data && data.weakest_skills) {
+          console.log('Weakest skills:', data.weakest_skills);
+          setWeakestSkills(data.weakest_skills);
+        }
+      } catch (error) {
+        console.error('Error fetching weakest skills:', error);
+        toast.error('Failed to load skills data');
+      }
+    };
+
+    fetchWeakestSkills();
+  }, [supabase]);
+
+  const handleExerciseSubmit = async () => {
+    if (!exerciseInput.trim()) {
+      toast.error('Please enter a sentence');
+      return;
+    }
+
+    try {
+      // Here you would typically send this to your AI endpoint for evaluation
+      // For now, we'll just show a success message
+      toast.success('Exercise submitted successfully!');
+      setExerciseInput('');
+    } catch (error) {
+      console.error('Error submitting exercise:', error);
+      toast.error('Failed to submit exercise');
+    }
+  };
 
   const writingMetrics = {
     paragraphsWritten: {
@@ -37,16 +91,145 @@ export default function MainChart() {
 
   return (
     <Card className="w-full h-full pb-12 p-[20px]">
+      <style jsx global>{`
+        .custom-textarea {
+          font-size: 2.5rem;
+          line-height: 1.75;
+          caret-color: #10b981;
+          text-shadow: 0 0 0 #1f2937;
+          -webkit-text-fill-color: #1f2937;
+        }
+        .custom-textarea::placeholder {
+          color: #34d399;
+          opacity: 0.5;
+        }
+        .dark .custom-textarea::placeholder {
+          color: #6ee7b7;
+          opacity: 0.3;
+        }
+        .custom-textarea::selection {
+          background-color: #10b98120;
+        }
+        .dark .custom-textarea {
+          text-shadow: 0 0 0 #f3f4f6;
+          -webkit-text-fill-color: #f3f4f6;
+        }
+      `}</style>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">Writing Progress</h2>
-            // One line writing exercise
-          </div>
-          
-        </div>
+        {weakestSkills.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Focus Area</h3>
+            <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 rounded-lg p-4">
+              {isLoading ? (
+                <div className="flex flex-col space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                    <div className="flex items-center justify-center h-4 w-4 rounded-full bg-zinc-200 dark:bg-zinc-800 animate-pulse">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    </div>
+                    <span className="font-medium">Generating your personalized exercise...</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <div className="h-2 w-1/4 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse"></div>
+                    <div className="h-2 w-1/4 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse delay-100"></div>
+                    <div className="h-2 w-1/4 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse delay-200"></div>
+                    <div className="h-2 w-1/4 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse delay-300"></div>
+                  </div>
+                  </div>
+              ) : error ? (
+                <div className="flex flex-col space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="flex items-center gap-2 text-red-500 dark:text-red-400">
+                    <AlertCircle className="h-5 w-5 animate-pulse" />
+                    <span className="font-medium">Exercise Generation Failed</span>
+                  </div>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 ml-7">
+                    We couldn't generate your exercise at this moment. This might be due to temporary issues.
+                  </p>
+                  <div className="ml-7">
+                    <button
+                      onClick={() => generateExercise()}
+                      className="inline-flex items-center gap-2 text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                    >
+                      <RefreshCw className="h-4 w-4 animate-[spin_4s_linear_infinite]" />
+                      <span>Try generating again</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
+                    <div className="flex items-center justify-center h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                      <Pencil className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-medium">Your Writing Exercise</span>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Personalized practice based on your challenge responses
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => generateExercise()}
+                      className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-800/40 transition-colors"
+                    >
+                      <RefreshCw className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </button>
+                  </div>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 ml-7">
+                    {exercise?.exercise_prompt}
+                  </p>
+                  <div className="flex flex-wrap gap-2 ml-7 mt-3">
+                    {exercise?.vocabulary.map((word, index) => (
+                      <div
+                        key={index}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-full 
+                          ${`bg-emerald-50 text-emerald-600 border border-emerald-200 
+                          dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 
+                          transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/30`}`}
+                      >
+                        {word}
+                      </div>
+                    ))}
+                    
+                  </div>
+                  <div className="relative">
+                      <textarea
+                        value={exerciseInput}
+                        onChange={(e) => setExerciseInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleExerciseSubmit();
+                          }
+                        }}
+                        placeholder="Type your sentence here..."
+                        className="custom-textarea w-full min-h-[100px] p-4 bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-100 dark:placeholder:text-zinc-600 resize-none focus:outline-none font-medium"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 mb-2 text-xs text-zinc-500 dark:text-zinc-400 justify-end">
+                      <span>Press</span>
+                      <kbd className="px-2 py-1 text-xs font-semibold text-zinc-800 bg-zinc-100 border border-zinc-300 rounded-md dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">
+                        enter
+                      </kbd>
+                      <span>to submit your answer</span>
+                    </div>
+                  <div className="relative">
+                  <div className="relative">
+                    
+                    
+                  </div>
+                </div>
+                </div>
+              )}
+            </div>
 
-        
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <div className="space-y-4 w-full">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">Writing Progress</h2>
+            
+            
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-6">
           <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
