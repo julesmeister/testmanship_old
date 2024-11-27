@@ -183,7 +183,7 @@ export default function MainChart({ user, userDetails, session }: User) {
                     <div className="flex-1">
                       <span className="font-medium">Your Writing Exercise</span>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Personalized practice based on your challenge responses
+                        Personalized practice based on your challenge evaluations
                       </p>
                     </div>
                     <button
