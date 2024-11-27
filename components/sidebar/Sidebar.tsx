@@ -89,7 +89,7 @@ export default function Sidebar(props: SidebarProps) {
             {!isCollapsed && (
               <div className="flex flex-col">
                 <span className="text-base font-semibold tracking-tight">Testmanship</span>
-                <span className="text-xs text-muted-foreground">Writing Platform</span>
+                <span className="text-xs text-muted-foreground">Language Practice Hub</span>
               </div>
             )}
           </div>
