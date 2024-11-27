@@ -33,7 +33,6 @@ export default function MainChart({ user, userDetails, session }: User) {
 
         if (error) throw error;
         if (data && data.weakest_skills) {
-          console.log('Weakest skills:', data.weakest_skills);
           setWeakestSkills(data.weakest_skills);
         }
       } catch (error) {
@@ -247,21 +246,27 @@ export default function MainChart({ user, userDetails, session }: User) {
                     <span>to submit your answer</span>
                   </div>
                   <div className="flex flex-wrap gap-2 ml-7 mt-3">
-                    {[...new Set(exercise?.vocabulary || [])].map((word, index) => {
+                    {Object.entries(exercise?.vocabulary || {}).map(([word, translation], index) => {
                       const isUsed = exerciseInput.toLowerCase().includes(word.toLowerCase());
                       return (
                         <div
-                          key={index}
-                          className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${isUsed
-                              ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                              : 'bg-transparent text-zinc-400 border-zinc-200 dark:text-zinc-500 dark:border-zinc-800'
-                            }`}
+                          key={word}
+                          className="relative group"
                         >
-                          {word}
+                          <div
+                            className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${isUsed
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                                : 'bg-transparent text-zinc-400 border-zinc-200 dark:text-zinc-500 dark:border-zinc-800'
+                              }`}
+                          >
+                            {word}
+                          </div>
+                          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs bg-zinc-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                            {translation}
+                          </div>
                         </div>
                       );
                     })}
-
                   </div>
                 </div>
               )}

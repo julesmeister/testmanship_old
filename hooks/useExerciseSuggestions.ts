@@ -24,7 +24,7 @@ import { useLanguageStore } from '@/stores/language';
 
 interface ExerciseSuggestion {
   exercise_prompt: string;
-  vocabulary: string[];
+  vocabulary: { [key: string]: string };
   weak_skill: string;
   remaining_weak_skills: string[];
 }
@@ -52,7 +52,6 @@ export function useExerciseSuggestions({ weak_skills = [] }: UseExerciseSuggesti
   const generateExercise = async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      console.log('Generating exercise for weak skills:', weak_skills);
       const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
 
       const response = await fetch('/api/exercise-suggestions', {
@@ -77,7 +76,8 @@ export function useExerciseSuggestions({ weak_skills = [] }: UseExerciseSuggesti
       }
 
       const data = await response.json();
-      console.log('Generated exercise:', data);
+
+      console.log(data.vocabulary);
       
       setState(prev => ({
         ...prev,
