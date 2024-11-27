@@ -8,18 +8,19 @@ import { toast } from 'sonner';
 import { UserDetails, User } from '@/types/types';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
+import { useGradeTheExercise } from '@/hooks/useGradeTheExercise';
 import { MdArrowUpward } from 'react-icons/md';
 import { Loader2, AlertCircle, RefreshCw, Pencil } from 'lucide-react';
 
 export default function MainChart({ user, userDetails, session }: User) {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("week");
   const [weakestSkills, setWeakestSkills] = useState<string[]>([]);
-  const [selectedSkill, setSelectedSkill] = useState<string>('');
-  const [currentSkillIndex, setCurrentSkillIndex] = useState(0);
   const [exerciseInput, setExerciseInput] = useState('');
+  const [exerciseGrades, setExerciseGrades] = useState<Array<{ grade: number; improvedSentence: string }>>([]);
   const supabase = createClientComponentClient();
 
   const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills });
+  const { gradeExercise } = useGradeTheExercise();
 
   useEffect(() => {
     const fetchWeakestSkills = async () => {
@@ -45,19 +46,38 @@ export default function MainChart({ user, userDetails, session }: User) {
   }, [supabase]);
 
   const handleExerciseSubmit = async () => {
-    if (!exerciseInput.trim()) {
-      toast.error('Please enter a sentence');
-      return;
-    }
+    if (!exercise?.exercise_prompt || !exerciseInput.trim()) return;
+    // show toast loading for 1 second
+    toast.loading('Grading exercise...', { duration: 1000 });
 
-    try {
-      // Here you would typically send this to your AI endpoint for evaluation
-      // For now, we'll just show a success message
-      toast.success('Exercise submitted successfully!');
+    const result = await gradeExercise({
+      exercise: exercise.exercise_prompt,
+      answer: exerciseInput.trim()
+    });
+
+    if (result) {
+      setExerciseGrades(prev => {
+        const newGrades = [...prev, result];
+        // Keep only the last 5 grades
+        const latestGrades = newGrades.slice(-5);
+        
+        // If we just reached 5 grades, schedule the next exercise
+        if (latestGrades.length === 5) {
+          setTimeout(() => {
+            setExerciseGrades([]);
+            generateExercise();
+          }, 10000);
+        }
+        
+        return latestGrades;
+      });
+
+      // Clear input for next exercise
       setExerciseInput('');
-    } catch (error) {
-      console.error('Error submitting exercise:', error);
-      toast.error('Failed to submit exercise');
+
+      toast.success('Exercise submitted!', {
+        description: `Grade: ${result.grade}. ${result.improvedSentence}`
+      });
     }
   };
 
@@ -134,7 +154,7 @@ export default function MainChart({ user, userDetails, session }: User) {
                     <div className="h-2 w-1/4 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse delay-200"></div>
                     <div className="h-2 w-1/4 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse delay-300"></div>
                   </div>
-                  </div>
+                </div>
               ) : error ? (
                 <div className="flex flex-col space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
                   <div className="flex items-center gap-2 text-red-500 dark:text-red-400">
@@ -173,50 +193,76 @@ export default function MainChart({ user, userDetails, session }: User) {
                       <RefreshCw className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </button>
                   </div>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 ml-7">
-                    {exercise?.exercise_prompt}
-                  </p>
+                  <div className="flex items-center justify-between ml-7 mr-7">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 flex-1">
+                      {exercise?.exercise_prompt}
+                    </p>
+                    <div className="flex items-center gap-1 ml-4">
+                      {exerciseGrades.map((grade, index) => (
+                        <div
+                          key={index}
+                          className="h-1.5 w-6 rounded-full"
+                          style={{
+                            backgroundColor: `rgb(${Math.max(0, Math.min(255, 255 - ((index + 1) * 51)))}, ${Math.max(0, Math.min(255, (index + 1) * 51))}, 0)`
+                          }}
+                          title={`Grade: ${grade.grade}%`}
+                        />
+                      ))}
+                      {Array(5 - exerciseGrades.length).fill(0).map((_, index) => (
+                        <div
+                          key={`empty-${index}`}
+                          className="h-1.5 w-6 rounded-full bg-zinc-200 dark:bg-zinc-700"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {exerciseGrades.length > 0 && exerciseGrades[exerciseGrades.length - 1].improvedSentence && (
+                    <div className="mt-4 ml-7 p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                      <h4 className="text-sm font-medium text-green-800 dark:text-green-300 mb-2">
+                        Improved Version:
+                      </h4>
+                      <p className="text-sm text-green-700 dark:text-green-400">
+                        {exerciseGrades[exerciseGrades.length - 1].improvedSentence}
+                      </p>
+                    </div>
+                  )}
+                  <textarea
+                    value={exerciseInput}
+                    spellCheck="false"
+                    onChange={(e) => setExerciseInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleExerciseSubmit();
+                      }
+                    }}
+                    placeholder="Type your sentence here..."
+                    className="custom-textarea w-full min-h-[100px] p-4 bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-100 dark:placeholder:text-zinc-600 resize-none focus:outline-none font-medium"
+                  />
+                  <div className="flex items-center gap-2 mb-2 text-xs text-zinc-500 dark:text-zinc-400 justify-end">
+                    <span>Press</span>
+                    <kbd className="px-2 py-1 text-xs font-semibold text-zinc-800 bg-zinc-100 border border-zinc-300 rounded-md dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">
+                      enter
+                    </kbd>
+                    <span>to submit your answer</span>
+                  </div>
                   <div className="flex flex-wrap gap-2 ml-7 mt-3">
-                    {exercise?.vocabulary.map((word, index) => (
-                      <div
-                        key={index}
-                        className={`px-2.5 py-1 text-xs font-medium rounded-full 
-                          ${`bg-emerald-50 text-emerald-600 border border-emerald-200 
-                          dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 
-                          transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/30`}`}
-                      >
-                        {word}
-                      </div>
-                    ))}
-                    
+                    {[...new Set(exercise?.vocabulary || [])].map((word, index) => {
+                      const isUsed = exerciseInput.toLowerCase().includes(word.toLowerCase());
+                      return (
+                        <div
+                          key={index}
+                          className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${isUsed
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                              : 'bg-transparent text-zinc-400 border-zinc-200 dark:text-zinc-500 dark:border-zinc-800'
+                            }`}
+                        >
+                          {word}
+                        </div>
+                      );
+                    })}
+
                   </div>
-                  <div className="relative">
-                      <textarea
-                        value={exerciseInput}
-                        onChange={(e) => setExerciseInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleExerciseSubmit();
-                          }
-                        }}
-                        placeholder="Type your sentence here..."
-                        className="custom-textarea w-full min-h-[100px] p-4 bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-100 dark:placeholder:text-zinc-600 resize-none focus:outline-none font-medium"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 mb-2 text-xs text-zinc-500 dark:text-zinc-400 justify-end">
-                      <span>Press</span>
-                      <kbd className="px-2 py-1 text-xs font-semibold text-zinc-800 bg-zinc-100 border border-zinc-300 rounded-md dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">
-                        enter
-                      </kbd>
-                      <span>to submit your answer</span>
-                    </div>
-                  <div className="relative">
-                  <div className="relative">
-                    
-                    
-                  </div>
-                </div>
                 </div>
               )}
             </div>
@@ -226,8 +272,8 @@ export default function MainChart({ user, userDetails, session }: User) {
         <div className="flex items-center justify-between">
           <div className="space-y-4 w-full">
             <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">Writing Progress</h2>
-            
-            
+
+
           </div>
         </div>
 
@@ -256,7 +302,7 @@ export default function MainChart({ user, userDetails, session }: User) {
               vs previous {timeframe}
             </span>
           </div>
-          
+
           <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
@@ -272,7 +318,7 @@ export default function MainChart({ user, userDetails, session }: User) {
               <span className="text-2xl font-bold text-zinc-900 dark:text-white">
                 {writingMetrics.daysStreak.value} days
               </span>
-              
+
             </div>
             <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               current streak
