@@ -29,6 +29,7 @@ import { useLanguageStore } from '@/stores/language';
 interface GradingResult {
   grade: number;
   improvedSentence: string;
+  begin_phrase: string
 }
 
 interface GradingState {
@@ -79,7 +80,8 @@ export function useGradeTheExercise() {
 
       const result = {
         grade: data.grade,
-        improvedSentence: data.improvedSentence
+        improvedSentence: data.improvedSentence,
+        begin_phrase: data.begin_phrase
       };
       console.log('[useGradeTheExercise] Grading result:', result);
 

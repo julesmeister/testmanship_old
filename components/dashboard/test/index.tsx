@@ -14,7 +14,6 @@
 
 import DashboardLayout from '@/components/layout';
 import { useLanguageStore } from '@/stores/language';
-import { ChatBody, OpenAIModel } from '@/types/types';
 import { User } from '@supabase/supabase-js';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';

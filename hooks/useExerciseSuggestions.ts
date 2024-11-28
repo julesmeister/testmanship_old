@@ -24,6 +24,7 @@ import { useLanguageStore } from '@/stores/language';
 
 interface ExerciseSuggestion {
   exercise_prompt: string;
+  begin_phrase: string;
   vocabulary: { [key: string]: string };
   weak_skill: string;
   remaining_weak_skills: string[];

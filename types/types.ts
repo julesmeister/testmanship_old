@@ -1,25 +1,6 @@
 import { ComponentType, ReactNode } from 'react';
 import { User } from '@supabase/auth-helpers-nextjs';
 
-export type OpenAIModel =
-  | 'gpt-3.5-turbo'
-  | 'gpt-4'
-  | 'gpt-4-1106-preview'
-  | 'gpt-4o';
-
-export interface TranslateBody {
-  topic: string;
-  paragraphs: string;
-  essayType: string;
-  model: OpenAIModel;
-  type?: 'review' | 'refactor' | 'complexity' | 'normal';
-}
-
-export interface ChatBody {
-  inputMessage: string;
-  model: OpenAIModel;
-  apiKey?: string | undefined | null;
-}
 
 export interface TranslateResponse {
   code: string;
@@ -31,7 +12,7 @@ export interface PageMeta {
   cardImage: string;
 }
 
-export interface User {
+export interface UserSession {
   user: User;
   userDetails: UserDetails;
   session: any;
@@ -58,36 +39,4 @@ export interface IRoute {
   items?: IRoute[];
   rightElement?: boolean;
   invisible?: boolean;
-}
-
-export interface EssayBody {
-  topic: string;
-  words: '300' | '200';
-  essayType: '' | 'Argumentative' | 'Classic' | 'Persuasive' | 'Critique';
-  model: OpenAIModel;
-  apiKey?: string | undefined;
-}
-
-export interface PremiumEssayBody {
-  words: string;
-  topic: string;
-  essayType:
-    | ''
-    | 'Argumentative'
-    | 'Classic'
-    | 'Persuasive'
-    | 'Memoir'
-    | 'Critique'
-    | 'Compare/Contrast'
-    | 'Narrative'
-    | 'Descriptive'
-    | 'Expository'
-    | 'Cause and Effect'
-    | 'Reflective'
-    | 'Informative';
-  tone: string;
-  citation: string;
-  level: string;
-  model: OpenAIModel;
-  apiKey?: string | undefined;
 }

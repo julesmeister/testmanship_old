@@ -61,7 +61,13 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
       }
 
       if (languagesData) {
-        set({ languages: languagesData });
+        // Type assertion to ensure data matches Language type
+        const typedLanguages = languagesData.map(lang => ({
+          id: lang.id as string,
+          code: lang.code as string,
+          name: lang.name as string
+        }));
+        set({ languages: typedLanguages });
       }
     } catch (error) {
       console.error('Error loading languages:', error);

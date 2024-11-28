@@ -5,14 +5,14 @@ import { useSupabase } from '@/app/supabase-provider';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { UserDetails, User } from '@/types/types';
+import { UserDetails, UserSession } from '@/types/types';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { useGradeTheExercise } from '@/hooks/useGradeTheExercise';
 import { MdArrowUpward } from 'react-icons/md';
 import { Loader2, AlertCircle, RefreshCw, Pencil } from 'lucide-react';
 
-export default function MainChart({ user, userDetails, session }: User) {
+export default function MainChart({ user, userDetails, session }: UserSession) {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("week");
   const [weakestSkills, setWeakestSkills] = useState<string[]>([]);
   const [exerciseInput, setExerciseInput] = useState('');
@@ -21,6 +21,12 @@ export default function MainChart({ user, userDetails, session }: User) {
 
   const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills });
   const { gradeExercise } = useGradeTheExercise();
+
+  useEffect(() => {
+    if (exercise?.begin_phrase) {
+      setExerciseInput(exercise.begin_phrase);
+    }
+  }, [exercise]);
 
   useEffect(() => {
     const fetchWeakestSkills = async () => {
@@ -46,37 +52,43 @@ export default function MainChart({ user, userDetails, session }: User) {
 
   const handleExerciseSubmit = async () => {
     if (!exercise?.exercise_prompt || !exerciseInput.trim()) return;
-    // show toast loading for 1 second
-    toast.loading('Grading exercise...', { duration: 1000 });
+    const toastId = toast.loading('Grading exercise...', { duration: 1000 });
 
-    const result = await gradeExercise({
-      exercise: exercise.exercise_prompt,
-      answer: exerciseInput.trim()
-    });
-
-    if (result) {
-      setExerciseGrades(prev => {
-        const newGrades = [...prev, result];
-        // Keep only the last 5 grades
-        const latestGrades = newGrades.slice(-5);
-        
-        // If we just reached 5 grades, schedule the next exercise
-        if (latestGrades.length === 5) {
-          setTimeout(() => {
-            setExerciseGrades([]);
-            generateExercise();
-          }, 10000);
-        }
-        
-        return latestGrades;
+    try {
+      const result = await gradeExercise({
+        exercise: exercise.exercise_prompt,
+        answer: exerciseInput.trim()
       });
 
-      // Clear input for next exercise
-      setExerciseInput('');
+      toast.dismiss(toastId);
 
-      toast.success('Exercise submitted!', {
-        description: `Grade: ${result.grade}. ${result.improvedSentence}`
-      });
+      if (result) {
+        setExerciseGrades(prev => {
+          const newGrades = [...prev, result];
+          // Keep only the last 5 grades
+          const latestGrades = newGrades.slice(-5);
+          
+          // If we just reached 5 grades, schedule the next exercise
+          if (latestGrades.length === 5) {
+            setTimeout(() => {
+              setExerciseGrades([]);
+              generateExercise();
+            }, 10000);
+          }
+          
+          return latestGrades;
+        });
+
+        setExerciseInput(result.begin_phrase);
+
+        toast.success('Exercise submitted!', {
+          description: `Grade: ${result.grade}. ${result.improvedSentence}`
+        });
+      }
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error('Failed to grade exercise');
+      console.error('Failed to grade exercise:', error);
     }
   };
 
@@ -193,7 +205,7 @@ export default function MainChart({ user, userDetails, session }: User) {
                     </button>
                   </div>
                   <div className="flex items-center justify-between ml-7 mr-7">
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 flex-1">
+                    <p className="text-base font-medium text-zinc-900 dark:text-zinc-100 flex-1">
                       {exercise?.exercise_prompt}
                     </p>
                     <div className="flex items-center gap-1 ml-4">
@@ -235,7 +247,7 @@ export default function MainChart({ user, userDetails, session }: User) {
                         handleExerciseSubmit();
                       }
                     }}
-                    placeholder="Type your sentence here..."
+                    placeholder="Continue the sentence..."
                     className="custom-textarea w-full min-h-[100px] p-4 bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-100 dark:placeholder:text-zinc-600 resize-none focus:outline-none font-medium"
                   />
                   <div className="flex items-center gap-2 mb-2 text-xs text-zinc-500 dark:text-zinc-400 justify-end">
@@ -258,6 +270,7 @@ export default function MainChart({ user, userDetails, session }: User) {
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
                                 : 'bg-transparent text-zinc-400 border-zinc-200 dark:text-zinc-500 dark:border-zinc-800'
                               }`}
+
                           >
                             {word}
                           </div>
