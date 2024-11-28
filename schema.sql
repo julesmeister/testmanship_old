@@ -267,6 +267,9 @@ create table user_progress (
   weakest_skills text[],
   preferred_topics text[],
   last_active_level difficulty_level,
+  current_streak integer default 0,
+  longest_streak integer default 0,
+  total_exercises_completed integer default 0,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 alter table user_progress enable row level security;

@@ -144,6 +144,7 @@ export const useEvaluationSubmission = () => {
         user_id: session.user.id,
         strongest_skills: Array.from(currentStrengths),
         weakest_skills: Array.from(currentWeaknesses),
+        last_active_level: data.difficulty_level,
         average_performance: currentProgress 
           ? ((currentProgress.average_performance || 0) * (currentProgress.total_challenges_completed || 0) + metricsData.overall) / ((currentProgress.total_challenges_completed || 0) + 1)
           : metricsData.overall,

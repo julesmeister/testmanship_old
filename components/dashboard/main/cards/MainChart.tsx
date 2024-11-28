@@ -9,18 +9,26 @@ import { UserDetails, UserSession } from '@/types/types';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { useGradeTheExercise } from '@/hooks/useGradeTheExercise';
+import { useExerciseAccepted } from '@/hooks/useExerciseAccepted';
 import { MdArrowUpward } from 'react-icons/md';
 import { Loader2, AlertCircle, RefreshCw, Pencil } from 'lucide-react';
+import { set } from 'nprogress';
 
 export default function MainChart({ user, userDetails, session }: UserSession) {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("week");
   const [weakestSkills, setWeakestSkills] = useState<string[]>([]);
   const [exerciseInput, setExerciseInput] = useState('');
   const [exerciseGrades, setExerciseGrades] = useState<Array<{ grade: number; improvedSentence: string }>>([]);
+  const [userProgressId, setUserProgressId] = useState<string | null>(null);
+  const [updated_at, setUpdated_at] = useState<Date | null>(null);
+  const [current_streak, setCurrentStreak] = useState<number | 0>(0);
+  const [challengesTaken, setChallengesTaken] = useState<number | 0>(0);
+  const [exercisesTaken, setExerciseTaken] = useState<number | 0>(0);
   const supabase = createClientComponentClient();
 
   const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills });
   const { gradeExercise } = useGradeTheExercise();
+  const { submitExerciseAccepted } = useExerciseAccepted();
 
   useEffect(() => {
     if (exercise?.begin_phrase) {
@@ -33,13 +41,18 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
       try {
         const { data, error } = await supabase
           .from('user_progress')
-          .select('weakest_skills')
+          .select('user_id, weakest_skills, updated_at, current_streak, total_challenges_completed, total_exercises_completed')
           .eq('user_id', user.id)
           .single();
 
         if (error) throw error;
-        if (data && data.weakest_skills) {
-          setWeakestSkills(data.weakest_skills);
+        if (data) {
+          setWeakestSkills(data.weakest_skills || []);
+          setUserProgressId(data.user_id);
+          setUpdated_at(data.updated_at);
+          setCurrentStreak(data.current_streak);
+          setChallengesTaken(data.total_challenges_completed);
+          setExerciseTaken(data.total_exercises_completed);
         }
       } catch (error) {
         console.error('Error fetching weakest skills:', error);
@@ -48,38 +61,54 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
     };
 
     fetchWeakestSkills();
-  }, [supabase]);
+  }, [supabase, user.id]);
 
   const handleExerciseSubmit = async () => {
-    if (!exercise?.exercise_prompt || !exerciseInput.trim()) return;
     const toastId = toast.loading('Grading exercise...', { duration: 1000 });
-
     try {
+      if (!exercise || !exercise?.exercise_prompt || !exerciseInput.trim()) {
+        toast.error('No exercise available');
+        toast.dismiss(toastId);
+        return;
+      }
+
+
+
       const result = await gradeExercise({
         exercise: exercise.exercise_prompt,
         answer: exerciseInput.trim()
       });
-
       toast.dismiss(toastId);
 
       if (result) {
         setExerciseGrades(prev => {
           const newGrades = [...prev, result];
           // Keep only the last 5 grades
-          const latestGrades = newGrades.slice(-5);
-          
-          // If we just reached 5 grades, schedule the next exercise
-          if (latestGrades.length === 5) {
-            setTimeout(() => {
-              setExerciseGrades([]);
-              generateExercise();
-            }, 10000);
-          }
-          
-          return latestGrades;
+          return newGrades.slice(-5);
         });
 
         setExerciseInput(result.begin_phrase);
+
+        // If we just reached 5 grades, schedule the next exercise
+        if (exerciseGrades.length == 5) {
+          setTimeout(() => {
+            if (userProgressId) {
+              submitExerciseAccepted({
+                supabase,
+                session,
+                data: {
+                  userProgressId: userProgressId,
+                  weakestSkills: exercise.remaining_weak_skills,
+                  updated_at: updated_at || new Date(),
+                  current_streak: current_streak || 0
+                }
+              });
+            }
+
+            setExerciseGrades([]);
+            generateExercise();
+          }, 2000);
+        }
 
         toast.success('Exercise submitted!', {
           description: `Grade: ${result.grade}. ${result.improvedSentence}`
@@ -87,8 +116,8 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
       }
     } catch (error) {
       toast.dismiss(toastId);
-      toast.error('Failed to grade exercise');
-      console.error('Failed to grade exercise:', error);
+      console.error('Exercise submission error:', error);
+      toast.error('Failed to submit exercise');
     }
   };
 
@@ -267,8 +296,8 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
                         >
                           <div
                             className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${isUsed
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                                : 'bg-transparent text-zinc-400 border-zinc-200 dark:text-zinc-500 dark:border-zinc-800'
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+                              : 'bg-transparent text-zinc-400 border-zinc-200 dark:text-zinc-500 dark:border-zinc-800'
                               }`}
 
                           >
@@ -295,7 +324,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
@@ -309,7 +338,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {writingMetrics.challengesTaken.value}
+                {challengesTaken}
               </span>
               <div className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-green-500 bg-green-500/10 rounded-full">
                 <MdArrowUpward className="h-3 w-3" />
@@ -334,12 +363,33 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {writingMetrics.daysStreak.value} days
+                {current_streak} days
               </span>
 
             </div>
             <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               current streak
+            </span>
+          </div>
+
+          <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                Exercises Completed
+              </p>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-zinc-900 dark:text-white">
+                {exercisesTaken}
+              </span>
+            </div>
+            <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              total exercises
             </span>
           </div>
         </div>
