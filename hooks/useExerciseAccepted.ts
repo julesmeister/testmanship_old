@@ -10,6 +10,7 @@ interface ExerciseAcceptedParams {
     weakestSkills: string[];
     updated_at: Date;
     current_streak: number;
+    total_exercises_completed?: number;
   };
 }
 
@@ -54,8 +55,12 @@ export const useExerciseAccepted = () => {
       // Update the user_progress record
       const { data: progressRecord, error: progressError } = await supabase
         .from('user_progress')
-        .update({ weakest_skills: data.weakestSkills, current_streak: updated_streak })
-        .eq('id', data.userProgressId)
+        .update({ 
+          weakest_skills: data.weakestSkills, 
+          current_streak: updated_streak,
+          total_exercises_completed: (data.total_exercises_completed || 0) + 1 
+        })
+        .eq('user_id', data.userProgressId)
         .select()
         .single();
 

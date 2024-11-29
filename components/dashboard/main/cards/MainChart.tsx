@@ -90,29 +90,36 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
         setExerciseInput(result.begin_phrase);
 
         // If we just reached 5 grades, schedule the next exercise
-        if (exerciseGrades.length == 5) {
-          setTimeout(() => {
+        if (exerciseGrades.length == 4 && (exerciseGrades.reduce((a, b) => a + b.grade, 0) / exerciseGrades.length) >= 50) {
+          setTimeout(async () => {
             if (userProgressId) {
-              submitExerciseAccepted({
+              const result = await submitExerciseAccepted({
                 supabase,
                 session,
                 data: {
                   userProgressId: userProgressId,
                   weakestSkills: exercise.remaining_weak_skills,
                   updated_at: updated_at || new Date(),
-                  current_streak: current_streak || 0
+                  current_streak: current_streak || 0,
+                  total_exercises_completed: exercisesTaken,
                 }
               });
+
+              if (result.success && result.data) {
+                setCurrentStreak(result.data.current_streak);
+                setExerciseTaken(result.data.total_exercises_completed);
+              }
             }
 
             setExerciseGrades([]);
             generateExercise();
           }, 2000);
+        } else if ((exerciseGrades.reduce((a, b) => a + b.grade, 0) / exerciseGrades.length) < 50) {
+          toast.error('You failed the exercise. Try again!', {
+            duration: 2000
+          });
+          setExerciseGrades([]);
         }
-
-        toast.success('Exercise submitted!', {
-          description: `Grade: ${result.grade}. ${result.improvedSentence}`
-        });
       }
     } catch (error) {
       toast.dismiss(toastId);
@@ -222,6 +229,11 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
                     </div>
                     <div className="flex-1">
                       <span className="font-medium">Your Writing Exercise</span>
+                      {weakestSkills.length > 0 && (
+                        <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                          {weakestSkills.length} {weakestSkills.length === 1 ? 'area' : 'areas'} for improvement left to address
+                        </span>
+                      )}
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
                         Personalized practice based on your challenge evaluations
                       </p>
