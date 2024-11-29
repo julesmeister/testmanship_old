@@ -44,9 +44,10 @@ const defaultState: ExerciseState = {
 
 interface UseExerciseSuggestionsParams {
   weak_skills?: string[];
+  difficulty?: string;
 }
 
-export function useExerciseSuggestions({ weak_skills = [] }: UseExerciseSuggestionsParams = {}): { exercise: ExerciseSuggestion | null, isLoading: boolean, error: string | null, generateExercise: () => Promise<ExerciseSuggestion | null> } {
+export function useExerciseSuggestions({ weak_skills = [], difficulty = 'A1' }: UseExerciseSuggestionsParams = {}): { exercise: ExerciseSuggestion | null, isLoading: boolean, error: string | null, generateExercise: () => Promise<ExerciseSuggestion | null> } {
   const [state, setState] = useState<ExerciseState>(defaultState);
   const { selectedLanguageId, languages } = useLanguageStore();
 
@@ -63,6 +64,7 @@ export function useExerciseSuggestions({ weak_skills = [] }: UseExerciseSuggesti
         body: JSON.stringify({
           weakSkills: weak_skills,
           targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN',
+          difficulty
         }),
       });
 

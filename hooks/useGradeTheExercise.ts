@@ -47,13 +47,14 @@ const defaultState: GradingState = {
 interface GradeExerciseParams {
   exercise: string;
   answer: string;
+  difficulty: string;
 }
 
 export function useGradeTheExercise() {
   const [state, setState] = useState<GradingState>(defaultState);
   const { selectedLanguageId, languages } = useLanguageStore();
 
-  const gradeExercise = async ({ exercise, answer }: GradeExerciseParams): Promise<GradingResult | null> => {
+  const gradeExercise = async ({ exercise, answer, difficulty }: GradeExerciseParams): Promise<GradingResult | null> => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -64,7 +65,8 @@ export function useGradeTheExercise() {
         body: JSON.stringify({
           exercise,
           answer,
-          targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN'
+          targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN',
+          difficulty
         })
       });
 

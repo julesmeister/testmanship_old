@@ -24,9 +24,10 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
   const [current_streak, setCurrentStreak] = useState<number | 0>(0);
   const [challengesTaken, setChallengesTaken] = useState<number | 0>(0);
   const [exercisesTaken, setExerciseTaken] = useState<number | 0>(0);
+  const [difficulty, setDifficulty] = useState<string | null>(null);
   const supabase = createClientComponentClient();
 
-  const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills });
+  const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills, difficulty: difficulty || 'A1' });
   const { gradeExercise } = useGradeTheExercise();
   const { submitExerciseAccepted } = useExerciseAccepted();
 
@@ -41,7 +42,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
       try {
         const { data, error } = await supabase
           .from('user_progress')
-          .select('user_id, weakest_skills, updated_at, current_streak, total_challenges_completed, total_exercises_completed')
+          .select('user_id, weakest_skills, updated_at, current_streak, total_challenges_completed, total_exercises_completed, last_active_level')
           .eq('user_id', user.id)
           .single();
 
@@ -53,6 +54,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
           setCurrentStreak(data.current_streak);
           setChallengesTaken(data.total_challenges_completed);
           setExerciseTaken(data.total_exercises_completed);
+          setDifficulty(data.last_active_level);
         }
       } catch (error) {
         console.error('Error fetching weakest skills:', error);
@@ -76,7 +78,8 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
 
       const result = await gradeExercise({
         exercise: exercise.exercise_prompt,
-        answer: exerciseInput.trim()
+        answer: exerciseInput.trim(),
+        difficulty: difficulty || 'A1'
       });
       toast.dismiss(toastId);
 

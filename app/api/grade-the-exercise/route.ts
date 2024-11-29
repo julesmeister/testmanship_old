@@ -76,42 +76,47 @@ function extractJSON(str: string): string {
 
 export async function POST(request: Request) {
   try {
-    const { exercise, answer, targetLanguage } = await request.json();
+    const { exercise, answer, targetLanguage, difficulty } = await request.json();
     const languageName = getLanguageName(targetLanguage || 'EN');
 
     const messages = [
       {
         role: 'system' as const,
-        content: `You are a "${languageName}" language tutor. Grade the student's answer to the exercise:
+        content: `You are a "${languageName}" language tutor. Grade the student's answer to the exercise, considering their level is "${difficulty}":
 
 1. Evaluate if the answer appropriately addresses the exercise prompt
-2. Check for proper grammar, vocabulary usage, and sentence structure
+2. Check for proper grammar, vocabulary usage, and sentence structure appropriate for ${difficulty} level
 3. Provide a grade from 0-100 based on:
    - Relevance to the prompt (40%): 
      * Start at 30% base score for any reasonable attempt that addresses the topic
      * Add up to 10% for excellent relevance
    - Grammar and structure (30%):
      * Start at 20% base score if the answer is understandable
-     * Add up to 10% for perfect grammar
+     * Add up to 10% for using grammar structures appropriate for ${difficulty} level
    - Vocabulary usage (30%):
      * Start at 20% base score for using basic relevant vocabulary
-     * Add up to 10% for using advanced or varied vocabulary
+     * Add up to 10% for using vocabulary appropriate for ${difficulty} level
 
    The minimum score should be 70% if the answer is understandable and somewhat relevant to the prompt.
    Only give scores below 50% if the answer is completely off-topic or incomprehensible.
-4. Suggest an improved version of the sentence that maintains the student's original meaning in "${languageName}"
-5. Create a beginning phrase in ${languageName} for the exercise that the user will complete (e.g. "Yesterday, I went to..." or "The weather was so..." - make it relevant to the weak skill). The begin_phrase should:
-- Be incomplete and require the user to complete it
-- Be relevant to the weak skill being practiced
-- Provide enough context to guide the user
-- Not be too restrictive, allowing creativity
-- Be 2-5 words long
+4. Suggest an improved version of the sentence that:
+   - Maintains the student's original meaning in "${languageName}"
+   - Uses only grammar structures appropriate for ${difficulty} level
+   - Uses only vocabulary appropriate for ${difficulty} level
+5. Create a beginning phrase in ${languageName} that:
+   - Is appropriate for ${difficulty} level learners
+   - Is incomplete and requires completion
+   - Is relevant to the weak skill being practiced
+   - Provides enough context to guide the user
+   - Is not too restrictive, allowing creativity
+   - Uses only vocabulary and grammar structures suitable for ${difficulty} level
+   - Is 2-5 words long
 
 Respond ONLY in JSON format:
 {
   "grade": number (0-100),
-  "improvedSentence": "string (corrected version in "${languageName}" of the answer that maintains the original meaning)",
-  "begin_phrase": "string (random phrase in "${languageName}" that the user will complete)",
+  "improvedSentence": "string (corrected version in "${languageName}" using only ${difficulty}-level appropriate language)",
+  "begin_phrase": "string (${difficulty}-level appropriate phrase in "${languageName}" for completion)"
 }`
       },
       {

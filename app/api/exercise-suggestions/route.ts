@@ -76,7 +76,7 @@ function extractJSON(str: string): string {
 
 export async function POST(request: Request) {
   try {
-    const { weakSkills, targetLanguage } = await request.json();
+    const { weakSkills, targetLanguage, difficulty } = await request.json();
     const languageName = getLanguageName(targetLanguage || 'EN');
 
     if (!Array.isArray(weakSkills) || weakSkills.length === 0) {
@@ -94,40 +94,51 @@ export async function POST(request: Request) {
     const messages = [
       {
         role: 'system' as const,
-        content: `You are a ${languageName} language tutor. Analyze the given list of weak language skills and:
+        content: `You are a ${languageName} language tutor creating exercises for a ${difficulty} level student. Analyze the given list of weak language skills and:
 
-1. Filter out any skills that are incomplete, or don't make sense for exercise generation.
-2. From the remaining valid weak skills, select one randomly from the list that would make a good exercise focus
-3. Create a friendly exercise prompt that specifically targets that weak skill (e.g. "Let's improve your descriptive adjectives!")
-4. Create a beginning phrase in ${languageName} for the exercise that the user will complete (e.g. "Yesterday, I went to..." or "The weather was so..." - make it relevant to the weak skill)
-5. Generate a list of 20 relevant ${languageName} unique words or phrases for practicing this specific weak skill
+1. Filter out any skills that are incomplete, don't make sense for exercise generation, or are too advanced for ${difficulty} level
+2. From the remaining valid weak skills that are appropriate for ${difficulty} level, select one randomly from the list
+3. Create a friendly exercise prompt that:
+   - Specifically targets that weak skill (e.g. "Let's improve your descriptive adjectives!")
+   - Uses instructions appropriate for ${difficulty} level learners
+4. The begin_phrase should be in ${languageName} that:
+   - Is the START of a sentence that the user needs to COMPLETE (e.g. "Gestern bin ich..." or "Das Wetter war...")
+   - Must be an INCOMPLETE sentence, not a question or instruction
+   - Uses only grammar structures and vocabulary suitable for ${difficulty} level
+   - Is relevant to the weak skill being practiced
+   - Provides enough context to guide the user
+   - Is not too restrictive, allowing creativity
+   - Is 2-5 words long
+   - INCORRECT example: "Kannst du ein Adjektiv finden?" (This is a question, not a beginning phrase)
+   - CORRECT example: "Mein bester Freund ist..." (This is an incomplete sentence to complete)
+5. Generate a list of 20 relevant ${languageName} unique words or phrases that:
+   - Are appropriate for ${difficulty} level
+   - Are useful for practicing this specific weak skill
+   - Include translations that the student can understand
 6. Only include logically valid and complete skills in the remaining_weak_skills list:
    - Remove any weakness that are illogical, unclear, or don't make sense for language learning
    - Must contain the EXACT text of the original weak skills, not placeholders
    - MUST NOT include the selected weak_skill that is being practiced in this exercise
+   - Should only include skills that are appropriate for ${difficulty} level
 
-IMPORTANT: For the vocabulary object, you MUST use the exact key format "word1", "word2", etc. (not numeric keys)
-
-The begin_phrase should:
-- Be incomplete and require the user to complete it
-- Be relevant to the weak skill being practiced
-- Provide enough context to guide the user
-- Not be too restrictive, allowing creativity
-- Be 2-5 words long
+IMPORTANT: 
+- For the vocabulary object, you MUST use the exact key format "word1", "word2", etc. (not numeric keys)
+- ALL generated content (exercise prompt, beginning phrase, vocabulary) MUST be appropriate for ${difficulty} level
+- Do not include grammar structures or vocabulary that are above ${difficulty} level
 
 Respond ONLY in valid JSON format with this exact structure:
 {
-  "exercise_prompt": "string (friendly exercise description that targets the selected weak skill)",
-  "begin_phrase": "string (beginning phrase for the exercise prompt in ${languageName})",
+  "exercise_prompt": "string (friendly exercise description using ${difficulty}-appropriate language)",
+  "begin_phrase": "Der Junge war..., Morgen bin ich..., Als ich...",
   "vocabulary": {
-    "word1 in ${languageName}": "translation1 in English",
-    "word2 in ${languageName}": "translation2 in English",
+    "word1 in ${languageName}": "translation1 in English (${difficulty}-appropriate)",
+    "word2 in ${languageName}": "translation2 in English (${difficulty}-appropriate)",
     ...
-    "word20 in ${languageName}": "translation20 in English"
+    "word20 in ${languageName}": "translation20 in English (${difficulty}-appropriate)"
   },
   "weak_skill": "string (the exact text of the specific weak skill from the input list focused on by the exercise prompt)",
   "remaining_weak_skills": [
-    "string (exact text of remaining valid weak skills, excluding the selected weak_skill)",
+    "string (exact text of remaining valid weak skills appropriate for ${difficulty} level, excluding the selected weak_skill)",
     ...
   ]
 }`
