@@ -101,7 +101,10 @@ export async function POST(request: Request) {
 3. Create a friendly exercise prompt that specifically targets that weak skill (e.g. "Let's improve your descriptive adjectives!")
 4. Create a beginning phrase in ${languageName} for the exercise that the user will complete (e.g. "Yesterday, I went to..." or "The weather was so..." - make it relevant to the weak skill)
 5. Generate a list of 20 relevant ${languageName} unique words or phrases for practicing this specific weak skill
-6. Only include logically valid and complete skills in the remaining_weak_skills list - remove any weakness that are illogical, unclear, or don't make sense for language learning and must contain the EXACT text of the original weak skills, not placeholders.
+6. Only include logically valid and complete skills in the remaining_weak_skills list:
+   - Remove any weakness that are illogical, unclear, or don't make sense for language learning
+   - Must contain the EXACT text of the original weak skills, not placeholders
+   - MUST NOT include the selected weak_skill that is being practiced in this exercise
 
 IMPORTANT: For the vocabulary object, you MUST use the exact key format "word1", "word2", etc. (not numeric keys)
 
@@ -124,8 +127,7 @@ Respond ONLY in valid JSON format with this exact structure:
   },
   "weak_skill": "string (the exact text of the specific weak skill from the input list focused on by the exercise prompt)",
   "remaining_weak_skills": [
-    "string (exact text of remaining weak skills)",
-    "string (exact text of remaining weak skills)",
+    "string (exact text of remaining valid weak skills, excluding the selected weak_skill)",
     ...
   ]
 }`

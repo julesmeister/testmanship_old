@@ -108,6 +108,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
               if (result.success && result.data) {
                 setCurrentStreak(result.data.current_streak);
                 setExerciseTaken(result.data.total_exercises_completed);
+                setWeakestSkills(result.data.weakest_skills);
                 
                 const streakChange = result.data.current_streak > current_streak ? 'Streak increased!' : 'Streak maintained';
                 toast.success('Progress Updated', {
