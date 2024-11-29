@@ -108,6 +108,12 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
               if (result.success && result.data) {
                 setCurrentStreak(result.data.current_streak);
                 setExerciseTaken(result.data.total_exercises_completed);
+                
+                const streakChange = result.data.current_streak > current_streak ? 'Streak increased!' : 'Streak maintained';
+                toast.success('Progress Updated', {
+                  description: `${streakChange} Current streak: ${result.data.current_streak} days. Total exercises: ${result.data.total_exercises_completed}`,
+                  duration: 3000
+                });
               }
             }
 
