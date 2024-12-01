@@ -440,7 +440,7 @@ const MainDashboardTable = ({ user, userDetails, session }: UserSession) => {
               <div className="flex flex-row gap-2 mt-4">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 [&>svg]:group-hover:text-foreground dark:[&>svg]:group-hover:text-white group"
                   onClick={() => setSelectedChallenge(challenge)}
                 >
                   <Eye className="h-4 w-4 mr-2" />
