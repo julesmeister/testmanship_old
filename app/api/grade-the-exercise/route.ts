@@ -103,7 +103,7 @@ export async function POST(request: Request) {
    - Maintains the student's original meaning in "${languageName}"
    - Uses only grammar structures appropriate for ${difficulty} level
    - Uses only vocabulary appropriate for ${difficulty} level
-5. Create a beginning phrase in ${languageName} that:
+5. Create a begin_phrase in ${languageName} that:
    - Is appropriate for ${difficulty} level learners
    - Is incomplete and requires completion
    - Is relevant to the weak skill being practiced
@@ -116,7 +116,7 @@ Respond ONLY in JSON format:
 {
   "grade": number (0-100),
   "improvedSentence": "string (corrected version in "${languageName}" using only ${difficulty}-level appropriate language)",
-  "begin_phrase": "string (${difficulty}-level appropriate phrase in "${languageName}" for completion)"
+  "begin_phrase": "Der Junge war..., Morgen bin ich..., Als ich...",
 }`
       },
       {
