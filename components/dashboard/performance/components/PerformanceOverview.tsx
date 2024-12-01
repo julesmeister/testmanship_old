@@ -1,10 +1,11 @@
-import { Clock, PenTool, Target, Trophy } from "lucide-react";
+import { Clock, PenTool, Target, Trophy, Gauge } from "lucide-react";
 
 interface ProgressData {
   total_challenges_completed: number;
   total_words_written: number;
   total_time_spent: number;
   average_performance: number;
+  last_active_level: string;
 }
 
 interface PerformanceOverviewProps {
@@ -13,7 +14,26 @@ interface PerformanceOverviewProps {
 
 export function PerformanceOverview({ progress }: PerformanceOverviewProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
+      <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+            <Gauge className="h-5 w-5" />
+          </div>
+          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            Last Active Level
+          </p>
+        </div>
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="text-2xl font-bold text-zinc-900 dark:text-white">
+            {progress.last_active_level || 'N/A'}
+          </span>
+        </div>
+        <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          Difficulty
+        </span>
+      </div>
+      
       <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
@@ -89,6 +109,8 @@ export function PerformanceOverview({ progress }: PerformanceOverviewProps) {
           overall performance
         </span>
       </div>
+
+      
     </div>
   );
 }

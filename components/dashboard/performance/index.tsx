@@ -25,9 +25,7 @@ interface UserProgress {
   total_words_written: number;
   total_time_spent: number;
   average_performance: number;
-  strongest_skills: string[];
   weakest_skills: string[];
-  preferred_topics: string[];
   last_active_level: string;
 }
 
@@ -53,9 +51,7 @@ export default function Performance({ user, userDetails }: Props) {
     total_words_written: 0,
     total_time_spent: 0,
     average_performance: 0,
-    strongest_skills: [],
     weakest_skills: [],
-    preferred_topics: [],
     last_active_level: ''
   });
   const [isLoading, setIsLoading] = useState(true);
