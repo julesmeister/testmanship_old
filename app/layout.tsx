@@ -74,7 +74,7 @@ export default function RootLayout({
         <link rel="canonical" href="https://testmanship" />
         <link rel="icon" href="/img/favicon.ico" />
       </head>
-      <body id={'root'} className={`loading bg-white ${inter.className}`}>
+      <body id={'root'} className={`loading bg-background ${inter.className}`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SupabaseProvider>
             <Toaster richColors closeButton position="top-right" />
