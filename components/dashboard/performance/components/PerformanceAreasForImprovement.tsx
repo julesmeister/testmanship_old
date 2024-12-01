@@ -19,7 +19,7 @@ export function PerformanceAnalysis({
   const currentSkills = weakest_skills.slice(startIndex, endIndex)
 
   return (
-    <Card className="bg-white">
+    <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-rose-500/10">

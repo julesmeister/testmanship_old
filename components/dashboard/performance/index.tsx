@@ -232,7 +232,7 @@ export default function Performance({ user, userDetails }: Props) {
           {/* Skills and Progress */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Skill Metrics */}
-            <Card className="bg-white">
+            <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-lg bg-blue-500/10">
@@ -255,7 +255,7 @@ export default function Performance({ user, userDetails }: Props) {
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Badge key={index} variant="secondary" className="font-mono text-foreground">
+                          <Badge key={index} variant="secondary" className="font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
                             {metric.proficiency_level.toFixed(1)}
                           </Badge>
                           {metric.improvement_rate > 0 && (
@@ -284,7 +284,7 @@ export default function Performance({ user, userDetails }: Props) {
           </div>
 
           {/* Performance Trends */}
-          <Card className="bg-white w-full">
+          <Card className="w-full">
             <CardHeader>
               <CardTitle className="text-foreground">Weekly Performance</CardTitle>
               <CardDescription className="text-muted-foreground">
