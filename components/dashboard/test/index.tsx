@@ -587,7 +587,7 @@ export default function Test({ user, userDetails }: Props) {
               />
             )
           )}
-          {selectedChallenge ? (
+          {selectedChallenge && (
             <textarea
               ref={textareaRef}
               value={inputMessage}
@@ -615,9 +615,6 @@ export default function Test({ user, userDetails }: Props) {
               className="flex-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 resize-none focus:outline-none focus:ring-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent whitespace-pre-wrap text-zinc-700 shadow-inner [background-color:rgb(255_255_255/0.5)] dark:[background-color:rgb(24_24_27/0.3)]"
               disabled={isTimeUp}
             />
-          ) : (
-            <div className="flex-1 w-full h-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center p-12 space-y-6">
-            </div>
           )}
           {/* Writing Statistics Bar */}
           {selectedChallenge && (
