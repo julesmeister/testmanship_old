@@ -27,6 +27,7 @@ interface UserProgress {
   average_performance: number;
   weakest_skills: string[];
   last_active_level: string;
+  longest_streak: number;
 }
 
 interface SkillMetric {
@@ -52,7 +53,8 @@ export default function Performance({ user, userDetails }: Props) {
     total_time_spent: 0,
     average_performance: 0,
     weakest_skills: [],
-    last_active_level: ''
+    last_active_level: '',
+    longest_streak: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,55 +87,7 @@ export default function Performance({ user, userDetails }: Props) {
   ]);
 
   const [trends, setTrends] = useState<PerformanceTrend[]>([
-    {
-      week: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      avg_score: 8.5,
-      avg_words: 850,
-      avg_time: 45,
-      challenges_completed: 12
-    },
-    {
-      week: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      avg_score: 8.2,
-      avg_words: 800,
-      avg_time: 50,
-      challenges_completed: 10
-    },
-    {
-      week: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-      avg_score: 7.8,
-      avg_words: 780,
-      avg_time: 48,
-      challenges_completed: 11
-    },
-    {
-      week: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-      avg_score: 7.5,
-      avg_words: 750,
-      avg_time: 52,
-      challenges_completed: 9
-    },
-    {
-      week: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-      avg_score: 6.9,
-      avg_words: 720,
-      avg_time: 55,
-      challenges_completed: 8
-    },
-    {
-      week: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString(),
-      avg_score: 6.5,
-      avg_words: 700,
-      avg_time: 58,
-      challenges_completed: 7
-    },
-    {
-      week: new Date(Date.now() - 49 * 24 * 60 * 60 * 1000).toISOString(),
-      avg_score: 6.0,
-      avg_words: 680,
-      avg_time: 60,
-      challenges_completed: 6
-    }
+    
   ]);
 
   useEffect(() => {

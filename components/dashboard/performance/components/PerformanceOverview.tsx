@@ -1,4 +1,4 @@
-import { Clock, PenTool, Target, Trophy, Gauge } from "lucide-react";
+import { Clock, PenTool, Target, Trophy, Gauge, Flame } from "lucide-react";
 
 interface ProgressData {
   total_challenges_completed: number;
@@ -6,6 +6,7 @@ interface ProgressData {
   total_time_spent: number;
   average_performance: number;
   last_active_level: string;
+  longest_streak: number;
 }
 
 interface PerformanceOverviewProps {
@@ -110,7 +111,24 @@ export function PerformanceOverview({ progress }: PerformanceOverviewProps) {
         </span>
       </div>
 
-      
+      <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
+            <Flame className="h-5 w-5" />
+          </div>
+          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            Longest Streak
+          </p>
+        </div>
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="text-2xl font-bold text-zinc-900 dark:text-white">
+            {progress.longest_streak || 0}
+          </span>
+        </div>
+        <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          days in a row
+        </span>
+      </div>
     </div>
   );
 }

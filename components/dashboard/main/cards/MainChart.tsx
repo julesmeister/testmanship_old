@@ -101,6 +101,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
                   weakestSkills: exercise.remaining_weak_skills,
                   updated_at: updated_at || new Date(),
                   current_streak: current_streak || 0,
+                  longest_streak: current_streak || 0,
                   total_exercises_completed: exercisesTaken,
                 }
               });
