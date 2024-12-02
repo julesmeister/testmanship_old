@@ -231,8 +231,8 @@ export default function Test({ user, userDetails }: Props) {
       setIdleTimer(null);
     }
 
-    // Only set new timer if suggestions are enabled
-    if (!isTimeUp && !evaluationLoading && !showEvaluation) {
+    // Only set new idle countdown if these conditions are met
+    if (!isTimeUp && !evaluationLoading && !showEvaluation && mode === 'practice') {
       let countdown = 20;
       setIdleTimer(countdown);
       
@@ -633,7 +633,7 @@ export default function Test({ user, userDetails }: Props) {
         </div>
       </div>
       {/* Idle Timer Badge */}
-      {idleTimer !== null && selectedChallenge && !showChallenges && !showEvaluation && (
+      {idleTimer !== null && selectedChallenge && !showChallenges && !showEvaluation && mode === "practice" && (
         <div className="fixed bottom-4 right-4 py-1 px-3 bg-orange-500 text-white text-sm font-medium rounded-full shadow-lg">
           Suggesting in: {idleTimer}s
         </div>
