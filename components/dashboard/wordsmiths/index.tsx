@@ -41,38 +41,63 @@ export default function Wordsmiths({ user, userDetails }: WordsmithProps) {
       </div>
 
       {/* Stats Section */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4 sm:p-6">
-            <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalUsers}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Total Wordsmiths</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+              <Users className="h-5 w-5" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4 sm:p-6">
-            <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">
-                {stats.totalCredits}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Total Credits</p>
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Total Wordsmiths
+            </p>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-zinc-900 dark:text-white">
+              {stats.totalUsers}
+            </span>
+          </div>
+          <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            registered users
+          </span>
+        </div>
+
+        <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+              <Star className="h-5 w-5" />
             </div>
-          </CardContent>
-        </Card>
-        <Card className="sm:col-span-2 md:col-span-1">
-          <CardContent className="flex items-center gap-4 p-4 sm:p-6">
-            <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">
-                {stats.activeThisWeek}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Active This Week</p>
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Total Credits
+            </p>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-zinc-900 dark:text-white">
+              {stats.totalCredits}
+            </span>
+          </div>
+          <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            earned credits
+          </span>
+        </div>
+
+        <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
+              <Clock className="h-5 w-5" />
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Active Users
+            </p>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-zinc-900 dark:text-white">
+              {stats.activeThisWeek}
+            </span>
+          </div>
+          <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            this week
+          </span>
+        </div>
       </div>
 
       {/* Search Bar */}
