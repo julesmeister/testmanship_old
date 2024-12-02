@@ -20,7 +20,7 @@ export function PerformanceAnalysis({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="border-b border-zinc-200 dark:border-zinc-700">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-rose-500/10">
             <TrendingUp className="h-4 w-4 text-rose-500" />
@@ -28,7 +28,7 @@ export function PerformanceAnalysis({
           <CardTitle className="text-foreground">Areas for Improvement</CardTitle>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             {currentSkills.map((skill, index) => (

@@ -233,7 +233,7 @@ export default function Performance({ user, userDetails }: Props) {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Skill Metrics */}
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-lg bg-blue-500/10">
                     <BarChart3 className="h-4 w-4 text-blue-500" />
@@ -241,7 +241,7 @@ export default function Performance({ user, userDetails }: Props) {
                   <CardTitle className="text-foreground">Skill Progress</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
                   {skillMetrics.map((metric, index) => (
                     <div key={index} className="space-y-2">
