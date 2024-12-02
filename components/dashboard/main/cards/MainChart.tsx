@@ -58,7 +58,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
         }
       } catch (error) {
         console.error('Error fetching weakest skills:', error);
-        toast.error('Failed to load skills data');
       }
     };
 
@@ -73,8 +72,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
         toast.dismiss(toastId);
         return;
       }
-
-
 
       const result = await gradeExercise({
         exercise: exercise.exercise_prompt,
