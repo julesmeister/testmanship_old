@@ -21,7 +21,7 @@ export const useTestState = create<TestState>((set) => ({
   startChallenge: () => set({ 
     showChallenges: false, 
     showEvaluation: false, 
-    idleTimer: 20 
+    idleTimer: 30 
   }),
   resetState: () => set({ 
     showChallenges: false, 

@@ -86,7 +86,7 @@ export default function Test({ user, userDetails }: Props) {
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [currentSuggestion, setCurrentSuggestion] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [lastTyped, setLastTyped] = useState<number>(Date.now());
+  const [lastTyped, setLastTyped] = useState<number | null>(Date.now());
   const [format, setFormat] = useState<string>('');
   const [checkedPhrases, setCheckedPhrases] = useState<boolean[]>([]);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -192,7 +192,7 @@ export default function Test({ user, userDetails }: Props) {
           .select('name')
           .eq('id', selectedChallenge.format_id)
           .single();
-        
+
         if (formatData) {
           console.log('Format fetched successfully:', formatData.name);
           setFormat(formatData.name);
@@ -205,78 +205,56 @@ export default function Test({ user, userDetails }: Props) {
         setFormat('Unknown Format');
       }
     };
-    
+
     fetchFormat();
   }, [selectedChallenge?.format_id, supabase]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const clearTimer = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearInterval(idleTimerRef.current);
+      idleTimerRef.current = null;
+      setIdleTimer(null);
+    }
+  }, [setIdleTimer]);
+
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setInputMessage(newText);
     setLastTyped(Date.now());
-    
+
     // Check for phrases if we have a challenge selected
     if (selectedChallenge?.checklist) {
-      const newCheckedPhrases = selectedChallenge.checklist.map(phrase => 
+      const newCheckedPhrases = selectedChallenge.checklist.map(phrase =>
         newText.toLowerCase().includes(phrase.toLowerCase())
       );
       setCheckedPhrases(newCheckedPhrases);
     }
 
     // Clear existing timer
-    if (idleTimerRef.current) {
-      clearInterval(idleTimerRef.current);
-      idleTimerRef.current = null;
-      setIdleTimer(null);
-    }
+    clearTimer();
 
-    // Only set new idle countdown if these conditions are met
-    if (!isTimeUp && !evaluationLoading && !showEvaluation && mode === 'practice') {
-      let countdown = 20;
-      setIdleTimer(countdown);
-      
-      idleTimerRef.current = setInterval(() => {
-        countdown -= 1;
-        if (countdown <= 0) {
-          if (idleTimerRef.current) {
-            clearInterval(idleTimerRef.current);
-            idleTimerRef.current = null;
-          }
-          setIdleTimer(null);
-          
-          // Only generate if still enabled
-          if (!isTimeUp && !evaluationLoading && !showEvaluation && selectedChallenge) {
-            toast.info("Generating writing suggestions...", {
-              duration: 3000,
-              position: 'bottom-right'
-            });
-            generateSuggestion();
-          }
-        } else {
-          setIdleTimer(countdown);
-        }
-      }, 1000);
-    }
+
 
     // Stop existing suggestions when user starts typing
     console.log('[Index] Text changed, stopping suggestions');
     stopSuggestions();
-    
+
     // Update stats
     handleTextStats(newText);
-    
+
     // Auto-adjust height
     e.target.style.height = 'auto';
     e.target.style.height = `${e.target.scrollHeight}px`;
-    
+
     // Show feedback state if needed
     if (newText.length > 0 && !showFeedbackState && !manuallyClosedFeedbackState) {
       setShowFeedbackState(true);
     }
-    
+
     if (isTimeUp) return;
-    
+
     if (!isWriting && newText.length > 0 && !isTimeUp) {
       setIsWriting(true);
     }
@@ -284,7 +262,7 @@ export default function Test({ user, userDetails }: Props) {
     // Calculate current paragraph index by counting double newlines
     const paragraphs = newText.split(/\n\s*\n/);
     const currentIndex = paragraphs.length - 1;
-    
+
     // Only trigger paragraph change if content actually changed
     if (newText !== inputMessage) {
       handleParagraphChange(newText, inputMessage, currentIndex);
@@ -297,10 +275,10 @@ export default function Test({ user, userDetails }: Props) {
       const cursorPosition = e.currentTarget.selectionStart;
       const newValue = inputMessage.slice(0, cursorPosition) + '\n\n' + inputMessage.slice(cursorPosition);
       setInputMessage(newValue);
-      
+
       // Store the reference to the current target
       const textarea = e.currentTarget;
-      
+
       // Set cursor position after the new paragraph
       setTimeout(() => {
         if (textarea) {
@@ -322,6 +300,7 @@ export default function Test({ user, userDetails }: Props) {
   };
 
   const handleStopChallenge = () => {
+    setLastTyped(null);
     resetTimer();
     setSelectedChallenge(null);
     setInputMessage('');
@@ -367,21 +346,21 @@ export default function Test({ user, userDetails }: Props) {
       setSecurityError('Content cannot be empty');
       return false;
     }
-    
+
     // Get text metrics
     const metrics = calculateMetrics(content);
-    
+
     // Validate content length
     if (metrics.wordCount < 5) {
       setSecurityError('Content is too short (minimum 5 words)');
       return false;
     }
-    
+
     if (metrics.wordCount > 1000) {
       setSecurityError('Content is too long (maximum 1000 words)');
       return false;
     }
-    
+
     // Check for suspicious patterns
     const suspiciousPatterns = [
       /<script/i,
@@ -391,7 +370,7 @@ export default function Test({ user, userDetails }: Props) {
       /onload=/i,
       /onerror=/i
     ];
-    
+
     if (suspiciousPatterns.some(pattern => pattern.test(content))) {
       setSecurityError('Invalid content detected');
       return false;
@@ -401,10 +380,10 @@ export default function Test({ user, userDetails }: Props) {
   };
 
   // Add authentication check with proper types
-  useAuthCheck({ 
-    user: user || null, 
-    userDetails, 
-    supabase 
+  useAuthCheck({
+    user: user || null,
+    userDetails,
+    supabase
   });
 
   // Rate limiting function
@@ -417,7 +396,7 @@ export default function Test({ user, userDetails }: Props) {
     setRateLimitExceeded(false);
   }, [user?.id]);
 
-  
+
 
   // Calculate initial metrics for display before evaluation
   const initialPerformanceMetrics = {
@@ -457,12 +436,12 @@ export default function Test({ user, userDetails }: Props) {
     const searchParams = new URLSearchParams({
       content: inputMessage, // Use the actual textarea content
       difficulty_level: selectedChallenge?.difficulty_level || 'A1',
-      insights: JSON.stringify({insights}),
+      insights: JSON.stringify({ insights }),
       challengeId: selectedChallenge?.id || '00000000-0000-0000-0000-000000000001',  // Use UUID format
       performanceMetrics: JSON.stringify(performanceMetrics),
       skillMetrics: JSON.stringify(skillMetrics)
     });
-    
+
     // Use window.location for client-side navigation
     window.location.href = `/dashboard/recording-evaluation?${searchParams.toString()}`;
   };
@@ -471,7 +450,7 @@ export default function Test({ user, userDetails }: Props) {
   const handleRefreshEvaluation = useCallback(() => {
     if (selectedChallenge && inputMessage && isTimeUp) {
       // Force a fresh evaluation by creating a new state object
-      setSelectedChallenge({...selectedChallenge});
+      setSelectedChallenge({ ...selectedChallenge });
     }
   }, [selectedChallenge, inputMessage, isTimeUp]);
 
@@ -482,12 +461,20 @@ export default function Test({ user, userDetails }: Props) {
     if (lastTyped) {
       interval = setInterval(() => {
         const elapsed = Date.now() - lastTyped;
-        const remaining = Math.max(0, 20 - Math.floor(elapsed / 1000));
-        
+        const remaining = Math.max(0, 30 - Math.floor(elapsed / 1000));
+
         if (remaining > 0 && !isSuggestionActive) {
           setIdleTimer(remaining);
         } else {
-          setIdleTimer(null);
+          clearTimer();
+          // Only generate if still enabled
+          if (!isTimeUp && !evaluationLoading && !showEvaluation && selectedChallenge && mode === 'practice') {
+            toast.info("Generating writing suggestions...", {
+              duration: 3000,
+              position: 'bottom-right'
+            });
+            generateSuggestion();
+          }
         }
       }, 1000);
     }
@@ -551,18 +538,18 @@ export default function Test({ user, userDetails }: Props) {
         <div className="flex-1 flex flex-col space-y-4 w-full lg:w-2/3 h-auto min-h-full">
           {!selectedChallenge ? (
             <>
-              <Tabs value={mode} defaultValue="practice" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>            
+              <Tabs value={mode} defaultValue="practice" className="w-full" onValueChange={value => setMode(value as 'practice' | 'exam')}>
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger 
-                    value="practice" 
+                  <TabsTrigger
+                    value="practice"
                     className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 
                               data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
                               hover:text-indigo-800 dark:hover:text-indigo-300"
                   >
                     Practice Mode
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="exam" 
+                  <TabsTrigger
+                    value="exam"
                     className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500
                               data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
                               hover:text-indigo-800 dark:hover:text-indigo-300"
@@ -618,22 +605,22 @@ export default function Test({ user, userDetails }: Props) {
           )}
           {/* Writing Statistics Bar */}
           {selectedChallenge && (
-          <div className="mt-4">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {[/* eslint-disable @typescript-eslint/no-use-before-define */
-                { label: 'Words', value: wordCount },
-                { label: 'Paragraphs', value: paragraphCount },
-                { label: 'Characters', value: charCount },
-                { label: 'Time Elapsed', value: formatTime(elapsedTime) }
-              ].map((stat) => (
-                <StatCard key={stat.label} {...stat} />
-              ))}
-            </div>
-          </div>)}
+            <div className="mt-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {[/* eslint-disable @typescript-eslint/no-use-before-define */
+                  { label: 'Words', value: wordCount },
+                  { label: 'Paragraphs', value: paragraphCount },
+                  { label: 'Characters', value: charCount },
+                  { label: 'Time Elapsed', value: formatTime(elapsedTime) }
+                ].map((stat) => (
+                  <StatCard key={stat.label} {...stat} />
+                ))}
+              </div>
+            </div>)}
         </div>
       </div>
       {/* Idle Timer Badge */}
-      {idleTimer !== null && selectedChallenge && !showChallenges && !showEvaluation && mode === "practice" && (
+      {idleTimer !== null && idleTimer <= 20 && selectedChallenge && !showChallenges && !showEvaluation && mode === "practice" && inputMessage.trim().length > 0 && (
         <div className="fixed bottom-4 right-4 py-1 px-3 bg-orange-500 text-white text-sm font-medium rounded-full shadow-lg">
           Suggesting in: {idleTimer}s
         </div>
