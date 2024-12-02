@@ -84,7 +84,7 @@ export const updateSession = async (request: NextRequest) => {
     try {
       // First check session
       const { data: { session } } = await supabase.auth.getSession();
-      let user = null;
+      let user: any = null;
 
       if (session) {
         // Only try to get user if we have a session

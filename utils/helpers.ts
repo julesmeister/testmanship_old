@@ -1,6 +1,12 @@
 import { Database } from '@/types/types_db';
 
-type Price = Database['public']['Tables']['prices']['Row'];
+type Price = Database['public']['Tables']['prices']['Row']
+
+interface StreakData {
+  current_streak: number;
+  longest_streak: number;
+  updated_at: string | Date;
+}
 
 export const getURL = (path?: string) => {
   let url =
@@ -137,3 +143,36 @@ export const getErrorRedirect = (
     disableButton,
     arbitraryParams
   );
+
+export const calculateStreak = (currentProgress: StreakData | null) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const lastUpdate = currentProgress?.updated_at
+    ? new Date(currentProgress.updated_at)
+    : new Date();
+  lastUpdate.setHours(0, 0, 0, 0);
+
+  const gap = Math.floor((today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+
+  let updated_streak = currentProgress?.current_streak || 0;
+  let updated_longest_streak = currentProgress?.longest_streak || 0;
+
+  if (gap === 0) {
+    // Same day, streak continues
+    updated_streak = currentProgress?.current_streak || 1;
+  } else if (gap === 1) {
+    // Next day, increase streak
+    updated_streak = (currentProgress?.current_streak || 0) + 1;
+    // Update longest streak if current streak becomes higher
+    updated_longest_streak = Math.max(updated_streak, currentProgress?.longest_streak || 0);
+  } else {
+    // Streak broken (more than 1 day gap)
+    updated_streak = 1;
+  }
+
+  return {
+    updated_streak,
+    updated_longest_streak
+  };
+};

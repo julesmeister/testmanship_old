@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { calculateStreak } from '@/utils/helpers';
 
 interface EvaluationSubmissionParams {
   supabase: SupabaseClient;
@@ -140,6 +141,9 @@ export const useEvaluationSubmission = () => {
       data.insights?.insights?.strengths?.forEach(skill => currentStrengths.add(skill));
       data.insights?.insights?.weaknesses?.forEach(skill => currentWeaknesses.add(skill));
 
+      // Calculate streaks
+      const { updated_streak, updated_longest_streak } = calculateStreak(currentProgress);
+      
       const userProgressUpdate = {
         user_id: session.user.id,
         strongest_skills: Array.from(currentStrengths),
@@ -151,7 +155,9 @@ export const useEvaluationSubmission = () => {
         total_challenges_completed: (currentProgress?.total_challenges_completed || 0) + 1,
         total_words_written: (currentProgress?.total_words_written || 0) + data.performanceMetrics.wordCount,
         total_time_spent: (currentProgress?.total_time_spent || 0) + data.timeSpent,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        current_streak: updated_streak,
+        longest_streak: updated_longest_streak
       };
 
       console.log('Updating user progress:', {
