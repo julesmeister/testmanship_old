@@ -8,8 +8,12 @@ type EmptyTestStateProps = {
 const EmptyTestState = ({ mode, setMode }: EmptyTestStateProps) => {
   return (
     <div className="flex-1 w-full h-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center p-12 space-y-6">
-      <div className="w-20 h-20 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-        <PencilIcon className="w-10 h-10 text-zinc-400 dark:text-zinc-500" />
+      <div className="relative">
+        <div className="absolute inset-0 w-20 h-20 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite] bg-indigo-400/30 dark:bg-indigo-500/30" />
+        <div className="absolute inset-0 w-20 h-20 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite_1.5s] bg-indigo-400/30 dark:bg-indigo-500/30" />
+        <div className="w-20 h-20 rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center relative">
+          <PencilIcon className="w-10 h-10 text-indigo-400 dark:text-indigo-400" />
+        </div>
       </div>
       <div className="space-y-4 text-center max-w-xl">
         <h3 className="text-2xl font-medium text-zinc-900 dark:text-zinc-100">
