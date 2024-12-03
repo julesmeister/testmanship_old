@@ -542,17 +542,17 @@ export default function Test({ user, userDetails }: Props) {
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger
                     value="practice"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 
-                              data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
-                              hover:text-indigo-800 dark:hover:text-indigo-300"
+                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 dark:data-[state=active]:text-white
+                              data-[state=inactive]:text-indigo-800 dark:data-[state=inactive]:text-indigo-900
+                              hover:text-indigo-900 dark:hover:text-indigo-950"
                   >
                     Practice Mode
                   </TabsTrigger>
                   <TabsTrigger
                     value="exam"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500
-                              data-[state=inactive]:text-indigo-600 dark:data-[state=inactive]:text-indigo-400
-                              hover:text-indigo-800 dark:hover:text-indigo-300"
+                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white dark:data-[state=active]:bg-indigo-500 dark:data-[state=active]:text-white
+                              data-[state=inactive]:text-indigo-800 dark:data-[state=inactive]:text-indigo-900
+                              hover:text-indigo-900 dark:hover:text-indigo-950"
                   >
                     Exam Mode
                   </TabsTrigger>
