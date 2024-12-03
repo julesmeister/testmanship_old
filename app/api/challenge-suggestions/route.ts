@@ -17,6 +17,7 @@ import { NextResponse } from 'next/server';
 import { makeAIRequest } from '@/utils/ai';
 import { getWordCountRange, isValidDifficulty } from '@/types/difficulty';
 import { getLanguageName } from '@/types/language';
+import { extractJSONFromAIResponse } from '@/utils/json';
 
 export async function POST(req: Request) {
   console.log('API Route started');
@@ -175,19 +176,7 @@ Return ONLY the JSON array, no additional text or explanations.${topics.length >
     console.log('Received AI response:', aiResponse);
 
     try {
-      // Extract JSON from the response, handling various markdown formats
-      const jsonMatch = aiResponse.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
-                       aiResponse.match(/(\{[\s\S]*\})/);
-                       
-      if (!jsonMatch) {
-        console.error('Could not find valid JSON in response');
-        throw new Error('Invalid response format');
-      }
-
-      const cleanedResponse = jsonMatch[1].trim();
-      console.log('Cleaned response:', cleanedResponse);
-      
-      const parsedResponse = JSON.parse(cleanedResponse);
+      const parsedResponse = extractJSONFromAIResponse<any>(aiResponse);
       console.log('Parsed response:', parsedResponse);
 
       if (title) {

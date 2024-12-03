@@ -6,73 +6,9 @@
 import { NextResponse } from 'next/server';
 import { makeAIRequest } from '@/utils/ai';
 import { getLanguageName } from '@/types/language';
+import { extractJSONFromAIResponse } from '@/utils/json';
 
-// Extract JSON from a string that might contain additional text
-function extractJSON(str: string): string {
-  try {
-    // First try to parse the entire string as JSON
-    try {
-      JSON.parse(str);
-      return str; // If successful, return the entire string
-    } catch {
-      // If that fails, try to extract JSON
-    }
-
-    // Find the first occurrence of '{'
-    const start = str.indexOf('{');
-    if (start === -1) {
-      console.error('No JSON object found in string:', str);
-      return '';
-    }
-
-    let openBraces = 0;
-    let inString = false;
-    let escaped = false;
-
-    for (let i = start; i < str.length; i++) {
-      const char = str[i];
-
-      if (inString) {
-        if (char === '\\' && !escaped) {
-          escaped = true;
-          continue;
-        }
-        if (char === '"' && !escaped) {
-          inString = false;
-        }
-        escaped = false;
-        continue;
-      }
-
-      if (char === '"') {
-        inString = true;
-        continue;
-      }
-
-      if (char === '{') {
-        openBraces++;
-      } else if (char === '}') {
-        openBraces--;
-        if (openBraces === 0) {
-          const extracted = str.substring(start, i + 1);
-          try {
-            // Validate that the extracted string is valid JSON
-            JSON.parse(extracted);
-            return extracted;
-          } catch {
-            console.error('Extracted string is not valid JSON:', extracted);
-            return '';
-          }
-        }
-      }
-    }
-    console.error('No complete JSON object found in string:', str);
-    return '';
-  } catch (error) {
-    console.error('Error extracting JSON:', error);
-    return '';
-  }
-}
+// ... (rest of the code remains the same)
 
 export async function POST(request: Request) {
   try {
@@ -131,12 +67,7 @@ Respond ONLY in JSON format:
       throw new Error('Failed to grade exercise');
     }
 
-    const jsonStr = extractJSON(response);
-    if (!jsonStr) {
-      throw new Error('Failed to extract valid JSON from response');
-    }
-
-    const aiResponse = JSON.parse(jsonStr);
+    const aiResponse = extractJSONFromAIResponse<any>(response);
     console.log('[API] Parsed response:', aiResponse);
 
     return NextResponse.json({

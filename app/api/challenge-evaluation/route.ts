@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { makeAIRequest } from '@/utils/ai';
+import { extractJSONFromAIResponse } from '@/utils/json';
 
 const EVALUATION_PROMPT = `You are a writing evaluation assistant specializing in language learning assessment. Analyze the given text based on the provided challenge context and respond ONLY with a valid JSON object. Do not include any additional text or explanations.
 
@@ -50,73 +51,6 @@ For any text, evaluate based on the challenge instructions, target language, dif
 4. Break the content into appropriate paragraphs with proper spacing and structure
 5. Ensure the final essay is complete and well-structured, adding connecting content where necessary while maintaining the original message",
 }`;
-
-// Extract JSON from a string that might contain additional text
-function extractJSON(str: string): string {
-  try {
-    // First try to parse the entire string as JSON
-    try {
-      JSON.parse(str);
-      return str; // If successful, return the entire string
-    } catch {
-      // If that fails, try to extract JSON
-    }
-
-    // Find the first occurrence of '{'
-    const start = str.indexOf('{');
-    if (start === -1) {
-      console.error('No JSON object found in string:', str);
-      return '';
-    }
-
-    let openBraces = 0;
-    let inString = false;
-    let escaped = false;
-
-    for (let i = start; i < str.length; i++) {
-      const char = str[i];
-
-      if (inString) {
-        if (char === '\\' && !escaped) {
-          escaped = true;
-          continue;
-        }
-        if (char === '"' && !escaped) {
-          inString = false;
-        }
-        escaped = false;
-        continue;
-      }
-
-      if (char === '"') {
-        inString = true;
-        continue;
-      }
-
-      if (char === '{') {
-        openBraces++;
-      } else if (char === '}') {
-        openBraces--;
-        if (openBraces === 0) {
-          const extracted = str.substring(start, i + 1);
-          try {
-            // Validate that the extracted string is valid JSON
-            JSON.parse(extracted);
-            return extracted;
-          } catch {
-            console.error('Extracted string is not valid JSON:', extracted);
-            return '';
-          }
-        }
-      }
-    }
-    console.error('No complete JSON object found in string:', str);
-    return '';
-  } catch (error) {
-    console.error('Error extracting JSON:', error);
-    return '';
-  }
-}
 
 interface EvaluationResponse {
   performanceMetrics: {
@@ -183,41 +117,26 @@ ${content}
 
     const aiResponse = await makeAIRequest(messages);
 
-    // Try to parse the direct response first
+    // Try to parse the AI response
     let evaluation;
     try {
-      evaluation = JSON.parse(aiResponse);
-    } catch {
-      // If direct parsing fails, try to extract JSON
-      const jsonStr = extractJSON(aiResponse);
-
-      if (!jsonStr) {
-        console.error('Failed to extract JSON from AI response:', aiResponse);
-        return NextResponse.json(
-          { 
-            error: 'Failed to process the evaluation results. Please try again.',
-            metrics: { grammar: 0, vocabulary: 0, fluency: 0, overall: 0 },
-            skills: { writingComplexity: 0, accuracy: 0, coherence: 0, style: 0 },
-            insights: {
-              strengths: ["Evaluation failed"],
-              weaknesses: ["Unable to process text"],
-              tips: ["Please try again"]
-            },
-            improvedEssay: content
+      evaluation = extractJSONFromAIResponse<any>(aiResponse);
+    } catch (error) {
+      console.error('Failed to extract JSON from AI response:', error);
+      return NextResponse.json(
+        { 
+          error: 'Failed to process the evaluation results. Please try again.',
+          metrics: { grammar: 0, vocabulary: 0, fluency: 0, overall: 0 },
+          skills: { writingComplexity: 0, accuracy: 0, coherence: 0, style: 0 },
+          insights: {
+            strengths: ["Evaluation failed"],
+            weaknesses: ["Unable to process text"],
+            tips: ["Please try again"]
           },
-          { status: 200 } // Return 200 with default values instead of 500
-        );
-      }
-
-      try {
-        evaluation = JSON.parse(jsonStr);
-      } catch (parseError) {
-        console.error('Failed to parse extracted JSON:', parseError);
-        return NextResponse.json(
-          { error: 'Failed to process the evaluation results. Please try again.' },
-          { status: 500 }
-        );
-      }
+          improvedEssay: content
+        },
+        { status: 200 } // Return 200 with default values instead of 500
+      );
     }
     
     // Validate the response structure and ensure arrays are not empty

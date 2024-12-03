@@ -79,8 +79,6 @@ export function useExerciseSuggestions({ weak_skills = [], difficulty = 'A1' }: 
       }
 
       const data = await response.json();
-
-      console.log(data.vocabulary);
       
       setState(prev => ({
         ...prev,
