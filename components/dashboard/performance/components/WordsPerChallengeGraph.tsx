@@ -98,7 +98,7 @@ export default function WordsPerChallengeGraph({ data }: WordsPerChallengeProps)
                   contentStyle={{
                     backgroundColor: 'rgba(255, 255, 255, 0.98)',
                     border: 'none',
-                    borderRadius: '12px',
+                    borderRadius: '12px 12px 12px 0',
                     boxShadow: '0 4px 20px -5px rgb(0 0 0 / 0.2)',
                     padding: '0',
                     minWidth: '220px',
