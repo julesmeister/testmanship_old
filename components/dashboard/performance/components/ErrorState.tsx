@@ -12,6 +12,7 @@ export function ErrorState({ error }: ErrorStateProps) {
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-red-500">Error Loading Performance Data</h3>
           <p className="text-sm text-muted-foreground max-w-md">{error}</p>
+          <p className="text-sm text-muted-foreground max-w-md">Have you taken any challenges yet? Your performance data will appear here after completing challenges.</p>
         </div>
       </div>
     </div>
