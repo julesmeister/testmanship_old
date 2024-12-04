@@ -20,10 +20,10 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('[API] Exercise Generation request:', {
-      weakSkills,
-      languageName
-    });
+    // console.log('[API] Exercise Generation request:', {
+    //   weakSkills,
+    //   languageName
+    // });
 
     const messages = [
       {
@@ -88,10 +88,10 @@ Respond ONLY in valid JSON format with this exact structure:
     if (!response) {
       throw new Error('Failed to generate exercise');
     }
-    console.log('[API] Exercise Generation response:', response);
+    // console.log('[API] Exercise Generation response:', response);
 
     const aiResponse = extractJSONFromAIResponse<any>(response);
-    console.log('[API] Parsed response:', aiResponse);
+    // console.log('[API] Parsed response:', aiResponse);
 
     return NextResponse.json({
       exercise_prompt: aiResponse.exercise_prompt || '',

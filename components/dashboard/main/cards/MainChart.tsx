@@ -10,9 +10,11 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { useGradeTheExercise } from '@/hooks/useGradeTheExercise';
 import { useExerciseAccepted } from '@/hooks/useExerciseAccepted';
-import { MdArrowUpward } from 'react-icons/md';
+import { useWeeklyStats } from '@/hooks/useWeeklyStats';
+import { MdArrowUpward, MdArrowDownward } from 'react-icons/md';
 import { Loader2, AlertCircle, RefreshCw, Pencil } from 'lucide-react';
 import { set } from 'nprogress';
+import { StatsCard } from '@/components/card/StatsCard';
 
 export default function MainChart({ user, userDetails, session }: UserSession) {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("week");
@@ -22,7 +24,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
   const [userProgressId, setUserProgressId] = useState<string | null>(null);
   const [updated_at, setUpdated_at] = useState<Date | null>(null);
   const [current_streak, setCurrentStreak] = useState<number | 0>(0);
-  const [challengesTaken, setChallengesTaken] = useState<number | 0>(0);
   const [exercisesTaken, setExerciseTaken] = useState<number | 0>(0);
   const [difficulty, setDifficulty] = useState<string | null>(null);
   const supabase = createClientComponentClient();
@@ -30,6 +31,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
   const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills, difficulty: difficulty || 'A1' });
   const { gradeExercise } = useGradeTheExercise();
   const { submitExerciseAccepted } = useExerciseAccepted();
+  const { stats: weeklyStats, isLoading: weeklyStatsLoading } = useWeeklyStats();
 
   useEffect(() => {
     if (exercise?.begin_phrase) {
@@ -52,7 +54,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
           setUserProgressId(data.user_id);
           setUpdated_at(data.updated_at);
           setCurrentStreak(data.current_streak);
-          setChallengesTaken(data.total_challenges_completed);
           setExerciseTaken(data.total_exercises_completed);
           setDifficulty(data.last_active_level);
         }
@@ -60,7 +61,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
         console.error('Error fetching weakest skills:', error);
       }
     };
-
     fetchWeakestSkills();
   }, [supabase, user.id]);
 
@@ -136,23 +136,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
     }
   };
 
-  const writingMetrics = {
-    paragraphsWritten: {
-      value: 157,
-      change: 23,
-      period: "Last 7 days"
-    },
-    challengesTaken: {
-      value: 42,
-      change: 8,
-      period: "Last 7 days"
-    },
-    daysStreak: {
-      value: 15,
-      change: 5,
-      period: "Current streak"
-    }
-  };
 
   const data = [
     { name: 'Mon', paragraphs: 20 },
@@ -345,73 +328,45 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Challenges Taken
-              </p>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {challengesTaken}
-              </span>
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-green-500 bg-green-500/10 rounded-full">
-                <MdArrowUpward className="h-3 w-3" />
-                <span>+{writingMetrics.challengesTaken.change}</span>
-              </div>
-            </div>
-            <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              vs previous {timeframe}
-            </span>
-          </div>
+          <StatsCard
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            iconBgColor="bg-purple-500/10"
+            iconTextColor="text-purple-500"
+            title="Challenges Taken"
+            value={weeklyStats.challengesTaken}
+            change={weeklyStats.weeklyChange}
+            subtitle="vs previous week"
+          />
 
-          <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Days Streak
-              </p>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {current_streak} days
-              </span>
+          <StatsCard
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+              </svg>
+            }
+            iconBgColor="bg-orange-500/10"
+            iconTextColor="text-orange-500"
+            title="Days Streak"
+            value={`${current_streak} days`}
+            subtitle="current streak"
+          />
 
-            </div>
-            <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              current streak
-            </span>
-          </div>
-
-          <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Exercises Completed
-              </p>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {exercisesTaken}
-              </span>
-            </div>
-            <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              total exercises
-            </span>
-          </div>
+          <StatsCard
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" />
+              </svg>
+            }
+            iconBgColor="bg-blue-500/10"
+            iconTextColor="text-blue-500"
+            title="Exercises Completed"
+            value={exercisesTaken}
+            subtitle="total exercises"
+          />
         </div>
       </div>
     </Card>

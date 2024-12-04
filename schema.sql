@@ -373,17 +373,6 @@ INSERT INTO supported_languages (code, name) VALUES
 ('ja', 'Japanese'),
 ('ko', 'Korean');
 
-CREATE VIEW weekly_performance_trends AS
-SELECT 
-    date_trunc('week', completed_at) as week,
-    AVG(performance_score) as avg_score,
-    AVG(word_count) as avg_words,
-    AVG(time_spent) as avg_time,
-    COUNT(*) as challenges_completed
-FROM challenge_attempts
-GROUP BY date_trunc('week', completed_at)
-ORDER BY week DESC;
-
 -- Create view for challenge attempts with related information
 CREATE OR REPLACE VIEW challenge_attempt_details AS
 SELECT 
@@ -467,3 +456,33 @@ $$;
 
 -- Grant execute permission to authenticated users
 GRANT EXECUTE ON FUNCTION public.update_user_language TO authenticated;
+
+-- View for weekly challenge attempts statistics
+CREATE OR REPLACE VIEW weekly_challenge_stats AS
+WITH weekly_stats AS (
+  SELECT 
+    user_id,
+    CASE 
+      WHEN date_trunc('week', completed_at) = date_trunc('week', CURRENT_TIMESTAMP) THEN 'this_week'
+      WHEN date_trunc('week', completed_at) = date_trunc('week', CURRENT_TIMESTAMP - interval '1 week') THEN 'last_week'
+    END AS week_period,
+    COUNT(*) as attempts_count
+  FROM challenge_attempts
+  WHERE completed_at >= date_trunc('week', CURRENT_TIMESTAMP - interval '1 week')
+    AND completed_at < date_trunc('week', CURRENT_TIMESTAMP + interval '1 week')
+  GROUP BY user_id, week_period
+)
+SELECT 
+  user_id,
+  COALESCE((SELECT attempts_count FROM weekly_stats w WHERE w.user_id = ws.user_id AND week_period = 'this_week'), 0) as this_week_attempts,
+  COALESCE((SELECT attempts_count FROM weekly_stats w WHERE w.user_id = ws.user_id AND week_period = 'last_week'), 0) as last_week_attempts,
+  COALESCE((SELECT attempts_count FROM weekly_stats w WHERE w.user_id = ws.user_id AND week_period = 'this_week'), 0) - 
+  COALESCE((SELECT attempts_count FROM weekly_stats w WHERE w.user_id = ws.user_id AND week_period = 'last_week'), 0) as weekly_change
+FROM weekly_stats ws
+GROUP BY user_id;
+
+-- Grant select permission on the view to authenticated users
+GRANT SELECT ON weekly_challenge_stats TO authenticated;
+
+-- Grant usage on schema to authenticated users
+GRANT USAGE ON SCHEMA public TO authenticated;
