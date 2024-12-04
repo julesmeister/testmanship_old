@@ -29,7 +29,10 @@ export default function WordsPerChallengeGraph({ data }: WordsPerChallengeProps)
 
   return (
     <Card>
-      <CardHeader className="border-b border-zinc-200 dark:border-zinc-700">
+      <CardHeader className={cn(
+        "border-b border-zinc-200 dark:border-zinc-700 transition-colors",
+        isCollapsed && "border-b-0"
+      )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-green-500/10">
@@ -39,11 +42,11 @@ export default function WordsPerChallengeGraph({ data }: WordsPerChallengeProps)
           </div>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-all duration-200 ease-in-out hover:scale-105 active:scale-95"
           >
             <ChevronDown 
               className={cn(
-                "h-5 w-5 text-zinc-500 transition-transform duration-200",
+                "h-5 w-5 text-zinc-500 transition-transform duration-300 ease-in-out",
                 isCollapsed && "transform rotate-180"
               )} 
             />
@@ -51,7 +54,7 @@ export default function WordsPerChallengeGraph({ data }: WordsPerChallengeProps)
         </div>
       </CardHeader>
       <div className={cn(
-        "transition-all duration-200 ease-in-out",
+        "transition-[height] duration-500 ease-[cubic-bezier(0.5,0,0.5,1)]",
         isCollapsed ? "h-0 overflow-hidden" : "h-auto"
       )}>
         <CardContent className="pt-6">
@@ -62,7 +65,7 @@ export default function WordsPerChallengeGraph({ data }: WordsPerChallengeProps)
                 margin={{
                   top: 5,
                   right: 30,
-                  left: 20,
+                  left: 0,
                   bottom: 25,
                 }}
               >
@@ -83,11 +86,11 @@ export default function WordsPerChallengeGraph({ data }: WordsPerChallengeProps)
                   stroke="hsl(var(--border))"
                 />
                 <YAxis
+                  width={90}
                   label={{ 
                     value: '✍️ Words Written', 
                     angle: -90, 
-                    position: 'insideLeft',
-                    offset: -5,
+                    position: 'outside',
                     ...labelStyle
                   }}
                   tick={{ fill: axisColor, fontSize: 12 }}

@@ -59,7 +59,8 @@ export const useUserWordStats = (
           .from('challenge_attempts')
           .select('word_count, completed_at')
           .eq('user_id', user.id)
-          .order('completed_at', { ascending: true });
+          .order('completed_at', { ascending: true })
+          .limit(30);
 
         if (wordCountError) throw wordCountError;
         setWordCountData(wordCountData || []);
