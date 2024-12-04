@@ -1,9 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Bar, BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useState, useEffect } from 'react';
-import { useSupabase } from '@/app/supabase-provider';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { UserDetails, UserSession } from '@/types/types';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
@@ -11,13 +7,11 @@ import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { useGradeTheExercise } from '@/hooks/useGradeTheExercise';
 import { useExerciseAccepted } from '@/hooks/useExerciseAccepted';
 import { useWeeklyStats } from '@/hooks/useWeeklyStats';
-import { MdArrowUpward, MdArrowDownward } from 'react-icons/md';
+import { useUserProgress } from '@/hooks/useUserProgress';
 import { Loader2, AlertCircle, RefreshCw, Pencil } from 'lucide-react';
-import { set } from 'nprogress';
 import { StatsCard } from '@/components/card/StatsCard';
 
 export default function MainChart({ user, userDetails, session }: UserSession) {
-  const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("week");
   const [weakestSkills, setWeakestSkills] = useState<string[]>([]);
   const [exerciseInput, setExerciseInput] = useState('');
   const [exerciseGrades, setExerciseGrades] = useState<Array<{ grade: number; improvedSentence: string }>>([]);
@@ -26,7 +20,17 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
   const [current_streak, setCurrentStreak] = useState<number | 0>(0);
   const [exercisesTaken, setExerciseTaken] = useState<number | 0>(0);
   const [difficulty, setDifficulty] = useState<string | null>(null);
+
   const supabase = createClientComponentClient();
+
+  useUserProgress(supabase, user.id, {
+    setWeakestSkills,
+    setUserProgressId,
+    setUpdatedAt: setUpdated_at,
+    setCurrentStreak,
+    setExercisesTaken: setExerciseTaken,
+    setDifficulty,
+  });
 
   const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills, difficulty: difficulty || 'A1' });
   const { gradeExercise } = useGradeTheExercise();
@@ -38,31 +42,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
       setExerciseInput(exercise.begin_phrase);
     }
   }, [exercise]);
-
-  useEffect(() => {
-    const fetchWeakestSkills = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_progress')
-          .select('user_id, weakest_skills, updated_at, current_streak, total_challenges_completed, total_exercises_completed, last_active_level')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-        if (data) {
-          setWeakestSkills(data.weakest_skills || []);
-          setUserProgressId(data.user_id);
-          setUpdated_at(data.updated_at);
-          setCurrentStreak(data.current_streak);
-          setExerciseTaken(data.total_exercises_completed);
-          setDifficulty(data.last_active_level);
-        }
-      } catch (error) {
-        console.error('Error fetching weakest skills:', error);
-      }
-    };
-    fetchWeakestSkills();
-  }, [supabase, user.id]);
 
   const handleExerciseSubmit = async () => {
     const toastId = toast.loading('Grading exercise...', { duration: 1000 });
@@ -135,17 +114,6 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
       toast.error('Failed to submit exercise');
     }
   };
-
-
-  const data = [
-    { name: 'Mon', paragraphs: 20 },
-    { name: 'Tue', paragraphs: 15 },
-    { name: 'Wed', paragraphs: 25 },
-    { name: 'Thu', paragraphs: 30 },
-    { name: 'Fri', paragraphs: 18 },
-    { name: 'Sat', paragraphs: 28 },
-    { name: 'Sun', paragraphs: 22 },
-  ];
 
   return (
     <Card className="w-full h-full pb-12 p-[20px]">
