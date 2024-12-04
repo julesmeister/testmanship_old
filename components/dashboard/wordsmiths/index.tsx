@@ -14,6 +14,7 @@ import { WordsmithProps } from '@/types/wordsmith';
 import { useWordsmithUsers } from '@/hooks/useWordsmithUsers';
 import { useUserChallenges } from '@/hooks/useUserChallenges';
 import { UserChallengesDialog } from './UserChallengesDialog';
+import { StatsCard } from '@/components/card/StatsCard';
 
 export default function Wordsmiths({ user, userDetails }: WordsmithProps) {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
@@ -42,62 +43,32 @@ export default function Wordsmiths({ user, userDetails }: WordsmithProps) {
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-              <Users className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Total Wordsmiths
-            </p>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-              {stats.totalUsers}
-            </span>
-          </div>
-          <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            registered users
-          </span>
-        </div>
+        <StatsCard
+          icon={<Users className="h-5 w-5" />}
+          iconBgColor="bg-blue-500/10"
+          iconTextColor="text-blue-500"
+          title="Total Wordsmiths"
+          value={stats.totalUsers}
+          subtitle="registered users"
+        />
 
-        <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
-              <Star className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Total Credits
-            </p>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-              {stats.totalCredits}
-            </span>
-          </div>
-          <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            earned credits
-          </span>
-        </div>
+        <StatsCard
+          icon={<Star className="h-5 w-5" />}
+          iconBgColor="bg-amber-500/10"
+          iconTextColor="text-amber-500"
+          title="Total Credits"
+          value={stats.totalCredits}
+          subtitle="earned credits"
+        />
 
-        <div className="flex flex-col p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
-              <Clock className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Active Users
-            </p>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 dark:text-white">
-              {stats.activeThisWeek}
-            </span>
-          </div>
-          <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            this week
-          </span>
-        </div>
+        <StatsCard
+          icon={<Clock className="h-5 w-5" />}
+          iconBgColor="bg-green-500/10"
+          iconTextColor="text-green-500"
+          title="Active Users"
+          value={stats.activeThisWeek}
+          subtitle="this week"
+        />
       </div>
 
       {/* Search Bar */}
