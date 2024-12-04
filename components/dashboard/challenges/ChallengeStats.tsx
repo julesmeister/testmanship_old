@@ -1,6 +1,7 @@
 import { PenLine, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import cn from 'classnames';
 
 interface ChallengeStatsProps {
   userCount: number;
@@ -18,23 +19,35 @@ export function ChallengeStats({
   onClearFilter
 }: ChallengeStatsProps) {
   return (
-    <div className="flex flex-col sm:flex-row gap-4 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 p-4">
+    <div className="flex flex-col sm:flex-row gap-4 rounded-xl bg-muted dark:bg-zinc-900 p-4">
       <div 
-        className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800/50 shadow-sm flex-1"
+        className={cn(
+          "flex items-center gap-3 px-4 py-2 rounded-lg bg-card border shadow-sm flex-1 relative cursor-pointer hover:bg-accent/50 transition-colors",
+          "dark:bg-zinc-800 dark:border-zinc-700 dark:hover:bg-zinc-700/50",
+          showUserChallengesOnly && "ring-2 ring-primary/50 dark:ring-2 dark:ring-primary"
+        )}
         onClick={onToggleUserChallenges}
       >
-        <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/20">
+        <div className={cn(
+          "p-2 rounded-md bg-primary/10",
+          "dark:bg-primary/30",
+          showUserChallengesOnly && "dark:bg-primary/40"
+        )}>
           <PenLine className="h-5 w-5 text-primary" />
         </div>
         <div className="flex flex-col">
-          <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{userCount}</span>
-          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">Your challenges</span>
+          <span className="text-2xl font-bold text-foreground dark:text-white">{userCount}</span>
+          <span className={cn(
+            "text-sm font-medium text-muted-foreground",
+            "dark:text-zinc-300",
+            showUserChallengesOnly && "dark:text-primary"
+          )}>{showUserChallengesOnly ? "Showing your challenges" : "Your challenges"}</span>
         </div>
         {showUserChallengesOnly && (
           <Button
             variant="ghost"
             size="icon"
-            className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-background shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-background dark:bg-zinc-700 border dark:border-zinc-600 shadow-sm"
             onClick={(e) => {
               e.stopPropagation();
               onClearFilter();
@@ -45,13 +58,13 @@ export function ChallengeStats({
           </Button>
         )}
       </div>
-      <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800/50 shadow-sm flex-1">
-        <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/20">
+      <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-card border shadow-sm flex-1 dark:bg-zinc-800 dark:border-zinc-700">
+        <div className="p-2 rounded-md bg-primary/10 dark:bg-primary/30">
           <Users className="h-5 w-5 text-primary" />
         </div>
         <div className="flex flex-col">
-          <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{totalCount}</span>
-          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">Community challenges</span>
+          <span className="text-2xl font-bold text-foreground dark:text-white">{totalCount}</span>
+          <span className="text-sm font-medium text-muted-foreground dark:text-zinc-300">Community challenges</span>
         </div>
       </div>
     </div>
