@@ -14,6 +14,8 @@ import { PerformanceOverview } from "@/components/dashboard/performance/componen
 import { PerformanceLoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { PerformanceAnalysis } from './components/PerformanceAreasForImprovement';
+import WordsPerChallengeGraph from './components/WordsPerChallengeGraph';
+import { useUserWordStats } from '@/hooks/useUserWordStats';
 
 interface Props {
   user: User | null | undefined;
@@ -45,20 +47,14 @@ interface PerformanceTrend {
   challenges_completed: number;
 }
 
+interface WordCountTimeSeries {
+  word_count: number;
+  completed_at: string;
+}
+
 export default function Performance({ user, userDetails }: Props) {
   const supabase = createClientComponentClient();
-  const [progress, setProgress] = useState<UserProgress>({
-    total_challenges_completed: 0,
-    total_words_written: 0,
-    total_time_spent: 0,
-    average_performance: 0,
-    weakest_skills: [],
-    last_active_level: '',
-    longest_streak: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const { progress, wordCountData, isLoading, error } = useUserWordStats(supabase, user);
   const [skillMetrics, setSkillMetrics] = useState<SkillMetric[]>([
     {
       category: 'Writing',
@@ -89,38 +85,6 @@ export default function Performance({ user, userDetails }: Props) {
   const [trends, setTrends] = useState<PerformanceTrend[]>([
     
   ]);
-
-  useEffect(() => {
-    async function fetchUserProgress() {
-      if (!user?.id) return;
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const { data, error: supabaseError } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (supabaseError) {
-          throw supabaseError;
-        }
-
-        if (data) {
-          setProgress(data);
-        }
-      } catch (err) {
-        console.error('Error fetching user progress:', err);
-        setError('Failed to load progress data');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchUserProgress();
-  }, [user?.id, supabase]);
 
   useEffect(() => {
     async function fetchSkillMetrics() {
@@ -181,8 +145,13 @@ export default function Performance({ user, userDetails }: Props) {
         <PerformanceLoadingState />
       ) : (
         <div className="min-h-screen w-full space-y-6">
-          <PerformanceOverview progress={progress} />
-
+          {progress && <PerformanceOverview progress={progress} />}
+          <WordsPerChallengeGraph 
+            data={wordCountData.map(item => ({
+              challenge_number: new Date(item.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              words_written: item.word_count
+            }))}
+          />
           {/* Skills and Progress */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Skill Metrics */}
@@ -234,7 +203,7 @@ export default function Performance({ user, userDetails }: Props) {
                 </div>
               </CardContent>
             </Card>
-            <PerformanceAnalysis weakest_skills={progress.weakest_skills} />
+            <PerformanceAnalysis weakest_skills={progress?.weakest_skills ?? []} />
           </div>
 
           {/* Performance Trends */}
