@@ -123,17 +123,17 @@ export default function Sidebar(props: SidebarProps) {
             ))}
           </div>
         </ScrollArea>
-        <div className="border-t border-zinc-200 pt-2 dark:border-zinc-800">
+        <div className="border-t border-zinc-200 dark:border-zinc-700 pt-2">
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start gap-2",
+              "w-full justify-start gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800",
               isCollapsed && "justify-center px-2"
             )}
             onClick={handleSignOut}
           >
-            <HiOutlineArrowRightOnRectangle className="h-4 w-4" />
-            {!isCollapsed && <span>Sign out</span>}
+            <HiOutlineArrowRightOnRectangle className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+            {!isCollapsed && <span className="text-zinc-700 dark:text-zinc-300">Sign out</span>}
           </Button>
         </div>
       </div>
