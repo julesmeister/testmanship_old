@@ -41,19 +41,19 @@ export function ChallengeStats({
             "text-sm font-medium text-muted-foreground",
             "dark:text-zinc-300",
             showUserChallengesOnly && "dark:text-primary"
-          )}>{showUserChallengesOnly ? "Showing your challenges" : "Your challenges"}</span>
+          )}>{showUserChallengesOnly ? "Showing your challenges only" : "Your challenges"}</span>
         </div>
         {showUserChallengesOnly && (
           <Button
             variant="ghost"
             size="icon"
-            className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-background dark:bg-zinc-700 border dark:border-zinc-600 shadow-sm"
+            className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-background dark:bg-zinc-700 border dark:border-zinc-600 shadow-sm transition-colors hover:dark:bg-zinc-600"
             onClick={(e) => {
               e.stopPropagation();
               onClearFilter();
             }}
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3 text-zinc-600 dark:text-zinc-300" />
             <span className="sr-only">Clear filter</span>
           </Button>
         )}

@@ -6,10 +6,10 @@ import {
   HiOutlineUsers,
   HiOutlineUser,
   HiOutlineCog8Tooth,
-  HiOutlineCreditCard,
   HiOutlineDocumentText,
   HiOutlineCurrencyDollar,
-  HiOutlineClipboard
+  HiOutlineClipboard,
+  HiOutlinePuzzlePiece
 } from 'react-icons/hi2';
 
 export const routes: IRoute[] = [
@@ -36,11 +36,16 @@ export const routes: IRoute[] = [
     collapse: false,
   },
   {
+    name: 'Exercise',
+    path: '/dashboard/exercise',
+    icon: (<HiOutlinePuzzlePiece className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />),
+    collapse: false,
+  },
+  {
     name: 'Performance',
     path: '/dashboard/performance',
-    icon: <HiOutlineUser className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />,
+    icon: (<HiOutlineUser className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />),
     collapse: false,
-    disabled: false
   },
   {
     name: 'Wordsmiths',
