@@ -66,8 +66,8 @@ export default function Exercise({ title, description, user, userDetails }: Prop
       try {
         const { data: exercisesData, error } = await supabase
           .from('exercises')
-          .select('id, topic, description, difficulty_level, grammar_category')
-          .eq('is_active', true)
+          .select('*')
+          .eq('difficulty_level', difficulty)
           .order('order_index', { ascending: true });
 
         if (error) throw error;
@@ -85,6 +85,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
           id: exercise.id,
           title: exercise.topic,
           description: exercise.description,
+          exercise_types: exercise.exercise_types,
           completed: userProgress?.some(progress => progress.exercise_id === exercise.id) ?? false,
           score: userProgress?.find(progress => progress.exercise_id === exercise.id)?.score
         }));
@@ -100,7 +101,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     if (user) {
       fetchExercises();
     }
-  }, [user, supabase]);
+  }, [user, supabase, difficulty]);
 
   const handleLevelChange = async (newLevel: string) => {
     const result = await updateLevel(newLevel);

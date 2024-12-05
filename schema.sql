@@ -513,7 +513,7 @@ CREATE TABLE IF NOT EXISTS public.exercises (
     topic VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     exercise_types exercise_type[] NOT NULL,
-    difficulty_level VARCHAR(20) DEFAULT 'beginner',
+    difficulty_level VARCHAR(20) DEFAULT 'A1',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),

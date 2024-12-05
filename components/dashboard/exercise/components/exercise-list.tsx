@@ -9,9 +9,12 @@ interface Exercise {
   id: string;
   title: string;
   description: string;
+  duration: number;
+  difficulty: string;
   completed?: boolean;
   score?: number;
   progress?: number;
+  objectives: string[];
 }
 
 interface ExerciseListProps {
@@ -27,7 +30,14 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h3 className="text-xl font-semibold text-gray-900">Available Exercises</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-xl font-semibold text-gray-900">Available Exercises</h3>
+          <div className="flex-1 flex justify-end">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+              {exercises.length}
+            </span>
+          </div>
+        </div>
         <div className="flex items-center gap-3 text-sm">
           <div ref={exercisesCount.containerRef} className="flex items-center gap-1.5 px-2 py-0.5 bg-violet-50 text-violet-600 rounded-md border border-violet-100 h-[26px]">
             <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
@@ -58,7 +68,7 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
               "bg-white/50 hover:bg-gradient-to-r from-violet-50/50 to-white",
               selectedId === exercise.id 
                 ? "bg-gradient-to-r from-violet-50/80 to-white border-violet-200 shadow-[0_2px_8px_-1px_rgba(107,70,193,0.1)]" 
-                : "hover:shadow-[0_2px_8px_-1px_rgba(107,70,193,0.05)]",
+                : "border-violet-100 hover:shadow-[0_2px_8px_-1px_rgba(107,70,193,0.05)]",
             )}
           >
             {/* {exercise.completed && (
