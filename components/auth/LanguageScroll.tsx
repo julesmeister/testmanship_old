@@ -18,7 +18,6 @@ const languages = [
   'Niemiecki',        // Polish
   'Tysk',             // Swedish
   'Saksa',            // Finnish
-  'Tysk',             // Norwegian
   'Duits',            // Dutch
   'Německý',          // Czech
   'Német'             // Hungarian
