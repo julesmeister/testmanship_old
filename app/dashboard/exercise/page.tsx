@@ -14,5 +14,5 @@ export default async function ExercisePage() {
     return redirect('/dashboard/signin');
   }
 
-  return <Exercise user={user} userDetails={userDetails} />;
+  return <Exercise user={user} userDetails={userDetails} title="Exercises" description="Practice your language skills with targeted exercises." />;
 }
