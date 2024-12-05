@@ -486,3 +486,265 @@ GRANT SELECT ON weekly_challenge_stats TO authenticated;
 
 -- Grant usage on schema to authenticated users
 GRANT USAGE ON SCHEMA public TO authenticated;
+
+-- Create exercise_types enum
+CREATE TYPE exercise_type AS ENUM (
+    'Fill-in-the-blanks',
+    'Matching',
+    'Conjugation tables',
+    'Question formation',
+    'Dialogue completion',
+    'Multiple-choice',
+    'Sentence transformation',
+    'Drag-and-drop',
+    'Gap-fill exercises',
+    'Word sorting',
+    'Sentence reordering',
+    'Role-playing',
+    'Verb conjugation table',
+    'Sentence splitting',
+    'Sentence correction',
+    'Word building'
+);
+
+-- Create exercises table
+CREATE TABLE IF NOT EXISTS public.exercises (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    topic VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    exercise_types exercise_type[] NOT NULL,
+    difficulty_level VARCHAR(20) DEFAULT 'beginner',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    created_by uuid REFERENCES auth.users(id),
+    grammar_category VARCHAR(100) NOT NULL,
+    order_index INTEGER,
+    prerequisites uuid[] -- References other exercise IDs that should be completed first
+);
+
+-- Add indexes
+CREATE INDEX IF NOT EXISTS idx_exercises_topic ON exercises(topic);
+CREATE INDEX IF NOT EXISTS idx_exercises_grammar_category ON exercises(grammar_category);
+CREATE INDEX IF NOT EXISTS idx_exercises_difficulty ON exercises(difficulty_level);
+
+-- Enable RLS
+ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+CREATE POLICY "Exercises are viewable by everyone." 
+    ON exercises FOR SELECT 
+    USING (true);
+
+CREATE POLICY "Only admins can insert exercises." 
+    ON exercises FOR INSERT 
+    TO authenticated
+    WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+
+CREATE POLICY "Only admins can update exercises." 
+    ON exercises FOR UPDATE 
+    TO authenticated
+    USING (auth.jwt() ->> 'role' = 'admin');
+
+-- Add comments
+COMMENT ON TABLE exercises IS 'Stores German language exercises with their topics and types';
+COMMENT ON COLUMN exercises.topic IS 'Main topic of the exercise';
+COMMENT ON COLUMN exercises.description IS 'Detailed description of what the exercise covers';
+COMMENT ON COLUMN exercises.exercise_types IS 'Array of exercise types available for this topic';
+COMMENT ON COLUMN exercises.difficulty_level IS 'Difficulty level of the exercise (beginner, intermediate, advanced)';
+COMMENT ON COLUMN exercises.grammar_category IS 'Main grammar category the exercise belongs to';
+COMMENT ON COLUMN exercises.prerequisites IS 'Array of exercise IDs that should be completed before this one';
+
+-- Create function to update timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create trigger for timestamp
+CREATE TRIGGER update_exercises_updated_at
+    BEFORE UPDATE ON exercises
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert initial exercises
+INSERT INTO public.exercises (
+    topic,
+    description,
+    exercise_types,
+    grammar_category,
+    order_index
+) VALUES 
+    (
+        'Conjugate verbs (regular and irregular)',
+        'Learn how to conjugate both regular and irregular verbs in the present tense.',
+        ARRAY['Fill-in-the-blanks', 'Matching', 'Conjugation tables']::exercise_type[],
+        'Verb Conjugation',
+        1
+    ),
+    (
+        'W-Questions (Wer, Was, Wo, etc.)',
+        'Understand and form open-ended questions using interrogatives.',
+        ARRAY['Question formation', 'Dialogue completion', 'Multiple-choice']::exercise_type[],
+        'Question Formation',
+        2
+    ),
+    (
+        'Yes/No Questions',
+        'Practice forming and answering yes/no questions.',
+        ARRAY['Multiple-choice', 'Sentence transformation', 'Dialogue completion']::exercise_type[],
+        'Question Formation',
+        3
+    ),
+    (
+        'Definite Articles (der, die, das)',
+        'Learn the correct usage of definite articles with nouns.',
+        ARRAY['Matching', 'Fill-in-the-blanks', 'Drag-and-drop']::exercise_type[],
+        'Articles',
+        4
+    ),
+    (
+        'Indefinite Articles (ein, eine)',
+        'Learn how to use indefinite articles with nouns.',
+        ARRAY['Fill-in-the-blanks', 'Multiple-choice', 'Gap-fill exercises']::exercise_type[],
+        'Articles',
+        5
+    ),
+    (
+        'Negative Article (kein, keine)',
+        'Practice negating sentences using the correct form of ''kein''.',
+        ARRAY['Sentence transformation', 'Gap-fill exercises', 'Dialogue completion']::exercise_type[],
+        'Articles',
+        6
+    ),
+    (
+        'Plural Forms of Nouns',
+        'Learn the plural forms of common German nouns.',
+        ARRAY['Drag-and-drop', 'Matching', 'Word sorting']::exercise_type[],
+        'Nouns',
+        7
+    ),
+    (
+        'Verb Position in Sentences',
+        'Understand the correct placement of verbs in main and subordinate clauses.',
+        ARRAY['Sentence reordering', 'Fill-in-the-blanks', 'Sentence transformation']::exercise_type[],
+        'Sentence Structure',
+        8
+    ),
+    (
+        'Accusative Case',
+        'Learn to use the accusative case with articles and direct objects.',
+        ARRAY['Gap-fill exercises', 'Multiple-choice', 'Fill-in-the-blanks']::exercise_type[],
+        'Cases',
+        9
+    ),
+    (
+        'Modal Verbs: ''können'' (can)',
+        'Practice the conjugation and usage of ''können'' to express ability.',
+        ARRAY['Dialogue completion', 'Sentence transformation', 'Conjugation tables']::exercise_type[],
+        'Modal Verbs',
+        10
+    ),
+    (
+        'Modal Verbs: ''mögen'' (like) and ''möchten'' (would like)',
+        'Learn how to use ''mögen'' and ''möchten'' to express preferences and wishes.',
+        ARRAY['Dialogue completion', 'Gap-fill exercises', 'Multiple-choice']::exercise_type[],
+        'Modal Verbs',
+        11
+    ),
+    (
+        'Verbs with Vowel Change (e.g., fahren, sehen)',
+        'Understand and practice verbs that change their stem vowels in conjugation.',
+        ARRAY['Conjugation tables', 'Fill-in-the-blanks', 'Matching']::exercise_type[],
+        'Verb Conjugation',
+        12
+    ),
+    (
+        'Separable Verbs (e.g., aufstehen, anrufen)',
+        'Learn how separable verbs are used in sentences and conjugated.',
+        ARRAY['Sentence splitting', 'Matching', 'Gap-fill exercises']::exercise_type[],
+        'Verb Types',
+        13
+    ),
+    (
+        'Non-Separable Verbs (e.g., besuchen, verstehen)',
+        'Practice using non-separable verbs correctly in sentences.',
+        ARRAY['Sentence correction', 'Fill-in-the-blanks', 'Multiple-choice']::exercise_type[],
+        'Verb Types',
+        14
+    ),
+    (
+        'Sentence Bracket (e.g., modal verbs with infinitives)',
+        'Learn how modal verbs create a sentence bracket with the infinitive at the end.',
+        ARRAY['Fill-in-the-blanks', 'Gap-fill exercises', 'Dialogue completion']::exercise_type[],
+        'Sentence Structure',
+        15
+    ),
+    (
+        'Temporal Prepositions (e.g., am, im, um)',
+        'Understand how to use prepositions to express time.',
+        ARRAY['Multiple-choice', 'Matching', 'Fill-in-the-blanks']::exercise_type[],
+        'Prepositions',
+        16
+    ),
+    (
+        'Compound Nouns (e.g., Haus + Tür = Haustür)',
+        'Learn how to form and understand compound nouns.',
+        ARRAY['Word building', 'Matching', 'Drag-and-drop']::exercise_type[],
+        'Nouns',
+        17
+    ),
+    (
+        'Perfect Tense with ''haben''',
+        'Practice forming sentences in the perfect tense with ''haben''.',
+        ARRAY['Sentence transformation', 'Fill-in-the-blanks', 'Dialogue completion']::exercise_type[],
+        'Perfect Tense',
+        18
+    ),
+    (
+        'Perfect Tense with ''sein''',
+        'Learn when and how to use ''sein'' to form the perfect tense.',
+        ARRAY['Gap-fill exercises', 'Multiple-choice', 'Dialogue completion']::exercise_type[],
+        'Perfect Tense',
+        19
+    ),
+    (
+        'Perfect Tense with ''haben'' and ''sein''',
+        'Understand the distinction between ''haben'' and ''sein'' in perfect tense usage.',
+        ARRAY['Dialogue completion', 'Gap-fill exercises', 'Sentence transformation']::exercise_type[],
+        'Perfect Tense',
+        20
+    );
+
+-- Create user exercise progress table
+CREATE TABLE IF NOT EXISTS public.user_exercise_progress (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    exercise_id uuid REFERENCES exercises(id) ON DELETE CASCADE,
+    score INTEGER CHECK (score >= 0 AND score <= 100),
+    completed_at TIMESTAMPTZ DEFAULT now(),
+    attempts INTEGER DEFAULT 1,
+    last_attempt_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(user_id, exercise_id)
+);
+
+-- Add indexes for performance
+CREATE INDEX IF NOT EXISTS idx_user_exercise_progress_user ON user_exercise_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_exercise_progress_exercise ON user_exercise_progress(exercise_id);
+
+-- Enable RLS
+ALTER TABLE user_exercise_progress ENABLE ROW LEVEL SECURITY;
+
+-- Create policy
+CREATE POLICY "Allow all operations on user_exercise_progress" 
+    ON user_exercise_progress FOR ALL 
+    USING (true);
+
+-- Add comments
+COMMENT ON TABLE user_exercise_progress IS 'Tracks user progress and scores for each exercise';
+COMMENT ON COLUMN user_exercise_progress.score IS 'Score achieved in the exercise (0-100)';
+COMMENT ON COLUMN user_exercise_progress.attempts IS 'Number of times the user has attempted this exercise';
+COMMENT ON COLUMN user_exercise_progress.last_attempt_at IS 'Timestamp of the most recent attempt';

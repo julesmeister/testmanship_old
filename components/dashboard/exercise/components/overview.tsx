@@ -186,7 +186,7 @@ export default function ExerciseOverview({
                   )}
                 >
                   {skill}
-                  <ArrowRight className="w-3 h-3 ml-1 inline-block opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <ArrowRight className="w-3 h-3 ml-1 inline-block opacity-100 transition-opacity duration-200" />
                 </Badge>
                 </motion.div>
               ))}

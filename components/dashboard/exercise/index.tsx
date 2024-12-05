@@ -7,6 +7,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import DashboardLayout from '@/components/layout';
 import ExerciseOverview from './components/overview';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { useUserLevel } from '@/hooks/useUserLevel';
 import ExerciseList from './components/exercise-list';
 import ExerciseDetails from './components/exercise-details'; 
 interface Props {
@@ -28,6 +29,15 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   const [exercisesTaken, setExercisesTaken] = useState(0);
   const [difficulty, setDifficulty] = useState<string | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
+  const [exercises, setExercises] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    completed?: boolean;
+    score?: number;
+  }>>([]);
+
+  const { updateLevel } = useUserLevel({ user, initialLevel: difficulty || 'A1' });
 
   useUserProgress(supabase, user?.id as string, {
     setWeakestSkills,
@@ -51,17 +61,52 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     fetchInitialData();
   }, []);
 
-  const handleLevelChange = async (newLevel: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_progress')
-        .update({ last_active_level: newLevel })
-        .eq('user_id', user?.id);
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const { data: exercisesData, error } = await supabase
+          .from('exercises')
+          .select('id, topic, description, difficulty_level, grammar_category')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
 
-      if (error) throw error;
-      setDifficulty(newLevel);
-    } catch (error) {
-      console.error('Error updating difficulty level:', error);
+        if (error) throw error;
+
+        // Get user progress for completed exercises
+        const { data: userProgress, error: progressError } = await supabase
+          .from('user_exercise_progress')
+          .select('exercise_id, score')
+          .eq('user_id', user?.id);
+
+        if (progressError) throw progressError;
+
+        // Map database exercises to component format
+        const formattedExercises = exercisesData.map(exercise => ({
+          id: exercise.id,
+          title: exercise.topic,
+          description: exercise.description,
+          completed: userProgress?.some(progress => progress.exercise_id === exercise.id) ?? false,
+          score: userProgress?.find(progress => progress.exercise_id === exercise.id)?.score
+        }));
+
+        setExercises(formattedExercises);
+      } catch (error) {
+        console.error('Error fetching exercises:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchExercises();
+    }
+  }, [user, supabase]);
+
+  const handleLevelChange = async (newLevel: string) => {
+    const result = await updateLevel(newLevel);
+    if (!result || !result.success) {
+      console.error('Failed to update level');
+      return;
     }
   };
 
@@ -90,31 +135,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
       <div className="mt-6 grid md:grid-cols-5 gap-6">
           <div className="md:col-span-1 space-y-6">
             <ExerciseList
-              exercises={[
-                {
-                  id: '1',
-                  title: 'Basic Greetings',
-                  description: 'Learn common greetings and introductions in everyday situations.',
-                  duration: 15,
-                  difficulty: 'A1',
-                  completed: true,
-                  score: 95
-                },
-                {
-                  id: '2',
-                  title: 'Family Members',
-                  description: 'Practice vocabulary related to family relationships and descriptions.',
-                  duration: 20,
-                  difficulty: 'A1',
-                },
-                {
-                  id: '3',
-                  title: 'Daily Routines',
-                  description: 'Learn to describe your daily activities and schedule.',
-                  duration: 25,
-                  difficulty: 'A2'
-                }
-              ]}
+              exercises={exercises}
               selectedId={selectedExerciseId}
               onSelect={setSelectedExerciseId}
             />
@@ -124,20 +145,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
             {selectedExerciseId !== null && selectedExerciseId !== undefined && (
               <ExerciseDetails
               exercise={
-                selectedExerciseId ? {
-                  id: '2',
-                  title: 'Family Members',
-                  description: 'Master essential vocabulary for describing family relationships and personal connections. Perfect for beginners looking to talk about their loved ones.',
-                  duration: 20,
-                  difficulty: 'A1',
-                  progress: 60,
-                  objectives: [
-                    'Learn basic family relationship terms',
-                    'Practice describing family members',
-                    'Understand possessive pronouns',
-                    'Create simple family-related sentences'
-                  ]
-                } : undefined
+                exercises.find(exercise => exercise.id === selectedExerciseId)
               }
                 onStart={() => console.log('Starting exercise...')}
                 onContinue={() => console.log('Continuing exercise...')}
