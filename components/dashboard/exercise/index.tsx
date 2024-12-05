@@ -10,6 +10,7 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import ExerciseList from './components/exercise-list';
 import ExerciseDetails from './components/exercise-details'; 
+import SelectExercise from './components/select-exercise';
 interface Props {
   title?: string;
   description?: string;
@@ -86,6 +87,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
           title: exercise.topic,
           description: exercise.description,
           exercise_types: exercise.exercise_types,
+          content: exercise.content,
           completed: userProgress?.some(progress => progress.exercise_id === exercise.id) ?? false,
           score: userProgress?.find(progress => progress.exercise_id === exercise.id)?.score
         }));
@@ -143,14 +145,16 @@ export default function Exercise({ title, description, user, userDetails }: Prop
           </div>
 
           <div className="md:col-span-3">
-            {selectedExerciseId !== null && selectedExerciseId !== undefined && (
+            {selectedExerciseId !== null && selectedExerciseId !== undefined ? (
               <ExerciseDetails
-              exercise={
-                exercises.find(exercise => exercise.id === selectedExerciseId)
-              }
+                exercise={
+                  exercises.find(exercise => exercise.id === selectedExerciseId)
+                }
                 onStart={() => console.log('Starting exercise...')}
                 onContinue={() => console.log('Continuing exercise...')}
               />
+            ) : (
+              <SelectExercise />
             )}
           </div>
       </div>

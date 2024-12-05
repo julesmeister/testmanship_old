@@ -514,6 +514,7 @@ CREATE TABLE IF NOT EXISTS public.exercises (
     description TEXT NOT NULL,
     exercise_types exercise_type[] NOT NULL,
     difficulty_level VARCHAR(20) DEFAULT 'A1',
+    content jsonb[] not null, -- Store exercise-specific data here
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
@@ -531,20 +532,10 @@ CREATE INDEX IF NOT EXISTS idx_exercises_difficulty ON exercises(difficulty_leve
 -- Enable RLS
 ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
 
--- Create policies
-CREATE POLICY "Exercises are viewable by everyone." 
-    ON exercises FOR SELECT 
-    USING (true);
-
-CREATE POLICY "Only admins can insert exercises." 
-    ON exercises FOR INSERT 
-    TO authenticated
-    WITH CHECK (auth.jwt() ->> 'role' = 'admin');
-
-CREATE POLICY "Only admins can update exercises." 
-    ON exercises FOR UPDATE 
-    TO authenticated
-    USING (auth.jwt() ->> 'role' = 'admin');
+-- Create new policy for all operations
+CREATE POLICY "Allow all operations on exercises" 
+  ON exercises FOR ALL 
+  USING (true);
 
 -- Add comments
 COMMENT ON TABLE exercises IS 'Stores German language exercises with their topics and types';

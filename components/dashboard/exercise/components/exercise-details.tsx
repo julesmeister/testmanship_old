@@ -44,6 +44,7 @@ import RolePlaying from './exercises/role-playing';
 import SentenceSplitting from './exercises/sentence-splitting';
 import SentenceCorrection from './exercises/sentence-correction';
 import WordBuilding from './exercises/word-building';
+import EmptyExercise from './exercises/empty-exercise';
 
 interface ExerciseDetailsProps {
   exercise?: {
@@ -54,8 +55,9 @@ interface ExerciseDetailsProps {
     score?: number;
     exercise_types: string[];
     progress?: number;
+    content: Array<any>;
   };
-  exerciseData?: any; // Temporary type for exercise data
+  exerciseData?: any; 
   onStart?: () => void;
   onContinue?: () => void;
 }
@@ -219,74 +221,62 @@ export default function ExerciseDetails({ exercise, exerciseData, onStart, onCon
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {selectedType.replace(/-/g, " ")}
-              </h3>
-              {exercise.progress ? (
-                <Button
-                  onClick={onContinue}
-                  className="flex items-center gap-2"
-                >
-                  Continue Exercise
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={onStart}
-                  className="flex items-center gap-2"
-                >
-                  Start Exercise
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
               {/* Dynamic Exercise Component */}
               {(() => {
-                // Mock exercise data handler - replace with actual data fetching
-                const mockExerciseData = {
+                // Filter exercises by selected type
+                const filteredExercises = exercise.content.filter(
+                  (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase()
+                );
+                
+                if (filteredExercises.length === 0) {
+                  return <EmptyExercise exerciseType={selectedType} />;
+                }
+
+                const randomIndex = Math.floor(Math.random() * filteredExercises.length);
+                const randomExerciseContent = filteredExercises[randomIndex];
+                const exerciseContent = {
+                  ...randomExerciseContent,
                   id: exercise.id,
                   onComplete: (score: number) => {
                     console.log(`Exercise completed with score: ${score}`);
                     // Handle exercise completion
                   }
-                };
+                } as any;
 
                 switch (selectedType.toLowerCase()) {
                   case 'fill-in-the-blanks':
-                    return <FillInTheBlanks exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <FillInTheBlanks exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'matching':
-                    return <Matching exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <Matching exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'conjugation tables':
-                    return <ConjugationTables exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <ConjugationTables exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'question formation':
-                    return <QuestionFormation exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <QuestionFormation exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'dialogue completion':
-                    return <DialogueCompletion exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <DialogueCompletion exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'multiple-choice':
-                    return <MultipleChoice exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <MultipleChoice exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'sentence transformation':
-                    return <SentenceTransformation exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <SentenceTransformation exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'drag-and-drop':
-                    return <DragAndDrop exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <DragAndDrop exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'gap-fill exercises':
-                    return <GapFill exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <GapFill exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'word sorting':
-                    return <WordSorting exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <WordSorting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'sentence reordering':
-                    return <SentenceReordering exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <SentenceReordering exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'role-playing':
-                    return <RolePlaying exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <RolePlaying exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'sentence splitting':
-                    return <SentenceSplitting exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <SentenceSplitting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'sentence correction':
-                    return <SentenceCorrection exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <SentenceCorrection exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'word building':
-                    return <WordBuilding exercise={mockExerciseData} onComplete={mockExerciseData.onComplete} />;
+                    return <WordBuilding exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   default:
-                    return <div className="p-6">Exercise type not implemented yet</div>;
+                    return <EmptyExercise exerciseType={selectedType} />;
                 }
               })()}
             </div>
