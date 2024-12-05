@@ -1,7 +1,28 @@
 import { useEffect, useState } from 'react';
 import { LANGUAGE_NAMES } from '@/types/language';
 
-const languages = Object.values(LANGUAGE_NAMES);
+const languages = [
+  'German',           // English
+  'Deutsch',          // German
+  'Allemand',         // French
+  'Alemán',           // Spanish
+  'Tedesco',          // Italian
+  'Alemão',           // Portuguese
+  'Немецкий',         // Russian
+  'ドイツ語',          // Japanese
+  '德语',             // Chinese Simplified
+  '독일어',           // Korean
+  'Almanca',          // Turkish
+  'الألمانية',        // Arabic
+  'Γερμανικά',        // Greek
+  'Niemiecki',        // Polish
+  'Tysk',             // Swedish
+  'Saksa',            // Finnish
+  'Tysk',             // Norwegian
+  'Duits',            // Dutch
+  'Německý',          // Czech
+  'Német'             // Hungarian
+];
 
 export const LanguageScroll = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
