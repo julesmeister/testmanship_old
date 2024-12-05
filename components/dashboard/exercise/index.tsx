@@ -87,7 +87,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
         {/* Exercise Details will go here */}
         {/* Exercise Grading will go here */}
       </div>
-      <div className="grid md:grid-cols-5 gap-6">
+      <div className="mt-6 grid md:grid-cols-5 gap-6">
           <div className="md:col-span-1 space-y-6">
             <ExerciseList
               exercises={[
