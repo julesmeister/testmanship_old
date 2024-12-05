@@ -62,7 +62,7 @@ IMPORTANT:
 
 Respond ONLY in valid JSON format with this exact structure:
 {
-  "exercise_prompt": "string (friendly exercise description using ${difficulty}-appropriate language)",
+  "exercise_prompt": "${difficulty === 'A1' || difficulty === 'A2' ? 'string (friendly exercise description in English)' : `string (friendly exercise description in ${languageName})`}",
   "begin_phrase": "Der Junge war..., Morgen bin ich..., Als ich...",
   "vocabulary": {
     "word1 in ${languageName}": "translation1 in English (${difficulty}-appropriate)",
