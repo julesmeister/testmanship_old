@@ -124,7 +124,7 @@ export default function SentenceTransformation({ exercise, onComplete }: Sentenc
                       "flex flex-wrap gap-2 p-2 min-h-[3rem] rounded-lg border-2 transition-colors",
                       results[index] && "border-green-500 bg-green-50 dark:bg-green-900/20",
                       !results[index] && showResults && "border-red-500 bg-red-50 dark:bg-red-900/20",
-                      !showResults && "border-gray-200 dark:border-gray-700 hover:border-violet-500"
+                      !showResults && "border-gray-200 dark:border-gray-700"
                     )}
                   >
                     {wordOrders[index].map((word, wordIndex) => (
@@ -145,7 +145,13 @@ export default function SentenceTransformation({ exercise, onComplete }: Sentenc
                             }}
                             className={cn(
                               "inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium leading-none transition-colors cursor-move",
-                              !showResults && "bg-violet-100 dark:bg-violet-900/30 text-violet-900 dark:text-violet-100",
+                              !showResults && [
+                                "text-slate-900 dark:text-slate-100",
+                                wordIndex % 4 === 0 && "bg-blue-100 dark:bg-blue-900/30",
+                                wordIndex % 4 === 1 && "bg-pink-100 dark:bg-pink-900/30",
+                                wordIndex % 4 === 2 && "bg-purple-100 dark:bg-purple-900/30",
+                                wordIndex % 4 === 3 && "bg-indigo-100 dark:bg-indigo-900/30"
+                              ],
                               showResults && results[index] && "bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100",
                               showResults && !results[index] && "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100"
                             )}
