@@ -215,12 +215,19 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                                   )}
                                 >
                                   <GripVertical className="h-5 w-5 text-gray-400" />
-                                  <span>{item.content}</span>
+                                  <div className="flex-1">
+                                    <span>{item.content}</span>
+                                    {showResults && !isCorrect && (
+                                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        Should be in: {exercise.targets.find(t => t.id === item.correctTarget)?.label}
+                                      </div>
+                                    )}
+                                  </div>
                                   {showResults && (
                                     isCorrect ? (
-                                      <Check className="h-5 w-5 text-green-500 ml-auto" />
+                                      <Check className="h-5 w-5 text-green-500 ml-auto flex-shrink-0" />
                                     ) : (
-                                      <X className="h-5 w-5 text-red-500 ml-auto" />
+                                      <X className="h-5 w-5 text-red-500 ml-auto flex-shrink-0" />
                                     )
                                   )}
                                 </div>
