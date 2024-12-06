@@ -4,6 +4,12 @@ import { motion } from 'framer-motion';
 import { BookOpen, ChevronRight, Trophy, CheckCircle2, BookOpenCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextFit } from '@/hooks/useTextFit';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Exercise {
   id: string;
@@ -70,7 +76,6 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            onClick={() => onSelect(exercise.id)}
             className={cn(
               "relative group cursor-pointer rounded-xl transition-all duration-300",
               "border border-transparent hover:border-violet-200 dark:hover:border-violet-700",
@@ -80,51 +85,75 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                 : "border-violet-100 hover:shadow-[0_2px_8px_-1px_rgba(107,70,193,0.05)] dark:border-violet-900/50 dark:hover:shadow-[0_2px_8px_-1px_rgba(139,92,246,0.1)]",
             )}
           >
-            <div className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1 flex-1">
-                  <h4 className={cn(
-                    "font-medium transition-colors duration-300",
-                    selectedId === exercise.id 
-                      ? "text-violet-700 dark:text-violet-300" 
-                      : "text-gray-900 group-hover:text-violet-600 dark:text-gray-100 dark:group-hover:text-violet-300"
-                  )}>
-                    {exercise.title}
-                  </h4>
-                  <div className="flex items-center gap-1 text-sm">
-                    {exercise.completed && exercise.score && (
-                      <div className="flex items-center gap-1 text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-950/50 px-2 py-0.5 rounded-full text-xs font-medium">
-                        <Trophy className="w-3 h-3" />
-                        <span>{exercise.score}%</span>
+            <TooltipProvider>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <div className="p-4" onClick={() => onSelect(exercise.id)}>
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1 flex-1">
+                        <h4 className={cn(
+                          "font-medium transition-colors duration-300",
+                          selectedId === exercise.id 
+                            ? "text-violet-700 dark:text-violet-300" 
+                            : "text-gray-900 group-hover:text-violet-600 dark:text-gray-100 dark:group-hover:text-violet-300"
+                        )}>
+                          {exercise.title}
+                        </h4>
+                        <div className="flex items-center gap-1 text-sm">
+                          {exercise.completed && exercise.score && (
+                            <div className="flex items-center gap-1 text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-950/50 px-2 py-0.5 rounded-full text-xs font-medium">
+                              <Trophy className="w-3 h-3" />
+                              <span>{exercise.score}%</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 pr-6">{exercise.description}</p>
+                        
+                        {exercise.progress !== undefined && (
+                          <div className="mt-3 space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Progress</span>
+                              <span className="text-xs font-medium text-violet-600 dark:text-violet-300">{exercise.progress}%</span>
+                            </div>
+                            <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-violet-500 dark:bg-violet-400 rounded-full transition-all duration-300"
+                                style={{ width: `${exercise.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 pr-6">{exercise.description}</p>
-                  
-                  {exercise.progress !== undefined && (
-                    <div className="mt-3 space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Progress</span>
-                        <span className="text-xs font-medium text-violet-600 dark:text-violet-300">{exercise.progress}%</span>
-                      </div>
-                      <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-violet-500 dark:bg-violet-400 rounded-full transition-all duration-300"
-                          style={{ width: `${exercise.progress}%` }}
-                        />
-                      </div>
+                      
+                      <ChevronRight className={cn(
+                        "w-5 h-5 transition-all duration-300 mt-1",
+                        selectedId === exercise.id 
+                          ? "text-violet-500 dark:text-violet-400 translate-x-1" 
+                          : "text-gray-400 group-hover:text-violet-400 dark:text-gray-500 dark:group-hover:text-violet-400 group-hover:translate-x-1"
+                      )} />
                     </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="right" 
+                  className={cn(
+                    "max-w-[300px] p-4 backdrop-blur-lg border shadow-lg",
+                    "bg-white/90 dark:bg-gray-900/90",
+                    "border-violet-100 dark:border-violet-800",
+                    "text-gray-700 dark:text-gray-200",
+                    "rounded-xl"
                   )}
-                </div>
-                
-                <ChevronRight className={cn(
-                  "w-5 h-5 transition-all duration-300 mt-1",
-                  selectedId === exercise.id 
-                    ? "text-violet-500 dark:text-violet-400 translate-x-1" 
-                    : "text-gray-400 group-hover:text-violet-400 dark:text-gray-500 dark:group-hover:text-violet-400 group-hover:translate-x-1"
-                )} />
-              </div>
-            </div>
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+                      <BookOpen className="w-4 h-4" />
+                      <span className="text-sm font-medium">Description</span>
+                    </div>
+                    <p className="text-sm leading-relaxed">{exercise.description}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             
             {exercise.progress !== undefined && !exercise.completed && (
               <div className="h-0.5 bg-gray-100/50 dark:bg-gray-800/50">
