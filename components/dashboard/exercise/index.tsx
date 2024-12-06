@@ -10,6 +10,7 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import ExerciseList from './components/exercise-list';
 import ExerciseDetails from './components/exercise-details'; 
+import ExercisePlaceholder from './components/exercise-placeholder'; // Changed to default import
 import { ExerciseGrade } from './components/exercise-grade'; // Changed to named import
 interface Props {
   title?: string;
@@ -169,7 +170,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
           </div>
 
           <div className="md:col-span-3">
-            {selectedExerciseId && (
+            {selectedExerciseId ? (
               <ExerciseDetails
                 exerciseId={selectedExerciseId}
                 exercise={exercises.find(exercise => exercise.id === selectedExerciseId)}
@@ -177,6 +178,8 @@ export default function Exercise({ title, description, user, userDetails }: Prop
                 onStart={() => console.log('Starting exercise...')}
                 onContinue={() => console.log('Continuing exercise...')}
               />
+            ) : (
+              <ExercisePlaceholder />
             )}
           </div>
           {/* Grading Section */}
