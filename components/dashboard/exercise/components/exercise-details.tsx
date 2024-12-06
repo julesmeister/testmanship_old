@@ -22,7 +22,8 @@ import {
   Users, 
   Scissors, 
   CheckSquare, 
-  Blocks 
+  Blocks,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -47,6 +48,7 @@ import WordBuilding from './exercises/word-building';
 import EmptyExercise from './exercises/empty-exercise';
 
 interface ExerciseDetailsProps {
+  exerciseId: string;
   exercise?: {
     id: string;
     title: string;
@@ -60,6 +62,7 @@ interface ExerciseDetailsProps {
   exerciseData?: any; 
   onStart?: () => void;
   onContinue?: () => void;
+  onComplete: (score: number, total: number) => void;
 }
 
 const getExerciseTypeIcon = (type: string) => {
@@ -101,7 +104,7 @@ const getExerciseTypeIcon = (type: string) => {
   }
 };
 
-export default function ExerciseDetails({ exercise, exerciseData, onStart, onContinue }: ExerciseDetailsProps) {
+export default function ExerciseDetails({ exerciseId, exercise, exerciseData, onStart, onContinue, onComplete }: ExerciseDetailsProps) {
   if (!exercise) return null;
 
   const [selectedType, setSelectedType] = useState<string>("");
@@ -112,6 +115,10 @@ export default function ExerciseDetails({ exercise, exerciseData, onStart, onCon
       setSelectedType(exercise.exercise_types[0]);
     }
   }, [exercise?.exercise_types]);
+
+  const handleSubmit = (score: number, total: number) => {
+    onComplete(score, total);
+  };
 
   return (
     <motion.div
@@ -238,10 +245,7 @@ export default function ExerciseDetails({ exercise, exerciseData, onStart, onCon
                 const exerciseContent = {
                   ...randomExerciseContent,
                   id: exercise.id,
-                  onComplete: (score: number) => {
-                    console.log(`Exercise completed with score: ${score}`);
-                    // Handle exercise completion
-                  }
+                  onComplete: handleSubmit
                 } as any;
 
                 switch (selectedType.toLowerCase()) {
@@ -283,6 +287,8 @@ export default function ExerciseDetails({ exercise, exerciseData, onStart, onCon
           </motion.div>
         )}
       </div>
+
+    
     </motion.div>
   );
 }

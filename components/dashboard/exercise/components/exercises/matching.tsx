@@ -15,7 +15,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
       .map(p => p.right)
       .sort(() => Math.random() - 0.5);
   });
-  const [matches, setMatches] = useState<number[]>([]);
+  const [matches, setMatches] = useState<number[]>(() => new Array(leftItems.length).fill(-1));
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [showResults, setShowResults] = useState(false);
 
@@ -39,7 +39,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
   ];
 
   const getItemColor = (index: number, isRight: boolean) => {
-    if (!showResults && selectedLeft === index && !isRight) {
+    if (selectedLeft === index && !isRight) {
       return "rgb(99 102 241)"; // indigo-500 for selected
     }
     
@@ -63,11 +63,14 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
     const baseStyles = "p-4 rounded-xl shadow-lg transition-all duration-200 cursor-pointer border-2";
     const color = getItemColor(index, isRight);
     const isMatched = isRight ? matches.includes(index) : matches[index] !== -1;
+    const isSelected = !isRight && selectedLeft === index;
     
     return `${baseStyles} ${
       isMatched 
         ? `bg-${color} border-transparent text-white transform hover:-translate-y-1`
-        : "bg-white border-gray-200 hover:border-indigo-500 hover:shadow-xl"
+        : isSelected
+          ? "bg-indigo-500 border-transparent text-white transform hover:-translate-y-1"
+          : "bg-white border-gray-200 hover:border-indigo-500 hover:shadow-xl"
     }`;
   };
 
@@ -165,9 +168,14 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
   const handleLeftClick = (index: number) => {
     if (showResults) return;
     
-    if (matches[index] !== -1) {
+    if (selectedLeft === index) {
+      // Deselect if clicking the same item
+      setSelectedLeft(null);
+    } else if (matches[index] !== -1) {
+      // Unplug if already matched
       handleUnmatch(index, false);
     } else {
+      // Select new item
       setSelectedLeft(index);
     }
   };

@@ -11,6 +11,7 @@ import { useUserLevel } from '@/hooks/useUserLevel';
 import ExerciseList from './components/exercise-list';
 import ExerciseDetails from './components/exercise-details'; 
 import SelectExercise from './components/select-exercise';
+import { ExerciseGrade } from './components/exercise-grade'; // Changed to named import
 interface Props {
   title?: string;
   description?: string;
@@ -37,6 +38,9 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     completed?: boolean;
     score?: number;
   }>>([]);
+  const [showResults, setShowResults] = useState(false); 
+  const [correctCount, setCorrectCount] = useState(0); 
+  const [totalQuestions, setTotalQuestions] = useState(0); 
 
   const { updateLevel } = useUserLevel({ user, initialLevel: difficulty || 'A1' });
 
@@ -113,6 +117,27 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     }
   };
 
+  const handleExerciseComplete = (score: number, total: number) => {
+    setCorrectCount(score);
+    setTotalQuestions(total);
+    setShowResults(true);
+    // Smooth scroll to grading section
+    setTimeout(() => {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleTryAgain = () => {
+    setShowResults(false);
+    // Temporarily clear the exercise
+    const currentExerciseId = selectedExerciseId;
+    setSelectedExerciseId(null);
+    // Bring it back after a short delay
+    setTimeout(() => {
+      setSelectedExerciseId(currentExerciseId);
+    }, 100);
+  };
+
   if (!user) {
     router.push('/dashboard/signin');
     return null;
@@ -145,17 +170,24 @@ export default function Exercise({ title, description, user, userDetails }: Prop
           </div>
 
           <div className="md:col-span-3">
-            {selectedExerciseId !== null && selectedExerciseId !== undefined ? (
+            {selectedExerciseId && (
               <ExerciseDetails
-                exercise={
-                  exercises.find(exercise => exercise.id === selectedExerciseId)
-                }
+                exerciseId={selectedExerciseId}
+                exercise={exercises.find(exercise => exercise.id === selectedExerciseId)}
+                onComplete={handleExerciseComplete}
                 onStart={() => console.log('Starting exercise...')}
                 onContinue={() => console.log('Continuing exercise...')}
               />
-            ) : (
-              <SelectExercise />
             )}
+          </div>
+          {/* Grading Section */}
+          <div className="mt-6" id="grading-section">
+            <ExerciseGrade
+              showResults={showResults}
+              correctCount={correctCount}
+              totalQuestions={totalQuestions}
+              onTryAgain={handleTryAgain}
+            />
           </div>
       </div>
     </DashboardLayout>
