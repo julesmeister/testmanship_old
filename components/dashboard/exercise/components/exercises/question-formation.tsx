@@ -6,18 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface QuestionFormationProps {
-  exercise: {
-    id: string;
-    statements: {
-      text: string;
-      expectedQuestion: string;
-      hint?: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { QuestionFormationProps } from '@/types/exercises';
 
 export default function QuestionFormation({ exercise, onComplete }: QuestionFormationProps) {
   const [answers, setAnswers] = useState<string[]>(new Array(exercise.statements.length).fill(''));

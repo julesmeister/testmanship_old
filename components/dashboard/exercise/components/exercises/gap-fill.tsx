@@ -6,20 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, X, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface GapFillProps {
-  exercise: {
-    id: string;
-    text: string;
-    gaps: {
-      id: string;
-      answer: string;
-      hint?: string;
-      acceptableAnswers?: string[];
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { GapFillProps } from '@/types/exercises';
 
 export default function GapFill({ exercise, onComplete }: GapFillProps) {
   const [answers, setAnswers] = useState<{ [key: string]: string }>(

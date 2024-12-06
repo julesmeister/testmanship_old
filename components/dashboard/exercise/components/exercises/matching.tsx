@@ -1,21 +1,13 @@
 "use client";
 
 import { useState } from 'react';
-import { motion, Reorder } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { MatchingProps } from '@/types/exercises';
 
-interface MatchingProps {
-  exercise: {
-    id: string;
-    pairs: {
-      left: string;
-      right: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+
 
 export default function Matching({ exercise, onComplete }: MatchingProps) {
   const [leftItems] = useState(exercise.pairs.map(p => p.left));

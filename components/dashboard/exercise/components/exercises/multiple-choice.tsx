@@ -7,19 +7,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { MultipleChoiceProps } from '@/types/exercises';
 
-interface MultipleChoiceProps {
-  exercise: {
-    id: string;
-    questions: {
-      text: string;
-      options: string[];
-      correctAnswer: number;
-      explanation?: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+
 
 export default function MultipleChoice({ exercise, onComplete }: MultipleChoiceProps) {
   const [answers, setAnswers] = useState<number[]>(new Array(exercise.questions.length).fill(-1));

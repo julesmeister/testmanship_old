@@ -5,18 +5,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, X } from 'lucide-react';
-
-interface FillInTheBlanksProps {
-  exercise: {
-    id: string;
-    sentence: string;
-    blanks: {
-      word: string;
-      position: number;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { FillInTheBlanksProps } from '@/types/exercises';
 
 export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlanksProps) {
   const [answers, setAnswers] = useState<string[]>(new Array(exercise.blanks.length).fill(''));

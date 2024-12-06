@@ -6,21 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface DialogueCompletionProps {
-  exercise: {
-    id: string;
-    context: string;
-    dialogue: {
-      speaker: string;
-      text: string;
-      isResponse?: boolean;
-      expectedResponse?: string;
-      hint?: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { DialogueCompletionProps } from '@/types/exercises';
 
 export default function DialogueCompletion({ exercise, onComplete }: DialogueCompletionProps) {
   const [answers, setAnswers] = useState<string[]>(

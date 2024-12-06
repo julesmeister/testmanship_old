@@ -6,21 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface SentenceCorrectionProps {
-  exercise: {
-    id: string;
-    sentences: {
-      id: string;
-      text: string;
-      correction: string;
-      hint?: string;
-      explanation?: string;
-      focus?: string; // e.g., "grammar", "spelling", "punctuation"
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { SentenceCorrectionProps } from '@/types/exercises';
 
 export default function SentenceCorrection({ exercise, onComplete }: SentenceCorrectionProps) {
   const [corrections, setCorrections] = useState<{ [key: string]: string }>({});

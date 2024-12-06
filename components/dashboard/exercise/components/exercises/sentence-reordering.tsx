@@ -5,22 +5,7 @@ import { motion, Reorder } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Check, X, MoveHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface SentenceReorderingProps {
-  exercise: {
-    id: string;
-    sentences: {
-      id: string;
-      segments: {
-        id: string;
-        text: string;
-        position: number;
-      }[];
-      hint?: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { SentenceReorderingProps } from '@/types/exercises';
 
 export default function SentenceReordering({ exercise, onComplete }: SentenceReorderingProps) {
   const [sentences, setSentences] = useState(() =>

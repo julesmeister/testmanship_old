@@ -5,19 +5,7 @@ import { motion, Reorder } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Check, X, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface DragAndDropProps {
-  exercise: {
-    id: string;
-    items: {
-      id: string;
-      content: string;
-      correctPosition: number;
-    }[];
-    instruction: string;
-  };
-  onComplete: (score: number) => void;
-}
+import type { DragAndDropProps } from '@/types/exercises';
 
 export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) {
   const [items, setItems] = useState(() => 

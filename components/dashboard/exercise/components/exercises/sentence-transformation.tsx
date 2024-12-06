@@ -6,19 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, ArrowLeftRight, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface SentenceTransformationProps {
-  exercise: {
-    id: string;
-    sentences: {
-      original: string;
-      transformation: string;
-      expectedResult: string;
-      hint?: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { SentenceTransformationProps } from '@/types/exercises';
 
 export default function SentenceTransformation({ exercise, onComplete }: SentenceTransformationProps) {
   const [answers, setAnswers] = useState<string[]>(new Array(exercise.sentences.length).fill(''));

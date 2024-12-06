@@ -6,23 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, X, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface WordBuildingProps {
-  exercise: {
-    id: string;
-    words: {
-      id: string;
-      root: string;
-      prefix?: string;
-      suffix?: string;
-      target: string;
-      type: string; // e.g., "prefix", "suffix", "both"
-      hint?: string;
-      explanation?: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { WordBuildingProps } from '@/types/exercises';
 
 export default function WordBuilding({ exercise, onComplete }: WordBuildingProps) {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});

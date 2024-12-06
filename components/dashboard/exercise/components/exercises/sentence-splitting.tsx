@@ -6,19 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, SplitSquareHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface SentenceSplittingProps {
-  exercise: {
-    id: string;
-    sentences: {
-      id: string;
-      text: string;
-      expectedSplits: string[];
-      hint?: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { SentenceSplittingProps } from '@/types/exercises';
 
 export default function SentenceSplitting({ exercise, onComplete }: SentenceSplittingProps) {
   const [responses, setResponses] = useState<{ [key: string]: string[] }>({});

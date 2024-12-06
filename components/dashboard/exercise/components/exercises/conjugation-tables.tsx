@@ -6,17 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface ConjugationTablesProps {
-  exercise: {
-    id: string;
-    verb: string;
-    tense: string;
-    pronouns: string[];
-    conjugations: string[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { ConjugationTablesProps } from '@/types/exercises';
 
 export default function ConjugationTables({ exercise, onComplete }: ConjugationTablesProps) {
   const [answers, setAnswers] = useState<string[]>(new Array(exercise.pronouns.length).fill(''));

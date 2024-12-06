@@ -9,7 +9,8 @@ import {
   HiOutlineDocumentText,
   HiOutlineCurrencyDollar,
   HiOutlineClipboard,
-  HiOutlinePuzzlePiece
+  HiOutlinePuzzlePiece,
+  HiOutlineShieldCheck
 } from 'react-icons/hi2';
 
 export const routes: IRoute[] = [
@@ -81,5 +82,13 @@ export const routes: IRoute[] = [
       <HiOutlineCog8Tooth className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
     ),
     collapse: false
+  },
+  {
+    name: 'Admin Settings',
+    path: '/dashboard/admin',
+    icon: (
+      <HiOutlineShieldCheck className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />
+    ),
+    collapse: false,
   }
 ];

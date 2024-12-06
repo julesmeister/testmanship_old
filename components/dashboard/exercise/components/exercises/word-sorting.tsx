@@ -1,35 +1,11 @@
 "use client";
 
 import { useState } from 'react';
-import { motion, Reorder } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Check, X, SortAsc } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface WordSortingProps {
-  exercise: {
-    id: string;
-    categories: {
-      id: string;
-      name: string;
-      description?: string;
-    }[];
-    words: {
-      id: string;
-      text: string;
-      category: string;
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
-
-interface SortedWords {
-  [categoryId: string]: {
-    id: string;
-    text: string;
-    category: string;
-  }[];
-}
+import type { WordSortingProps, SortedWords } from '@/types/exercises';
 
 export default function WordSorting({ exercise, onComplete }: WordSortingProps) {
   const [sortedWords, setSortedWords] = useState<SortedWords>(() => {

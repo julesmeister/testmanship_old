@@ -6,27 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, Users, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface RolePlayingProps {
-  exercise: {
-    id: string;
-    scenario: string;
-    context: string;
-    roles: {
-      id: string;
-      name: string;
-      description: string;
-      prompts: {
-        id: string;
-        text: string;
-        expectedResponse: string;
-        alternatives?: string[];
-        hint?: string;
-      }[];
-    }[];
-  };
-  onComplete: (score: number) => void;
-}
+import type { RolePlayingProps } from '@/types/exercises';
 
 export default function RolePlaying({ exercise, onComplete }: RolePlayingProps) {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
