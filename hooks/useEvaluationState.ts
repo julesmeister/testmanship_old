@@ -44,7 +44,6 @@ export function useEvaluationState(
   const [state, setState] = useState<EvaluationState>(defaultState);
   const { selectedLanguageId, languages } = useLanguageStore();
   const { submitEvaluation, isSubmitting } = useEvaluationSubmission();
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const evaluateChallenge = async () => {
