@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import cn from 'classnames';
 import { useExerciseContent } from '@/hooks/useExerciseContent';
+import { useSaveExerciseContent } from '@/hooks/useSaveExerciseContent';
 import { toast } from 'sonner';
 
 interface ExerciseManagementProps {
@@ -47,6 +48,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const [activeTab, setActiveTab] = useState<"template" | "generated">("template");
 
   const { generateContent } = useExerciseContent();
+  const { saveContent, isSaving } = useSaveExerciseContent();
 
   // Fetch topics and exercise types when difficulty level changes
   useEffect(() => {
@@ -97,9 +99,13 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const handleSave = async () => {
     try {
       // Validate JSON
-      JSON.parse(jsonContent);
-      // TODO: Save to database
-      console.log('Saving configuration:', selectedConfig, jsonContent);
+      JSON.parse(generatedContent);
+      
+      await saveContent({
+        supabase,
+        exerciseId: topics.find(t => t.topic === selectedTopic)?.id || '',
+        content: JSON.parse(generatedContent)
+      });
     } catch (error) {
       toast.error('Invalid JSON format');
     }
@@ -343,10 +349,10 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
               <Button
                 className="w-full"
                 onClick={handleSave}
-                disabled={!selectedConfig}
+                disabled={!selectedConfig || isSaving}
               >
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
               <Button
                 variant="outline"
