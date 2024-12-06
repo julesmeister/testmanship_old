@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { DifficultyLevel } from '@/types/difficulty'
 
 interface ExerciseFiltersState {
@@ -9,10 +10,22 @@ interface ExerciseFiltersState {
   resetFilters: () => void
 }
 
-export const useExerciseFilters = create<ExerciseFiltersState>((set) => ({
-  selectedLevel: null,
-  selectedTopic: null,
-  setSelectedLevel: (level) => set({ selectedLevel: level, selectedTopic: null }), // Reset topic when level changes
-  setSelectedTopic: (topic) => set({ selectedTopic: topic }),
-  resetFilters: () => set({ selectedLevel: null, selectedTopic: null })
-}))
+export const useExerciseFilters = create<ExerciseFiltersState>()(
+  persist(
+    (set) => ({
+      selectedLevel: null,
+      selectedTopic: null,
+      setSelectedLevel: (level) => set({ selectedLevel: level }), // Don't reset topic here
+      setSelectedTopic: (topic) => set({ selectedTopic: topic }),
+      resetFilters: () => set({ selectedLevel: null, selectedTopic: null })
+    }),
+    {
+      name: 'exercise-filters-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        selectedLevel: state.selectedLevel,
+        selectedTopic: state.selectedTopic
+      })
+    }
+  )
+)

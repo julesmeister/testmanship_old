@@ -60,6 +60,8 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
     async function fetchData() {
       if (!selectedLevel) {
         setTopics([]);
+        // Only reset topic if we're clearing the level
+        if (selectedTopic) setSelectedTopic(null);
         return;
       }
 
@@ -84,7 +86,6 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
             exercises: curr.content || []
           };
         } else {
-          // Combine exercise types and remove duplicates
           acc[curr.topic].exercise_types = Array.from(new Set([
             ...acc[curr.topic].exercise_types,
             ...(curr.exercise_types || [])
@@ -96,7 +97,10 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
 
       setTopics(Object.values(topicsMap));
       
-      setSelectedTopic(null); // Reset selected topic when level changes
+      // Only reset topic if it's not available in the new level
+      if (selectedTopic && !Object.keys(topicsMap).includes(selectedTopic)) {
+        setSelectedTopic(null);
+      }
     }
 
     fetchData();

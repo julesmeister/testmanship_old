@@ -15,6 +15,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
     exercise.targets.reduce((acc, target) => ({ ...acc, [target.id]: [] }), {})
   );
   const [showResults, setShowResults] = useState(false);
+  const [expandedTargets, setExpandedTargets] = useState<Record<string, boolean>>({});
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -78,11 +79,21 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
     return items.filter(item => !assignedItems.has(item.id));
   };
 
+  const toggleTargetExpansion = (targetId: string) => {
+    setExpandedTargets(prev => ({
+      ...prev,
+      [targetId]: !prev[targetId]
+    }));
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="space-y-4">
-        <div className="text-gray-900 dark:text-gray-100 font-medium">
-          {exercise.instruction}
+        <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <GripVertical className="w-5 h-5" />
+          </div>
+          <p className="text-sm font-medium">{exercise.instruction}</p>
         </div>
 
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -99,10 +110,21 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                     Available Items
                   </div>
                   {getUnassignedItems().length === 0 ? (
-                    <div className="flex flex-col items-center justify-center text-center p-4 text-sm text-gray-500 dark:text-gray-400">
-                      <Check className="h-6 w-6 mb-2 text-green-500" />
-                      <p>All items have been placed!</p>
-                      <p>Great job!</p>
+                    <div className="flex flex-col items-center justify-center text-center p-6 space-y-3 animate-fadeIn">
+                      <div className="relative">
+                        <div className="absolute -inset-1 bg-green-500/30 rounded-full blur animate-pulse" />
+                        <Check className="h-8 w-8 text-green-500 animate-bounce relative" />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl">🎉</span>
+                        <h3 className="font-semibold text-base text-gray-700 dark:text-gray-300">
+                          All items have been placed!
+                        </h3>
+                        <span className="text-xl">🎉</span>
+                      </div>
+                      <p className="text-emerald-600 dark:text-emerald-400 font-medium animate-pulse">
+                        Great job!
+                      </p>
                     </div>
                   ) : (
                     getUnassignedItems().map((item, index) => (
@@ -143,7 +165,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={cn(
-                          "p-4 rounded-lg min-h-[100px] border-2 border-dashed",
+                          "p-4 rounded-lg min-h-[100px] border-2 border-dashed relative",
                           "bg-gray-50 dark:bg-gray-900/50",
                           showResults && itemLocations[target.id].every(itemId => {
                             const item = exercise.items.find(i => i.id === itemId);
@@ -153,7 +175,22 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                             : "border-gray-200 dark:border-gray-700"
                         )}
                       >
-                        {itemLocations[target.id].map((itemId, index) => {
+                        {itemLocations[target.id].length > 0 && (
+                          <div className="absolute top-2 right-2 flex items-center gap-2">
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300">
+                              {itemLocations[target.id].length} items
+                            </span>
+                            {itemLocations[target.id].length > 5 && (
+                              <button
+                                onClick={() => toggleTargetExpansion(target.id)}
+                                className="text-xs text-violet-600 dark:text-violet-400 hover:underline focus:outline-none"
+                              >
+                                {expandedTargets[target.id] ? 'Show Less' : 'Show All'}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {(expandedTargets[target.id] ? itemLocations[target.id] : itemLocations[target.id].slice(0, 5)).map((itemId, index) => {
                           const item = items.find(i => i.id === itemId);
                           if (!item) return null; // Skip if item not found
 
@@ -191,6 +228,11 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                             </Draggable>
                           );
                         })}
+                        {itemLocations[target.id].length > 5 && (
+                          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                            {itemLocations[target.id].length - 5} more items hidden
+                          </div>
+                        )}
                         {provided.placeholder}
                       </div>
                     )}
