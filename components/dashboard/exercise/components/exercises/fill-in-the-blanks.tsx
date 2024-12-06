@@ -1,111 +1,199 @@
-"use client";
-
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, X } from 'lucide-react';
+import { Check, X, AlertCircle } from 'lucide-react';
 import type { FillInTheBlanksProps } from '@/types/exercises';
+import { cn } from '@/lib/utils';
 
 export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlanksProps) {
   const [answers, setAnswers] = useState<string[]>(new Array(exercise.blanks.length).fill(''));
   const [showResults, setShowResults] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [currentBlankIndex, setCurrentBlankIndex] = useState<number | null>(null);
+
+  const colors = useMemo(() => [
+    { bg: "bg-pink-100 dark:bg-pink-900/30", hover: "hover:bg-pink-200 dark:hover:bg-pink-800/30", text: "text-pink-700 dark:text-pink-300", disabled: "bg-pink-50 dark:bg-pink-900/10 text-pink-300 dark:text-pink-700" },
+    { bg: "bg-blue-100 dark:bg-blue-900/30", hover: "hover:bg-blue-200 dark:hover:bg-blue-800/30", text: "text-blue-700 dark:text-blue-300", disabled: "bg-blue-50 dark:bg-blue-900/10 text-blue-300 dark:text-blue-700" },
+    { bg: "bg-green-100 dark:bg-green-900/30", hover: "hover:bg-green-200 dark:hover:bg-green-800/30", text: "text-green-700 dark:text-green-300", disabled: "bg-green-50 dark:bg-green-900/10 text-green-300 dark:text-green-700" },
+    { bg: "bg-purple-100 dark:bg-purple-900/30", hover: "hover:bg-purple-200 dark:hover:bg-purple-800/30", text: "text-purple-700 dark:text-purple-300", disabled: "bg-purple-50 dark:bg-purple-900/10 text-purple-300 dark:text-purple-700" },
+    { bg: "bg-yellow-100 dark:bg-yellow-900/30", hover: "hover:bg-yellow-200 dark:hover:bg-yellow-800/30", text: "text-yellow-700 dark:text-yellow-300", disabled: "bg-yellow-50 dark:bg-yellow-900/10 text-yellow-300 dark:text-yellow-700" },
+    { bg: "bg-red-100 dark:bg-red-900/30", hover: "hover:bg-red-200 dark:hover:bg-red-800/30", text: "text-red-700 dark:text-red-300", disabled: "bg-red-50 dark:bg-red-900/10 text-red-300 dark:text-red-700" },
+  ], []);
+
+  const getColorForChoice = useCallback((index: number) => {
+    return colors[index % colors.length];
+  }, [colors]);
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];
     newAnswers[index] = value;
     setAnswers(newAnswers);
+    setCurrentBlankIndex(null);
   };
 
+  const handleBlankClick = (index: number) => {
+    if (showResults) return;
+    
+    // If there's an answer and we click the same blank, clear it
+    if (answers[index]?.trim()) {
+      const newAnswers = [...answers];
+      newAnswers[index] = '';
+      setAnswers(newAnswers);
+      return;
+    }
+
+    setCurrentBlankIndex(currentBlankIndex === index ? null : index);
+  };
+
+  const handleChoiceClick = (choice: string) => {
+    if (showResults) return;
+    
+    // If a blank is selected, fill that one
+    if (currentBlankIndex !== null) {
+      handleAnswerChange(currentBlankIndex, choice);
+      return;
+    }
+
+    // Otherwise, find the first empty blank
+    const firstEmptyIndex = answers.findIndex(answer => !answer.trim());
+    if (firstEmptyIndex !== -1) {
+      handleAnswerChange(firstEmptyIndex, choice);
+    }
+  };
+
+  const choices = useMemo(() => {
+    return exercise.blanks.map(blank => blank.word).sort(() => Math.random() - 0.5);
+  }, [exercise.blanks]);
+
   const checkAnswers = () => {
-    setShowResults(true);
-    const correctAnswers = answers.reduce((count, answer, index) => {
-      return answer.toLowerCase() === exercise.blanks[index].word.toLowerCase() ? count + 1 : count;
-    }, 0);
-    const score = Math.round((correctAnswers / exercise.blanks.length) * 100);
-    onComplete(score);
+    setIsAnimating(true);
+    setTimeout(() => {
+      setShowResults(true);
+      const score = Math.round(
+        (exercise.blanks.reduce((acc, blank, index) => {
+          return acc + (blank.word.toLowerCase() === answers[index].toLowerCase() ? 1 : 0);
+        }, 0) /
+          exercise.blanks.length) *
+        100
+      );
+      onComplete(score);
+    }, 300);
   };
 
   const renderSentenceWithBlanks = () => {
-    const words = exercise.sentence.split(' ');
-    return words.map((word, index) => {
-      const blank = exercise.blanks.find(b => b.position === index);
-      if (blank) {
-        const isCorrect = answers[exercise.blanks.indexOf(blank)]?.toLowerCase() === blank.word.toLowerCase();
-        return (
-          <span key={index} className="inline-block mx-1">
-            <Input
-              type="text"
-              value={answers[exercise.blanks.indexOf(blank)] || ''}
-              onChange={(e) => handleAnswerChange(exercise.blanks.indexOf(blank), e.target.value)}
-              className={cn(
-                "w-24 text-center",
-                showResults && (
-                  isCorrect
-                    ? "border-green-500 bg-green-50 dark:bg-green-950/50"
-                    : "border-red-500 bg-red-50 dark:bg-red-950/50"
-                )
-              )}
-              disabled={showResults}
-            />
-            {showResults && (
+    // Split by one or more underscores
+    const parts = exercise.sentence.split(/(_+)/g);
+    let blankIndex = 0;
+
+    return (
+      <div className="text-lg leading-relaxed space-y-6">
+        {parts.map((part, index) => {
+          if (part.match(/_+/)) {
+            const currentBlankIndex = blankIndex;
+            const answer = answers[currentBlankIndex];
+            const colorSet = getColorForChoice(currentBlankIndex);
+            blankIndex++;
+
+            return (
               <motion.span
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className={cn(
-                  "inline-flex items-center justify-center w-5 h-5 rounded-full ml-1",
-                  isCorrect ? "bg-green-500" : "bg-red-500"
-                )}
+                key={index}
+                className="inline-block mx-1"
+                initial={false}
+                animate={isAnimating ? { scale: [1, 0.9, 1], y: [0, -2, 0] } : {}}
+                transition={{ duration: 0.3 }}
               >
-                {isCorrect ? (
-                  <Check className="w-3 h-3 text-white" />
+                {answer ? (
+                  <motion.button
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-medium rounded-lg",
+                      [colorSet.bg, colorSet.hover, colorSet.text]
+                    )}
+                    onClick={() => handleBlankClick(currentBlankIndex)}
+                  >
+                    {answer}
+                  </motion.button>
                 ) : (
-                  <X className="w-3 h-3 text-white" />
+                  <motion.button
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-medium rounded-lg border-2 border-dashed",
+                      currentBlankIndex === currentBlankIndex
+                        ? "border-violet-400 dark:border-violet-500"
+                        : "border-gray-300 dark:border-gray-600",
+                      "text-gray-500 dark:text-gray-400"
+                    )}
+                    onClick={() => handleBlankClick(currentBlankIndex)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {currentBlankIndex + 1}
+                  </motion.button>
                 )}
               </motion.span>
-            )}
-          </span>
-        );
-      }
-      return <span key={index} className="mx-1">{word}</span>;
-    });
+            );
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </div>
+    );
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="text-lg text-gray-900 dark:text-gray-100 leading-relaxed">
+    <div className="space-y-8">
+      <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-yellow-600 dark:text-yellow-400">
+            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <p className="text-sm font-medium">Fill in the blanks with the correct words to complete the sentence.</p>
+          </div>
+          {!showResults && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Button
+                onClick={checkAnswers}
+                disabled={answers.some(answer => !answer.trim())}
+                className={cn(
+                  "px-6 font-medium transition-colors",
+                  answers.some(answer => !answer.trim())
+                    ? "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+                    : "px-6 font-medium transition-colors bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-500"
+                )}
+              >
+                Check Answers
+              </Button>
+            </motion.div>
+          )}
+        </div>
+        {/* Show choices which are clickable */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {[...new Set(choices)].map((choice, index) => {
+            const colorSet = getColorForChoice(index);
+            return (
+              <button
+                key={index}
+                onClick={() => handleChoiceClick(choice)}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                  [colorSet.bg, colorSet.hover, colorSet.text]
+                )}
+              >
+                {choice}
+              </button>
+            );
+          })}
+        </div>
         {renderSentenceWithBlanks()}
       </div>
-      
-      {!showResults && (
-        <Button
-          onClick={checkAnswers}
-          className="w-full sm:w-auto"
-          disabled={answers.some(answer => !answer)}
-        >
-          Check Answers
-        </Button>
-      )}
 
-      {showResults && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Correct Answers:</h4>
-            <div className="space-y-2">
-              {exercise.blanks.map((blank, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Blank {index + 1}:</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{blank.word}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 }

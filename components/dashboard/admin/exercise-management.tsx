@@ -335,7 +335,10 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                       topic: selectedTopic,
                       description: topics.find(t => t.topic === selectedTopic)?.description || '',
                       difficultyLevel: selectedLevel,
-                      onContentGenerated: setGeneratedContent
+                      onContentGenerated: (content) => {
+                        setGeneratedContent(content);
+                        setActiveTab("generated");
+                      }
                     });
                   } else {
                     toast.error('Please select a topic, difficulty level, and exercise type');
