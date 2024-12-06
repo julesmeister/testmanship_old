@@ -39,7 +39,11 @@ const interfaceStructures = {
     items: [{
       id: '',
       content: '',
-      correctPosition: 0
+      correctTarget: ''
+    }],
+    targets: [{
+      id: '',
+      label: ''
     }],
     instruction: ''
   },

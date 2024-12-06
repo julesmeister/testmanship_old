@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { motion, Reorder } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Button } from '@/components/ui/button';
 import { Check, X, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,16 +11,71 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
   const [items, setItems] = useState(() => 
     [...exercise.items].sort(() => Math.random() - 0.5)
   );
+  const [itemLocations, setItemLocations] = useState<Record<string, string[]>>(() => 
+    exercise.targets.reduce((acc, target) => ({ ...acc, [target.id]: [] }), {})
+  );
   const [showResults, setShowResults] = useState(false);
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const { source, destination } = result;
+    const sourceId = source.droppableId;
+    const destId = destination.droppableId;
+
+    if (sourceId === destId) return;
+
+    const sourceItems = Array.from(itemLocations[sourceId] || []);
+    const destItems = Array.from(itemLocations[destId] || []);
+    const itemId = result.draggableId;
+
+    // Remove from source if it exists there
+    const sourceIndex = sourceItems.indexOf(itemId);
+    if (sourceIndex !== -1) {
+      sourceItems.splice(sourceIndex, 1);
+    }
+
+    // Add to destination at the specified index
+    destItems.splice(destination.index, 0, itemId);
+
+    // Update state with new locations
+    const newLocations = {
+      ...itemLocations,
+      [sourceId]: sourceItems,
+      [destId]: destItems,
+    };
+    setItemLocations(newLocations);
+
+    // Check if all items have been placed
+    const assignedItems = Object.values(newLocations).flat();
+    const unassignedCount = items.length - assignedItems.length;
+
+    if (unassignedCount === 0) {
+      checkAnswers();
+    }
+  };
 
   const checkAnswers = () => {
     setShowResults(true);
-    const correctPositions = items.reduce((count, item, index) => {
-      const correctItem = exercise.items.find(i => i.correctPosition === index);
-      return item.id === correctItem?.id ? count + 1 : count;
-    }, 0);
-    const score = Math.round((correctPositions / exercise.items.length) * 100);
+    let correctCount = 0;
+
+    // Check each target
+    Object.entries(itemLocations).forEach(([targetId, itemIds]) => {
+      itemIds.forEach(itemId => {
+        const item = exercise.items.find(i => i.id === itemId);
+        if (item?.correctTarget === targetId) {
+          correctCount++;
+        }
+      });
+    });
+
+    const score = Math.round((correctCount / exercise.items.length) * 100);
     onComplete(score);
+  };
+
+  const getUnassignedItems = () => {
+    const assignedItems = new Set(Object.values(itemLocations).flat());
+    return items.filter(item => !assignedItems.has(item.id));
   };
 
   return (
@@ -30,94 +85,122 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
           {exercise.instruction}
         </div>
 
-        <Reorder.Group
-          axis="y"
-          values={items}
-          onReorder={setItems}
-          className="space-y-2"
-        >
-          {items.map((item) => (
-            <Reorder.Item
-              key={item.id}
-              value={item}
-              className={cn(
-                "relative flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm",
-                "border transition-colors cursor-grab active:cursor-grabbing",
-                !showResults && "hover:border-violet-300 dark:hover:border-violet-700",
-                showResults && (
-                  item.correctPosition === items.indexOf(item)
-                    ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                    : "border-red-500 bg-red-50 dark:bg-red-900/20"
-                )
-              )}
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700">
-                <GripVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              </div>
-
-              <span className="flex-1 text-gray-900 dark:text-gray-100">
-                {item.content}
-              </span>
-
-              {showResults && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="absolute right-3"
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Source items */}
+            <Droppable droppableId="source">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="space-y-2 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg min-h-[100px]"
                 >
-                  {item.correctPosition === items.indexOf(item) ? (
-                    <div className="flex items-center gap-2">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className="text-sm text-green-600 dark:text-green-400">Correct!</span>
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
+                    Available Items
+                  </div>
+                  {getUnassignedItems().length === 0 ? (
+                    <div className="flex flex-col items-center justify-center text-center p-4 text-sm text-gray-500 dark:text-gray-400">
+                      <Check className="h-6 w-6 mb-2 text-green-500" />
+                      <p>All items have been placed!</p>
+                      <p>Great job!</p>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <X className="w-5 h-5 text-red-500" />
-                      <span className="text-sm text-red-600 dark:text-red-400">
-                        Should be at position {item.correctPosition + 1}
-                      </span>
-                    </div>
+                    getUnassignedItems().map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className={cn(
+                              "flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm",
+                              "border border-gray-200 dark:border-gray-700",
+                              "hover:border-violet-300 dark:hover:border-violet-700"
+                            )}
+                          >
+                            <GripVertical className="h-5 w-5 text-gray-400" />
+                            <span>{item.content}</span>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))
                   )}
-                </motion.div>
+                  {provided.placeholder}
+                </div>
               )}
-            </Reorder.Item>
-          ))}
-        </Reorder.Group>
-      </div>
+            </Droppable>
 
-      {!showResults && (
-        <Button
-          onClick={checkAnswers}
-          className="w-full sm:w-auto"
-        >
-          Check Order
-        </Button>
-      )}
+            {/* Drop targets */}
+            <div className="space-y-4">
+              {exercise.targets.map((target) => (
+                <div key={target.id} className="space-y-2">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {target.label}
+                  </div>
+                  <Droppable droppableId={target.id}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn(
+                          "p-4 rounded-lg min-h-[100px] border-2 border-dashed",
+                          "bg-gray-50 dark:bg-gray-900/50",
+                          showResults && itemLocations[target.id].every(itemId => {
+                            const item = exercise.items.find(i => i.id === itemId);
+                            return item?.correctTarget === target.id;
+                          })
+                            ? "border-green-500/50"
+                            : "border-gray-200 dark:border-gray-700"
+                        )}
+                      >
+                        {itemLocations[target.id].map((itemId, index) => {
+                          const item = items.find(i => i.id === itemId);
+                          if (!item) return null; // Skip if item not found
 
-      {showResults && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-        >
-          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Correct Order:</h4>
-          <div className="space-y-2">
-            {[...exercise.items]
-              .sort((a, b) => a.correctPosition - b.correctPosition)
-              .map((item, index) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-900 dark:text-violet-100">
-                    {index + 1}
-                  </span>
-                  <span className="text-gray-900 dark:text-gray-100">{item.content}</span>
+                          const isCorrect = showResults && item.correctTarget === target.id;
+                          
+                          return (
+                            <Draggable key={itemId} draggableId={itemId} index={index}>
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={cn(
+                                    "flex items-center gap-3 p-3 mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm",
+                                    "border transition-colors",
+                                    !showResults && "hover:border-violet-300 dark:hover:border-violet-700",
+                                    showResults && (
+                                      isCorrect
+                                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                                        : "border-red-500 bg-red-50 dark:bg-red-900/20"
+                                    )
+                                  )}
+                                >
+                                  <GripVertical className="h-5 w-5 text-gray-400" />
+                                  <span>{item.content}</span>
+                                  {showResults && (
+                                    isCorrect ? (
+                                      <Check className="h-5 w-5 text-green-500 ml-auto" />
+                                    ) : (
+                                      <X className="h-5 w-5 text-red-500 ml-auto" />
+                                    )
+                                  )}
+                                </div>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
                 </div>
               ))}
+            </div>
           </div>
-        </motion.div>
-      )}
+        </DragDropContext>
+      </div>
     </div>
   );
 }

@@ -30,7 +30,14 @@ export interface DragAndDropProps {
         items: {
             id: string;
             content: string;
-            correctPosition: number;
+            /** ID of the target where this item should be dropped */
+            correctTarget: string;
+        }[];
+        targets: {
+            /** Unique identifier for the target drop zone */
+            id: string;
+            /** Display label for the target drop zone */
+            label: string;
         }[];
         instruction: string;
     };

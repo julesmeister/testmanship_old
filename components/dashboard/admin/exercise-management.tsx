@@ -27,6 +27,7 @@ import { useSaveExerciseContent } from '@/hooks/useSaveExerciseContent';
 import { toast } from 'sonner';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useExerciseFilters } from '@/store/exercise-filters';
 
 interface ExerciseManagementProps {
   supabase: SupabaseClient;
@@ -46,8 +47,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const [generatedContent, setGeneratedContent] = useState<string>('');
   const [allExercisesContent, setAllExercisesContent] = useState<string>('');
   const [activeAccordion, setActiveAccordion] = useState("exercise-types");
-  const [selectedLevel, setSelectedLevel] = useState<DifficultyLevel | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const { selectedLevel, selectedTopic, setSelectedLevel, setSelectedTopic } = useExerciseFilters();
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [activeTab, setActiveTab] = useState<"template" | "generated" | "all">("template");
   const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
@@ -395,7 +395,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
 
               <Select
                 value={selectedTopic || ""}
-                onValueChange={setSelectedTopic}
+                onValueChange={(topic) => setSelectedTopic(topic)}
                 disabled={!selectedLevel}
               >
                 <SelectTrigger className="bg-background text-foreground">
