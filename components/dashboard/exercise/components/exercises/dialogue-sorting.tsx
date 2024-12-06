@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { DialogueCompletionProps } from '@/types/exercises';
+import { DialogueSortingProps } from '@/types/exercises';
 import { AlertCircle, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
 
-export default function DialogueCompletion({ exercise, onComplete }: DialogueCompletionProps) {
+export default function DialogueSorting({ exercise, onComplete }: DialogueSortingProps) {
   // Store the original order
   const [originalLines] = useState([...exercise.dialogueLines].map((line, index) => ({
     ...line,
@@ -39,8 +39,8 @@ export default function DialogueCompletion({ exercise, onComplete }: DialogueCom
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6 p-4">
-      <div className="flex items-center justify-between gap-4">
+    <div className="p-6 space-y-8">
+      <div className="flex items-center justify-between gap-3">
         {exercise.context && (
           <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">

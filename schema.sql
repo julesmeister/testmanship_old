@@ -493,7 +493,7 @@ CREATE TYPE exercise_type AS ENUM (
     'Matching',
     'Conjugation tables',
     'Question formation',
-    'Dialogue completion',
+    'Dialogue sorting',
     'Multiple-choice',
     'Sentence transformation',
     'Drag-and-drop',
@@ -579,14 +579,14 @@ INSERT INTO public.exercises (
     (
         'W-Questions (Wer, Was, Wo, etc.)',
         'Understand and form open-ended questions using interrogatives.',
-        ARRAY['Question formation', 'Dialogue completion', 'Multiple-choice']::exercise_type[],
+        ARRAY['Question formation', 'Dialogue sorting', 'Multiple-choice']::exercise_type[],
         'Question Formation',
         2
     ),
     (
         'Yes/No Questions',
         'Practice forming and answering yes/no questions.',
-        ARRAY['Multiple-choice', 'Sentence transformation', 'Dialogue completion']::exercise_type[],
+        ARRAY['Multiple-choice', 'Sentence transformation', 'Dialogue sorting']::exercise_type[],
         'Question Formation',
         3
     ),
@@ -607,7 +607,7 @@ INSERT INTO public.exercises (
     (
         'Negative Article (kein, keine)',
         'Practice negating sentences using the correct form of ''kein''.',
-        ARRAY['Sentence transformation', 'Gap-fill', 'Dialogue completion']::exercise_type[],
+        ARRAY['Sentence transformation', 'Gap-fill', 'Dialogue sorting']::exercise_type[],
         'Articles',
         6
     ),
@@ -635,14 +635,14 @@ INSERT INTO public.exercises (
     (
         'Modal Verbs: ''können'' (can)',
         'Practice the conjugation and usage of ''können'' to express ability.',
-        ARRAY['Dialogue completion', 'Sentence transformation', 'Conjugation tables']::exercise_type[],
+        ARRAY['Dialogue sorting', 'Sentence transformation', 'Conjugation tables']::exercise_type[],
         'Modal Verbs',
         10
     ),
     (
         'Modal Verbs: ''mögen'' (like) and ''möchten'' (would like)',
         'Learn how to use ''mögen'' and ''möchten'' to express preferences and wishes.',
-        ARRAY['Dialogue completion', 'Gap-fill', 'Multiple-choice']::exercise_type[],
+        ARRAY['Dialogue sorting', 'Gap-fill', 'Multiple-choice']::exercise_type[],
         'Modal Verbs',
         11
     ),
@@ -670,7 +670,7 @@ INSERT INTO public.exercises (
     (
         'Sentence Bracket (e.g., modal verbs with infinitives)',
         'Learn how modal verbs create a sentence bracket with the infinitive at the end.',
-        ARRAY['Fill-in-the-blanks', 'Gap-fill', 'Dialogue completion']::exercise_type[],
+        ARRAY['Fill-in-the-blanks', 'Gap-fill', 'Dialogue sorting']::exercise_type[],
         'Sentence Structure',
         15
     ),
@@ -691,21 +691,21 @@ INSERT INTO public.exercises (
     (
         'Perfect Tense with ''haben''',
         'Practice forming sentences in the perfect tense with ''haben''.',
-        ARRAY['Sentence transformation', 'Fill-in-the-blanks', 'Dialogue completion']::exercise_type[],
+        ARRAY['Sentence transformation', 'Fill-in-the-blanks', 'Dialogue sorting']::exercise_type[],
         'Perfect Tense',
         18
     ),
     (
         'Perfect Tense with ''sein''',
         'Learn when and how to use ''sein'' to form the perfect tense.',
-        ARRAY['Gap-fill', 'Multiple-choice', 'Dialogue completion']::exercise_type[],
+        ARRAY['Gap-fill', 'Multiple-choice', 'Dialogue sorting']::exercise_type[],
         'Perfect Tense',
         19
     ),
     (
         'Perfect Tense with ''haben'' and ''sein''',
         'Understand the distinction between ''haben'' and ''sein'' in perfect tense usage.',
-        ARRAY['Dialogue completion', 'Gap-fill', 'Sentence transformation']::exercise_type[],
+        ARRAY['Dialogue sorting', 'Gap-fill', 'Sentence transformation']::exercise_type[],
         'Perfect Tense',
         20
     );

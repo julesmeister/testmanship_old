@@ -32,7 +32,7 @@ import FillInTheBlanks from './exercises/fill-in-the-blanks';
 import Matching from './exercises/matching';
 import ConjugationTables from './exercises/conjugation-tables';
 import QuestionFormation from './exercises/question-formation';
-import DialogueCompletion from './exercises/dialogue-completion';
+import DialogueSorting from './exercises/dialogue-sorting';
 import MultipleChoice from './exercises/multiple-choice';
 import SentenceTransformation from './exercises/sentence-transformation';
 import DragAndDrop from './exercises/drag-and-drop';
@@ -75,7 +75,7 @@ const getExerciseTypeIcon = (type: string) => {
       return <Table className={iconClass} />;
     case 'question-formation':
       return <HelpCircle className={iconClass} />;
-    case 'dialogue-completion':
+    case 'dialogue-sorting':
       return <MessageSquare className={iconClass} />;
     case 'multiple-choice':
       return <ListChecks className={iconClass} />;
@@ -260,8 +260,8 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
                     return <ConjugationTables exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'question-formation':
                     return <QuestionFormation exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'dialogue-completion':
-                    return <DialogueCompletion exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                  case 'dialogue-sorting':
+                    return <DialogueSorting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'multiple-choice':
                     return <MultipleChoice exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'sentence-transformation':

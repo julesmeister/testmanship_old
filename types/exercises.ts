@@ -9,7 +9,7 @@ export interface ConjugationTablesProps {
     onComplete: (score: number) => void;
 }
 
-export interface DialogueCompletionProps {
+export interface DialogueSortingProps {
     exercise: {
         id: string;
         context?: string;

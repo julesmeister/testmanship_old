@@ -23,8 +23,8 @@ const interfaceStructures = {
     pronouns: [],
     conjugations: []
   },
-  'dialogue-completion': {
-    exercise_type: 'dialogue-completion',
+  'dialogue-sorting': {
+    exercise_type: 'dialogue-sorting',
     context: '',
     dialogueLines: [
       {
