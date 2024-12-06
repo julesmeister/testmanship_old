@@ -324,12 +324,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
             )}
 
             {activeTab === "all" && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium text-foreground">
-                    All Exercise Content
-                  </Label>
-                </div>
+              <div>
                 <Editor
                   key="all-exercises-editor"
                   height="700px"

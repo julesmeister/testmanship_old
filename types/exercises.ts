@@ -12,13 +12,11 @@ export interface ConjugationTablesProps {
 export interface DialogueCompletionProps {
     exercise: {
         id: string;
-        context: string;
-        dialogue: {
+        context?: string;
+        dialogueLines: {
             speaker: string;
             text: string;
-            isResponse?: boolean;
-            expectedResponse?: string;
-            hint?: string;
+            correctPosition: number;
         }[];
     };
     onComplete: (score: number) => void;

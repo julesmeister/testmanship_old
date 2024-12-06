@@ -26,13 +26,13 @@ const interfaceStructures = {
   'dialogue-completion': {
     exercise_type: 'dialogue-completion',
     context: '',
-    dialogue: [{
-      speaker: '',
-      text: '',
-      isResponse: false,
-      expectedResponse: '',
-      hint: ''
-    }]
+    dialogueLines: [
+      {
+        speaker: 'Assistant',
+        text: '',
+        correctPosition: 0
+      }
+    ]
   },
   'drag-and-drop': {
     exercise_type: 'drag-and-drop',

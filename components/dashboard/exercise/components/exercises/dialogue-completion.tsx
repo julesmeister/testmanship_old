@@ -3,168 +3,143 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Check, X, MessageSquare } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { DialogueCompletionProps } from '@/types/exercises';
+import { DialogueCompletionProps } from '@/types/exercises';
+import { AlertCircle, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
 
 export default function DialogueCompletion({ exercise, onComplete }: DialogueCompletionProps) {
-  const [answers, setAnswers] = useState<string[]>(
-    exercise.dialogue.filter(d => d.isResponse).map(() => '')
+  // Store the original order
+  const [originalLines] = useState([...exercise.dialogueLines].map((line, index) => ({
+    ...line,
+    correctPosition: index
+  })));
+  
+  // Create randomized version for the exercise
+  const [dialogueLines, setDialogueLines] = useState(() => 
+    [...originalLines].sort(() => Math.random() - 0.5)
   );
-  const [showResults, setShowResults] = useState(false);
-  const [showHints, setShowHints] = useState<boolean[]>(
-    exercise.dialogue.filter(d => d.isResponse).map(() => false)
-  );
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
 
-  const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...answers];
-    newAnswers[index] = value;
-    setAnswers(newAnswers);
+  const moveItem = (fromIndex: number, toIndex: number) => {
+    if (isSubmitted) return;
+    const newLines = [...dialogueLines];
+    const [movedItem] = newLines.splice(fromIndex, 1);
+    newLines.splice(toIndex, 0, movedItem);
+    setDialogueLines(newLines);
   };
 
-  const toggleHint = (index: number) => {
-    const newHints = [...showHints];
-    newHints[index] = !newHints[index];
-    setShowHints(newHints);
+  const handleSubmit = () => {
+    setIsSubmitted(true);
+    const correctCount = dialogueLines.reduce((count, line, index) => 
+      line.correctPosition === index ? count + 1 : count, 0
+    );
+    const newScore = Math.round((correctCount / dialogueLines.length) * 100);
+    setScore(newScore);
+    onComplete(newScore);
   };
-
-  const checkAnswers = () => {
-    setShowResults(true);
-    const responseDialogues = exercise.dialogue.filter(d => d.isResponse);
-    const correctAnswers = answers.reduce((count, answer, index) => {
-      return answer.toLowerCase().trim() === responseDialogues[index].expectedResponse?.toLowerCase().trim()
-        ? count + 1 : count;
-    }, 0);
-    const score = Math.round((correctAnswers / responseDialogues.length) * 100);
-    onComplete(score);
-  };
-
-  let responseIndex = -1;
 
   return (
-    <div className="p-6 space-y-6">
-      {exercise.context && (
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Context:</h3>
-          <p className="text-gray-900 dark:text-gray-100">{exercise.context}</p>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {exercise.dialogue.map((line, index) => {
-          if (line.isResponse) responseIndex++;
-          const currentResponseIndex = responseIndex;
-
-          return (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: line.speaker === 'User' ? 20 : -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={cn(
-                "flex gap-4",
-                line.speaker === 'User' ? "justify-end" : "justify-start"
-              )}
+    <div className="w-full max-w-2xl mx-auto space-y-6 p-4">
+      <div className="flex items-center justify-between gap-4">
+        {exercise.context && (
+          <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <p className="text-sm font-medium">{exercise.context}</p>
+          </div>
+        )}
+        {!isSubmitted && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex-shrink-0"
+          >
+            <Button
+              onClick={handleSubmit}
+              className="px-6 font-medium transition-colors bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-500"
             >
-              <div className={cn(
-                "max-w-[80%] space-y-2",
-                line.speaker === 'User' ? "items-end" : "items-start"
-              )}>
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {line.speaker}
-                  </span>
-                </div>
-
-                {line.isResponse ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      value={answers[currentResponseIndex]}
-                      onChange={(e) => handleAnswerChange(currentResponseIndex, e.target.value)}
-                      className={cn(
-                        "resize-none min-w-[300px]",
-                        showResults && (
-                          answers[currentResponseIndex].toLowerCase().trim() === line.expectedResponse?.toLowerCase().trim()
-                            ? "border-green-500 bg-green-50 dark:bg-green-950/50"
-                            : "border-red-500 bg-red-50 dark:bg-red-950/50"
-                        )
-                      )}
-                      placeholder="Type your response..."
-                      disabled={showResults}
-                      rows={2}
-                    />
-                    
-                    {line.hint && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleHint(currentResponseIndex)}
-                        className="text-violet-600 dark:text-violet-400"
-                      >
-                        {showHints[currentResponseIndex] ? "Hide Hint" : "Show Hint"}
-                      </Button>
-                    )}
-
-                    {showHints[currentResponseIndex] && line.hint && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="p-2 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-sm rounded"
-                      >
-                        💡 {line.hint}
-                      </motion.div>
-                    )}
-
-                    {showResults && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2"
-                      >
-                        {answers[currentResponseIndex].toLowerCase().trim() === line.expectedResponse?.toLowerCase().trim() ? (
-                          <>
-                            <Check className="w-4 h-4 text-green-500" />
-                            <span className="text-sm text-green-600 dark:text-green-400">Perfect response!</span>
-                          </>
-                        ) : (
-                          <>
-                            <X className="w-4 h-4 text-red-500" />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              Expected: <span className="font-medium text-gray-900 dark:text-gray-200">{line.expectedResponse}</span>
-                            </span>
-                          </>
-                        )}
-                      </motion.div>
-                    )}
-                  </div>
-                ) : (
-                  <div className={cn(
-                    "p-3 rounded-lg",
-                    line.speaker === 'User'
-                      ? "bg-violet-100 dark:bg-violet-900/50 text-violet-900 dark:text-violet-100"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  )}>
-                    {line.text}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
+              Check Order
+            </Button>
+          </motion.div>
+        )}
       </div>
 
-      {!showResults && (
-        <Button
-          onClick={checkAnswers}
-          className="w-full sm:w-auto"
-          disabled={answers.some(answer => !answer)}
-        >
-          Check Answers
-        </Button>
-      )}
+      <div className="w-full flex flex-col gap-3">
+        {dialogueLines.map((line, index) => (
+          <div key={index} className="group flex items-center gap-3">
+            {!isSubmitted && (
+              <div className="flex items-center gap-1 bg-white dark:bg-gray-900 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+                <Button
+                  onClick={() => moveItem(index, Math.max(0, index - 1))}
+                  disabled={index === 0}
+                  size="icon"
+                  variant="ghost"
+                  className={`h-8 w-8 rounded-full transition-all hover:scale-110 
+                    ${index === 0 ? 'opacity-0 !cursor-default' : 'hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400'}`}
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={() => moveItem(index, Math.min(dialogueLines.length - 1, index + 1))}
+                  disabled={index === dialogueLines.length - 1}
+                  size="icon"
+                  variant="ghost"
+                  className={`h-8 w-8 rounded-full transition-all hover:scale-110
+                    ${index === dialogueLines.length - 1 ? 'opacity-0 !cursor-default' : 'hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400'}`}
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            <div 
+              className={`flex-grow transition-all ${
+                isSubmitted
+                  ? line.correctPosition === index
+                    ? 'border-l-4 border-green-500 pl-3'
+                    : 'border-l-4 border-red-500 pl-3'
+                  : ''
+              }`}
+            >
+              <div className="relative">
+                {isSubmitted && (
+                  <div className="absolute -left-36 top-1/2 -translate-y-1/2 flex items-center">
+                    <div className="flex items-center gap-2 bg-white dark:bg-gray-900 px-3 py-1.5 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
+                      <span className="text-sm font-medium bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                        Position {line.correctPosition + 1}
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </div>
+                )}
+                <div className={`p-4 rounded-2xl ${
+                  line.speaker === exercise.dialogueLines[0].speaker 
+                    ? 'bg-blue-500 text-white ml-auto rounded-br-sm max-w-[80%]' 
+                    : 'bg-gray-100 dark:bg-gray-800 mr-auto rounded-bl-sm max-w-[80%]'
+                }`}>
+                  <div className="flex flex-col gap-1">
+                    <span className={`text-sm font-medium ${
+                      line.speaker === exercise.dialogueLines[0].speaker
+                        ? 'text-blue-50'
+                        : 'text-gray-600 dark:text-gray-300'
+                    }`}>
+                      {line.speaker}
+                    </span>
+                    <span className={`${
+                      line.speaker === exercise.dialogueLines[0].speaker
+                        ? 'text-white'
+                        : 'text-gray-700 dark:text-gray-400'
+                    }`}>
+                      {line.text}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
