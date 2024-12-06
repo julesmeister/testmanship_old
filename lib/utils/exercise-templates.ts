@@ -133,9 +133,9 @@ const interfaceStructures = {
     sentences: [{
       original: '',
       transformation: '',
-      expectedResult: '',
       hint: ''
-    }]
+    }],
+    instruction: ''
   },
   'word-building': {
     exercise_type: 'word-building',

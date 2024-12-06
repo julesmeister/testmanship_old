@@ -70,32 +70,32 @@ const getExerciseTypeIcon = (type: string) => {
       return <Square className={iconClass} />;
     case 'matching':
       return <ArrowRightLeft className={iconClass} />;
-    case 'conjugation tables':
-    case 'verb conjugation table':
+    case 'conjugation-tables':
+    case 'verb-conjugation-table':
       return <Table className={iconClass} />;
-    case 'question formation':
+    case 'question-formation':
       return <HelpCircle className={iconClass} />;
-    case 'dialogue completion':
+    case 'dialogue-completion':
       return <MessageSquare className={iconClass} />;
     case 'multiple-choice':
       return <ListChecks className={iconClass} />;
-    case 'sentence transformation':
+    case 'sentence-transformation':
       return <ArrowLeftRight className={iconClass} />;
     case 'drag-and-drop':
       return <GripVertical className={iconClass} />;
-    case 'gap-fill exercises':
+    case 'gap-fill':
       return <Square className={iconClass} />;
-    case 'word sorting':
+    case 'word-sorting':
       return <SortAsc className={iconClass} />;
-    case 'sentence reordering':
+    case 'sentence-reordering':
       return <MoveHorizontal className={iconClass} />;
     case 'role-playing':
       return <Users className={iconClass} />;
-    case 'sentence splitting':
+    case 'sentence-splitting':
       return <Scissors className={iconClass} />;
-    case 'sentence correction':
+    case 'sentence-correction':
       return <CheckSquare className={iconClass} />;
-    case 'word building':
+    case 'word-building':
       return <Blocks className={iconClass} />;
     default:
       return <BookOpen className={iconClass} />;
@@ -110,7 +110,7 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
   // Memoize the filtered exercises and random index
   const { filteredExercises, randomExercise } = useMemo(() => {
     const filtered = exercise.content.filter(
-      (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase()
+      (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase().replace(/\s+/g, '-')
     );
     const randomIndex = Math.floor(Math.random() * filtered.length);
     return {
@@ -198,7 +198,7 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
                     repeatDelay: 2
                   }}
                 >
-                  {getExerciseTypeIcon(type)}
+                  {getExerciseTypeIcon(type.replace(/\s/g, "-"))}
                 </motion.span>
                 {type.replace(/-/g, " ")}
               </span>
@@ -251,36 +251,36 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
                   onComplete: handleSubmit
                 } as any;
 
-                switch (selectedType.toLowerCase()) {
+                switch (selectedType.toLowerCase().replace(/\s+/g, '-')) {
                   case 'fill-in-the-blanks':
                     return <FillInTheBlanks exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'matching':
                     return <Matching exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'conjugation tables':
+                  case 'conjugation-tables':
                     return <ConjugationTables exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'question formation':
+                  case 'question-formation':
                     return <QuestionFormation exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'dialogue completion':
+                  case 'dialogue-completion':
                     return <DialogueCompletion exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'multiple-choice':
                     return <MultipleChoice exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'sentence transformation':
+                  case 'sentence-transformation':
                     return <SentenceTransformation exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'drag-and-drop':
                     return <DragAndDrop exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'gap-fill exercises':
+                  case 'gap-fill':
                     return <GapFill exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'word sorting':
+                  case 'word-sorting':
                     return <WordSorting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'sentence reordering':
+                  case 'sentence-reordering':
                     return <SentenceReordering exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   case 'role-playing':
                     return <RolePlaying exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'sentence splitting':
+                  case 'sentence-splitting':
                     return <SentenceSplitting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'sentence correction':
+                  case 'sentence-correction':
                     return <SentenceCorrection exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
-                  case 'word building':
+                  case 'word-building':
                     return <WordBuilding exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
                   default:
                     return <EmptyExercise exerciseType={selectedType} />;

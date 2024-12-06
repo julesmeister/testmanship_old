@@ -177,9 +177,9 @@ export interface SentenceTransformationProps {
         sentences: {
             original: string;
             transformation: string;
-            expectedResult: string;
             hint?: string;
         }[];
+        instruction: string;
     };
     onComplete: (score: number) => void;
 }
