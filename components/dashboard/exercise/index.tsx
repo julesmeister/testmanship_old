@@ -121,9 +121,9 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setCorrectCount(score);
     setTotalQuestions(total);
     setShowResults(true);
-    // Smooth scroll to grading section
+    // Smooth scroll to top of the page
     setTimeout(() => {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
   };
 

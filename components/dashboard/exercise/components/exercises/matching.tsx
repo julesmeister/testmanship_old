@@ -199,6 +199,13 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
     onComplete(score);
   };
 
+  useEffect(() => {
+    // When all pairs are matched, automatically check answers
+    if (!showResults && matches.filter(m => m !== -1).length === exercise.pairs.length) {
+      checkAnswers();
+    }
+  }, [matches, showResults]);
+
   return (
     <div className="p-6 space-y-6">
       <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8" ref={containerRef}>
@@ -325,15 +332,6 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
           ))}
         </div>
       </div>
-
-      {!showResults && matches.filter(m => m !== -1).length === exercise.pairs.length && (
-        <Button
-          onClick={checkAnswers}
-          className="w-full sm:w-auto"
-        >
-          Check Answers
-        </Button>
-      )}
 
       {showResults && (
         <motion.div
