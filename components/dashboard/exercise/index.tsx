@@ -10,7 +10,6 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import ExerciseList from './components/exercise-list';
 import ExerciseDetails from './components/exercise-details'; 
-import SelectExercise from './components/select-exercise';
 import { ExerciseGrade } from './components/exercise-grade'; // Changed to named import
 interface Props {
   title?: string;
@@ -42,7 +41,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   const [correctCount, setCorrectCount] = useState(0); 
   const [totalQuestions, setTotalQuestions] = useState(0); 
 
-  const { updateLevel } = useUserLevel({ user, initialLevel: difficulty || 'A1' });
+  const { updateLevel } = useUserLevel({ user, setLevel: setDifficulty, initialLevel: difficulty || 'A1' });
 
   useUserProgress(supabase, user?.id as string, {
     setWeakestSkills,
