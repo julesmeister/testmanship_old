@@ -8,6 +8,7 @@ interface GenerateContentParams {
   topic: string;
   description: string;
   difficultyLevel: string;
+  additionalInstructions?: string;
   onContentGenerated?: (content: string) => void;
 }
 
@@ -22,6 +23,7 @@ export function useExerciseContent() {
     topic,
     description,
     difficultyLevel,
+    additionalInstructions,
     onContentGenerated,
   }: GenerateContentParams) => {
     try {
@@ -42,6 +44,7 @@ export function useExerciseContent() {
           topic,
           description,
           difficultyLevel,
+          additionalInstructions,
           targetLanguage: selectedLanguage?.code?.toUpperCase() || 'EN',
         }),
       });

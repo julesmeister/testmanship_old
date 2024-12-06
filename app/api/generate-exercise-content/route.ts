@@ -14,6 +14,7 @@ interface RequestBody {
   topic: string;
   description: string;
   difficultyLevel: string;
+  additionalInstructions?: string;
   targetLanguage: string;
 }
 
@@ -41,6 +42,7 @@ Topic Description: {description}
 Difficulty Level: {difficultyLevel}
 Exercise Type: {exerciseType}
 Target Language: {targetLanguage}
+{additionalInstructions}
 
 Template:
 {template}
@@ -70,7 +72,8 @@ export async function POST(request: Request) {
       .replace('{difficultyLevel}', body.difficultyLevel)
       .replace('{exerciseType}', body.exerciseType)
       .replace('{targetLanguage}', body.targetLanguage)
-      .replace('{template}', body.template);
+      .replace('{template}', body.template)
+      .replace('{additionalInstructions}', body.additionalInstructions ? `\nAdditional Instructions: ${body.additionalInstructions}` : '');
 
     // Prepare messages for AI request
     const messages: Message[] = [

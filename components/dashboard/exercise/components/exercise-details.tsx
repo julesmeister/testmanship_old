@@ -107,7 +107,24 @@ const getExerciseTypeIcon = (type: string) => {
 export default function ExerciseDetails({ exerciseId, exercise, exerciseData, onStart, onContinue, onComplete }: ExerciseDetailsProps) {
   if (!exercise) return null;
 
-  const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>('fill-in-the-blanks');
+  const [selectedExerciseIndex, setSelectedExerciseIndex] = useState<number | null>(null);
+
+  // Reset selected exercise when type changes or when exercise content changes
+  useEffect(() => {
+    if (exercise?.content) {
+      const filteredExercises = exercise.content.filter(
+        (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase()
+      );
+      
+      if (filteredExercises.length > 0) {
+        const randomIndex = Math.floor(Math.random() * filteredExercises.length);
+        setSelectedExerciseIndex(randomIndex);
+      } else {
+        setSelectedExerciseIndex(null);
+      }
+    }
+  }, [selectedType, exercise?.content]);
 
   useEffect(() => {
     // Set the first type as default when exercise types change
@@ -240,10 +257,9 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
                   return <EmptyExercise exerciseType={selectedType} />;
                 }
 
-                const randomIndex = Math.floor(Math.random() * filteredExercises.length);
-                const randomExerciseContent = filteredExercises[randomIndex];
+                // Use the stored index instead of generating a new random one
                 const exerciseContent = {
-                  ...randomExerciseContent,
+                  ...(selectedExerciseIndex !== null ? filteredExercises[selectedExerciseIndex] : filteredExercises[0]),
                   id: exercise.id,
                   onComplete: handleSubmit
                 } as any;

@@ -6,26 +6,33 @@ interface SaveExerciseParams {
   supabase: SupabaseClient;
   exerciseId: string;
   content: any;
+  append: boolean;
 }
 
 export function useSaveExerciseContent() {
   const [isSaving, setIsSaving] = useState(false);
 
-  const saveContent = async ({ supabase, exerciseId, content }: SaveExerciseParams) => {
+  const saveContent = async ({ supabase, exerciseId, content, append }: SaveExerciseParams) => {
     setIsSaving(true);
     try {
-      // Get current exercise content
-      const { data: exerciseData, error: fetchError } = await supabase
-        .from('exercises')
-        .select('content')
-        .eq('id', exerciseId)
-        .single();
 
-      if (fetchError) throw fetchError;
 
-      // Append new content to existing content array
-      const updatedContent = exerciseData?.content || [];
-      updatedContent.push(content);
+      // Handle content based on append mode
+      let updatedContent;
+      if (append) {
+        // Get current exercise content
+        const { data: exerciseData, error: fetchError } = await supabase
+          .from('exercises')
+          .select('content')
+          .eq('id', exerciseId)
+          .single();
+
+        if (fetchError) throw fetchError;
+        updatedContent = exerciseData?.content || [];
+        updatedContent.push(content);
+      } else {
+        updatedContent = content; // Replace existing content
+      }
 
       // Update exercise with new content
       const { error: updateError } = await supabase
@@ -49,8 +56,5 @@ export function useSaveExerciseContent() {
     }
   };
 
-  return {
-    isSaving,
-    saveContent,
-  };
+  return { saveContent, isSaving };
 }

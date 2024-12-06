@@ -25,6 +25,8 @@ import cn from 'classnames';
 import { useExerciseContent } from '@/hooks/useExerciseContent';
 import { useSaveExerciseContent } from '@/hooks/useSaveExerciseContent';
 import { toast } from 'sonner';
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ExerciseManagementProps {
   supabase: SupabaseClient;
@@ -35,17 +37,20 @@ interface TopicData {
   topic: string;
   description: string;
   exercise_types: string[];
+  exercises: any[];
 }
 
 export default function ExerciseManagement({ supabase }: ExerciseManagementProps) {
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [generatedContent, setGeneratedContent] = useState<string>('');
+  const [allExercisesContent, setAllExercisesContent] = useState<string>('');
   const [activeAccordion, setActiveAccordion] = useState("exercise-types");
   const [selectedLevel, setSelectedLevel] = useState<DifficultyLevel | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [topics, setTopics] = useState<TopicData[]>([]);
-  const [activeTab, setActiveTab] = useState<"template" | "generated">("template");
+  const [activeTab, setActiveTab] = useState<"template" | "generated" | "all">("template");
+  const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
 
   const { generateContent } = useExerciseContent();
   const { saveContent, isSaving } = useSaveExerciseContent();
@@ -60,7 +65,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
 
       const { data, error } = await supabase
         .from('exercises')
-        .select('id, topic, exercise_types, description')
+        .select('id, topic, exercise_types, description, content')
         .eq('difficulty_level', selectedLevel);
 
       if (error) {
@@ -75,7 +80,8 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
             id: curr.id,
             topic: curr.topic,
             description: curr.description,
-            exercise_types: curr.exercise_types || []
+            exercise_types: curr.exercise_types || [],
+            exercises: curr.content || []
           };
         } else {
           // Combine exercise types and remove duplicates
@@ -83,12 +89,12 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
             ...acc[curr.topic].exercise_types,
             ...(curr.exercise_types || [])
           ]));
+          acc[curr.topic].exercises = [...acc[curr.topic].exercises, ...curr.content];
         }
         return acc;
       }, {} as Record<string, TopicData>);
 
       setTopics(Object.values(topicsMap));
-      
       
       setSelectedTopic(null); // Reset selected topic when level changes
     }
@@ -96,15 +102,23 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
     fetchData();
   }, [selectedLevel, supabase]);
 
-  const handleSave = async () => {
+  useEffect(() => {
+    if (selectedTopic) {
+      setAllExercisesContent(JSON.stringify(topics.find(topic => topic.topic === selectedTopic)?.exercises || [], null, 2));
+    }
+  }, [selectedTopic, topics]);
+
+  const handleSave = async (add: boolean = false) => {
     try {
       // Validate JSON
-      JSON.parse(generatedContent);
+      const contentToSave = activeTab === "all" ? allExercisesContent : generatedContent;
+      JSON.parse(contentToSave);
       
       await saveContent({
         supabase,
         exerciseId: topics.find(t => t.topic === selectedTopic)?.id || '',
-        content: JSON.parse(generatedContent)
+        content: JSON.parse(contentToSave),
+        append: add,
       });
     } catch (error) {
       toast.error('Invalid JSON format');
@@ -115,11 +129,30 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
     setJsonContent("");
   };
 
+  const handleGenerateContent = async () => {
+    if (selectedConfig && selectedTopic && selectedLevel) {
+      await generateContent({
+        template: jsonContent,
+        exerciseType: selectedConfig,
+        topic: selectedTopic,
+        description: topics.find(t => t.topic === selectedTopic)?.description || '',
+        difficultyLevel: selectedLevel,
+        additionalInstructions: additionalInstructions,
+        onContentGenerated: (content) => {
+          setGeneratedContent(content);
+          setActiveTab("generated");
+        }
+      });
+    } else {
+      toast.error('Please select a topic, difficulty level, and exercise type');
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
         <div className="grid grid-cols-12 gap-6">
-          {/* Column 1: Settings Accordion */}
+          {/* Column 1: Form Controls */}
           <div className="col-span-3">
             <Accordion 
               type="single" 
@@ -215,13 +248,25 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                 >
                   Generated Content
                 </button>
+                <button
+                  onClick={() => setActiveTab("all")}
+                  className={cn(
+                    "px-4 h-full inline-flex items-center justify-center",
+                    "text-sm font-medium transition-colors hover:text-primary",
+                    activeTab === "all"
+                      ? "border-b-2 border-primary text-primary"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  All Exercises
+                </button>
               </div>
             </div>
-            
-            {activeTab === "template" ? (
+
+            {activeTab === "template" && (
               <Editor
                 key="template-editor"
-                height="500px"
+                height="700px"
                 defaultLanguage="json"
                 theme="vs-dark"
                 value={typeof jsonContent === 'string' ? jsonContent : ''}
@@ -244,10 +289,12 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                   });
                 }}
               />
-            ) : (
+            )}
+
+            {activeTab === "generated" && (
               <Editor
                 key="generated-editor"
-                height="500px"
+                height="700px"
                 defaultLanguage="json"
                 theme="vs-dark"
                 value={typeof generatedContent === 'string' ? generatedContent : ''}
@@ -270,6 +317,53 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                   });
                 }}
               />
+            )}
+
+            {activeTab === "all" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium text-foreground">
+                    All Exercise Content
+                  </Label>
+                </div>
+                <Editor
+                  key="all-exercises-editor"
+                  height="700px"
+                  defaultLanguage="json"
+                  value={allExercisesContent}
+                  onChange={(value) => setAllExercisesContent(value || '')}
+                  options={{
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    lineNumbers: "on",
+                    renderLineHighlight: "none",
+                    occurrencesHighlight: false,
+                    tabSize: 2,
+                    wordWrap: "on",
+                    wrappingIndent: "indent",
+                    theme: "vs-dark",
+                    contextmenu: false,
+                    quickSuggestions: false,
+                    parameterHints: { enabled: false },
+                    suggestOnTriggerCharacters: false,
+                    acceptSuggestionOnEnter: "off",
+                    tabCompletion: "off",
+                    wordBasedSuggestions: false,
+                    readOnly: false
+                  }}
+                  beforeMount={(monaco) => {
+                    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+                      validate: true,
+                      allowComments: false,
+                      schemas: [],
+                    });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This shows all exercises for the selected topic
+                </p>
+              </div>
             )}
           </div>
 
@@ -324,26 +418,33 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
               </Select>
             </div>
             <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label 
+                  htmlFor="additionalInstructions" 
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"
+                >
+                  Additional Instructions
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  Optional
+                </span>
+              </div>
+              <Textarea
+                id="additionalInstructions"
+                placeholder="Add specific requirements or guidelines for the exercise generation..."
+                className="min-h-[120px] resize-y text-sm leading-relaxed transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-1"
+                value={additionalInstructions}
+                onChange={(e) => setAdditionalInstructions(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Provide any specific instructions or requirements to customize the exercise generation.
+              </p>
+            </div>
+            <div className="space-y-2">
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={async () => {
-                  if (selectedConfig && selectedTopic && selectedLevel) {
-                    await generateContent({
-                      template: jsonContent,
-                      exerciseType: selectedConfig,
-                      topic: selectedTopic,
-                      description: topics.find(t => t.topic === selectedTopic)?.description || '',
-                      difficultyLevel: selectedLevel,
-                      onContentGenerated: (content) => {
-                        setGeneratedContent(content);
-                        setActiveTab("generated");
-                      }
-                    });
-                  } else {
-                    toast.error('Please select a topic, difficulty level, and exercise type');
-                  }
-                }}
+                onClick={handleGenerateContent}
               >
                 <Wand2 className="w-4 h-4 mr-2" />
                 Generate Exercise
@@ -351,7 +452,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
             </div>
               <Button
                 className="w-full"
-                onClick={handleSave}
+                onClick={() => handleSave(activeTab === "all" ? false: true)}
                 disabled={!selectedConfig || isSaving}
               >
                 <Save className="w-4 h-4 mr-2" />

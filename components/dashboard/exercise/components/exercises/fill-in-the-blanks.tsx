@@ -11,6 +11,7 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
   const [showResults, setShowResults] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentBlankIndex, setCurrentBlankIndex] = useState<number | null>(null);
+  const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
 
   const colors = useMemo(() => [
     { bg: "bg-pink-100 dark:bg-pink-900/30", hover: "hover:bg-pink-200 dark:hover:bg-pink-800/30", text: "text-pink-700 dark:text-pink-300", disabled: "bg-pink-50 dark:bg-pink-900/10 text-pink-300 dark:text-pink-700" },
@@ -70,6 +71,8 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
     setIsAnimating(true);
     setTimeout(() => {
       setShowResults(true);
+      const correct = exercise.blanks.map(blank => blank.word);
+      setCorrectAnswers(correct);
       const score = Math.round(
         (exercise.blanks.reduce((acc, blank, index) => {
           return acc + (blank.word.toLowerCase() === answers[index].toLowerCase() ? 1 : 0);
@@ -104,19 +107,30 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
                 transition={{ duration: 0.3 }}
               >
                 {answer ? (
-                  <motion.button
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={cn(
-                      "px-3 py-1.5 text-sm font-medium rounded-lg",
-                      [colorSet.bg, colorSet.hover, colorSet.text]
+                  <motion.div className="relative">
+                    <motion.button
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={cn(
+                        "px-3 py-1.5 text-sm font-medium rounded-lg",
+                        [colorSet.bg, colorSet.hover, colorSet.text]
+                      )}
+                      onClick={() => handleBlankClick(currentBlankIndex)}
+                    >
+                      {answer}
+                    </motion.button>
+                    {showResults && answer.toLowerCase() !== exercise.blanks[currentBlankIndex].word.toLowerCase() && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: -50 }}
+                        className="absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded"
+                      >
+                        {exercise.blanks[currentBlankIndex].word}
+                      </motion.div>
                     )}
-                    onClick={() => handleBlankClick(currentBlankIndex)}
-                  >
-                    {answer}
-                  </motion.button>
+                  </motion.div>
                 ) : (
                   <motion.button
                     className={cn(
