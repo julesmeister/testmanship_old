@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   BookOpen, 
@@ -25,8 +25,6 @@ import {
   Blocks,
   RotateCcw
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 // Import exercise components
@@ -107,24 +105,19 @@ const getExerciseTypeIcon = (type: string) => {
 export default function ExerciseDetails({ exerciseId, exercise, exerciseData, onStart, onContinue, onComplete }: ExerciseDetailsProps) {
   if (!exercise) return null;
 
-  const [selectedType, setSelectedType] = useState<string>('fill-in-the-blanks');
-  const [selectedExerciseIndex, setSelectedExerciseIndex] = useState<number | null>(null);
+  const [selectedType, setSelectedType] = useState<string>('');
 
-  // Reset selected exercise when type changes or when exercise content changes
-  useEffect(() => {
-    if (exercise?.content) {
-      const filteredExercises = exercise.content.filter(
-        (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase()
-      );
-      
-      if (filteredExercises.length > 0) {
-        const randomIndex = Math.floor(Math.random() * filteredExercises.length);
-        setSelectedExerciseIndex(randomIndex);
-      } else {
-        setSelectedExerciseIndex(null);
-      }
-    }
-  }, [selectedType, exercise?.content]);
+  // Memoize the filtered exercises and random index
+  const { filteredExercises, randomExercise } = useMemo(() => {
+    const filtered = exercise.content.filter(
+      (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase()
+    );
+    const randomIndex = Math.floor(Math.random() * filtered.length);
+    return {
+      filteredExercises: filtered,
+      randomExercise: filtered.length > 0 ? filtered[randomIndex] : null
+    };
+  }, [selectedType, exercise.content]);
 
   useEffect(() => {
     // Set the first type as default when exercise types change
@@ -248,18 +241,12 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
               {/* Dynamic Exercise Component */}
               {(() => {
-                // Filter exercises by selected type
-                const filteredExercises = exercise.content.filter(
-                  (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase()
-                );
-                
                 if (filteredExercises.length === 0) {
                   return <EmptyExercise exerciseType={selectedType} />;
                 }
 
-                // Use the stored index instead of generating a new random one
                 const exerciseContent = {
-                  ...(selectedExerciseIndex !== null ? filteredExercises[selectedExerciseIndex] : filteredExercises[0]),
+                  ...randomExercise,
                   id: exercise.id,
                   onComplete: handleSubmit
                 } as any;

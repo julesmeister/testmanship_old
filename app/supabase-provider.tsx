@@ -19,7 +19,26 @@ export default function SupabaseProvider({
   const [supabase] = useState(() =>
     createBrowserClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            if (typeof document === 'undefined') return '';
+            const cookie = document.cookie
+              .split('; ')
+              .find((row) => row.startsWith(`${name}=`));
+            return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
+          },
+          set(name: string, value: string, options: { maxAge?: number; path?: string }) {
+            if (typeof document === 'undefined') return;
+            document.cookie = `${name}=${encodeURIComponent(value)}; path=${options.path || '/'}; max-age=${options.maxAge || 31536000}`;
+          },
+          remove(name: string, options: { path?: string }) {
+            if (typeof document === 'undefined') return;
+            document.cookie = `${name}=; path=${options.path || '/'}; expires=Thu, 01 Jan 1970 00:00:01 GMT`;
+          },
+        },
+      }
     )
   );
 
