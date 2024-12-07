@@ -51,7 +51,7 @@ export default function RolePlaying({ exercise, onComplete }: RolePlayingProps) 
     }
 
     const score = Math.round((correctCount / totalPrompts) * 100);
-    onComplete(score);
+    onComplete(score, totalPrompts);
   };
 
   return (

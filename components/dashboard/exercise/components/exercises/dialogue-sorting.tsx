@@ -65,7 +65,7 @@ export default function DialogueSorting({ exercise, onComplete }: DialogueSortin
     );
     const newScore = Math.round((correctCount / dialogueLines.length) * 100);
     setScore(newScore);
-    onComplete(newScore);
+    onComplete(newScore, dialogueLines.length);
   };
 
   return (

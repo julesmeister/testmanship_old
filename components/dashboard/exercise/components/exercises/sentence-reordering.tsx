@@ -48,7 +48,7 @@ export default function SentenceReordering({ exercise, onComplete }: SentenceReo
       0
     );
     const score = Math.round((correctSentences / sentences.length) * 100);
-    onComplete(score);
+    onComplete(score, sentences.length);
   };
 
   return (

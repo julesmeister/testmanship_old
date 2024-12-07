@@ -196,7 +196,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
       return exercise.pairs[leftIndex].right === rightItems[rightIndex] ? count + 1 : count;
     }, 0);
     const score = Math.round((correctMatches / exercise.pairs.length) * 100);
-    onComplete(score);
+    onComplete(score, exercise.pairs.length);
   };
 
   useEffect(() => {

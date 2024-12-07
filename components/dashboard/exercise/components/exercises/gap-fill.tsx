@@ -40,7 +40,7 @@ export default function GapFill({ exercise, onComplete }: GapFillProps) {
       isAnswerCorrect(gap.id) ? count + 1 : count, 0
     );
     const score = Math.round((correctCount / exercise.gaps.length) * 100);
-    onComplete(score);
+    onComplete(score, exercise.gaps.length);
   };
 
   // Split text into segments with gaps

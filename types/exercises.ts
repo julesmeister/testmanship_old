@@ -6,7 +6,7 @@ export interface ConjugationTablesProps {
         pronouns: string[];
         conjugations: { pronoun: string; conjugation: string }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface DialogueSortingProps {
@@ -19,7 +19,7 @@ export interface DialogueSortingProps {
             correctPosition: number;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface DragAndDropProps {
@@ -39,7 +39,7 @@ export interface DragAndDropProps {
         }[];
         instruction: string;
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface FillInTheBlanksProps {
@@ -51,7 +51,7 @@ export interface FillInTheBlanksProps {
             position: number;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface GapFillProps {
@@ -65,7 +65,7 @@ export interface GapFillProps {
             acceptableAnswers?: string[];
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface MatchingProps {
@@ -76,7 +76,7 @@ export interface MatchingProps {
             right: string;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface MultipleChoiceProps {
@@ -89,7 +89,7 @@ export interface MultipleChoiceProps {
             explanation?: string;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface QuestionFormationProps {
@@ -101,7 +101,7 @@ export interface QuestionFormationProps {
             hint?: string;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface RolePlayingProps {
@@ -122,7 +122,7 @@ export interface RolePlayingProps {
             }[];
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface SentenceCorrectionProps {
@@ -137,7 +137,7 @@ export interface SentenceCorrectionProps {
             focus?: string; // e.g., "grammar", "spelling", "punctuation"
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface SentenceReorderingProps {
@@ -153,7 +153,7 @@ export interface SentenceReorderingProps {
             hint?: string;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface SentenceSplittingProps {
@@ -166,7 +166,7 @@ export interface SentenceSplittingProps {
             hint?: string;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface SentenceTransformationProps {
@@ -179,7 +179,7 @@ export interface SentenceTransformationProps {
         }[];
         instruction: string;
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface WordBuildingProps {
@@ -196,7 +196,7 @@ export interface WordBuildingProps {
             explanation?: string;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface WordSortingProps {
@@ -213,7 +213,7 @@ export interface WordSortingProps {
             category: string;
         }[];
     };
-    onComplete: (score: number) => void;
+    onComplete: (score: number, total: number) => void;
 }
 
 export interface SortedWords {

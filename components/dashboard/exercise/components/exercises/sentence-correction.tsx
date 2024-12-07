@@ -37,7 +37,7 @@ export default function SentenceCorrection({ exercise, onComplete }: SentenceCor
     });
 
     const score = Math.round((correctCount / totalSentences) * 100);
-    onComplete(score);
+    onComplete(score, totalSentences);
   };
 
   return (

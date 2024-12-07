@@ -48,7 +48,7 @@ export default function WordSorting({ exercise, onComplete }: WordSortingProps) 
     });
 
     const score = Math.round((correctCount / totalWords) * 100);
-    onComplete(score);
+    onComplete(score, totalWords);
   };
 
   return (

@@ -54,7 +54,7 @@ export default function QuestionFormation({ exercise, onComplete }: QuestionForm
         ? count + 1 : count;
     }, 0);
     const score = Math.round((correctAnswers / exercise.statements.length) * 100);
-    onComplete(score);
+    onComplete(score, exercise.statements.length);
   };
 
   return (

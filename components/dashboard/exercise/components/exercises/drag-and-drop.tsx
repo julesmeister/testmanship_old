@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Button } from '@/components/ui/button';
 import { Check, X, GripVertical } from 'lucide-react';
@@ -46,17 +46,21 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
       [destId]: destItems,
     };
     setItemLocations(newLocations);
-
-    // Check if all items have been placed
-    const assignedItems = Object.values(newLocations).flat();
-    const unassignedCount = items.length - assignedItems.length;
-
-    if (unassignedCount === 0) {
-      checkAnswers();
-    }
   };
 
   const checkAnswers = () => {
+    // Check if all items are placed
+    const allItemsPlaced = exercise.items.every(item => 
+      Object.values(itemLocations).some(targetItems => 
+        targetItems.includes(item.id)
+      )
+    );
+
+    if (!allItemsPlaced) {
+      // Optionally, you can show a toast or alert
+      return;
+    }
+
     setShowResults(true);
     let correctCount = 0;
 
@@ -71,7 +75,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
     });
 
     const score = Math.round((correctCount / exercise.items.length) * 100);
-    onComplete(score);
+    onComplete(score, exercise.items.length);
   };
 
   const getUnassignedItems = () => {
@@ -85,6 +89,37 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
       [targetId]: !prev[targetId]
     }));
   };
+
+  // Check if all items are placed
+  // This memoized function ensures comprehensive item placement verification
+  // Key aspects of the implementation:
+  // 1. Uses exercise.items as the source of truth for total items
+  // 2. Checks EVERY item against ALL target locations
+  // 3. Ensures 100% placement before scoring
+  // 
+  // How it works:
+  // - exercise.items.every(): Checks EACH item in the exercise
+  // - Object.values(itemLocations).some(): Looks through ALL target locations
+  // - targetItems.includes(item.id): Confirms the item is in at least one target
+  // 
+  // Example scenarios:
+  // - Correct: All 10 items are distributed across targets
+  // - Incorrect: 9/10 items placed, or an item left in the source
+  const allItemsPlaced = useMemo(() => 
+    exercise.items.every(item => 
+      Object.values(itemLocations).some(targetItems => 
+        targetItems.includes(item.id)
+      )
+    ), 
+    [exercise.items, itemLocations]
+  );
+
+  useEffect(() => {
+    // Automatically check answers when all items are placed
+    if (allItemsPlaced) {
+      checkAnswers();
+    }
+  }, [allItemsPlaced]);
 
   return (
     <div className="p-6 space-y-6">
@@ -153,9 +188,18 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
             </Droppable>
 
             {/* Drop targets */}
-            <div className="space-y-4">
+            <div className={cn(
+              "space-y-4",
+              exercise.targets.length > 3 && "grid grid-cols-2 md:grid-cols-2 gap-4"
+            )}>
               {exercise.targets.map((target) => (
-                <div key={target.id} className="space-y-2">
+                <div 
+                  key={target.id} 
+                  className={cn(
+                    "space-y-2",
+                    exercise.targets.length > 3 && "w-full"
+                  )}
+                >
                   <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {target.label}
                   </div>
@@ -167,6 +211,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                         className={cn(
                           "p-4 rounded-lg min-h-[100px] border-2 border-dashed relative",
                           "bg-gray-50 dark:bg-gray-900/50",
+                          exercise.targets.length > 3 && "min-h-[150px]",
                           showResults && itemLocations[target.id].every(itemId => {
                             const item = exercise.items.find(i => i.id === itemId);
                             return item?.correctTarget === target.id;
@@ -206,6 +251,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                                   className={cn(
                                     "flex items-center gap-3 p-3 mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm",
                                     "border transition-colors",
+                                    exercise.targets.length > 3 && "p-2",
                                     !showResults && "hover:border-violet-300 dark:hover:border-violet-700",
                                     showResults && (
                                       isCorrect
@@ -214,20 +260,26 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                                     )
                                   )}
                                 >
-                                  <GripVertical className="h-5 w-5 text-gray-400" />
-                                  <div className="flex-1">
-                                    <span>{item.content}</span>
+                                  <GripVertical className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                  <div className={cn(
+                                    "flex-1 min-w-0", 
+                                    exercise.targets.length > 3 && "text-sm"
+                                  )}>
+                                    <span className="block truncate">{item.content}</span>
                                     {showResults && !isCorrect && (
-                                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                      <div className={cn(
+                                        "text-xs text-gray-500 dark:text-gray-400 mt-1",
+                                        exercise.targets.length > 3 && "text-[10px]"
+                                      )}>
                                         Should be in: {exercise.targets.find(t => t.id === item.correctTarget)?.label}
                                       </div>
                                     )}
                                   </div>
                                   {showResults && (
                                     isCorrect ? (
-                                      <Check className="h-5 w-5 text-green-500 ml-auto flex-shrink-0" />
+                                      <Check className="h-4 w-4 text-green-500 ml-auto flex-shrink-0" />
                                     ) : (
-                                      <X className="h-5 w-5 text-red-500 ml-auto flex-shrink-0" />
+                                      <X className="h-4 w-4 text-red-500 ml-auto flex-shrink-0" />
                                     )
                                   )}
                                 </div>

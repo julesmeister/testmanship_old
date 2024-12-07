@@ -46,7 +46,7 @@ export default function SentenceTransformation({ exercise, onComplete }: Sentenc
     setShowResults(true);
 
     const score = Math.round((newResults.filter(r => r).length / exercise.sentences.length) * 100);
-    onComplete(score);
+    onComplete(score, exercise.sentences.length);
   };
 
   return (

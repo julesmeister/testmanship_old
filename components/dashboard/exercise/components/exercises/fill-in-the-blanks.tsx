@@ -80,7 +80,7 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
           exercise.blanks.length) *
         100
       );
-      onComplete(score);
+      onComplete(score, exercise.blanks.length);
     }, 300);
   };
 

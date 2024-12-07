@@ -37,7 +37,7 @@ export default function WordBuilding({ exercise, onComplete }: WordBuildingProps
     });
 
     const score = Math.round((correctCount / totalWords) * 100);
-    onComplete(score);
+    onComplete(score, totalWords);
   };
 
   return (

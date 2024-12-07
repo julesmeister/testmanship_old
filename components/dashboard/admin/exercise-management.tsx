@@ -168,6 +168,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
         topic: selectedTopicOfIndividualExercise,
         exerciseType: selectedConfig || '', // Default to conjugation-tables if no config selected
       });
+      fetchExercises();
     } catch (error) {
       toast.error('Invalid JSON format');
     }

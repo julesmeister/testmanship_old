@@ -41,7 +41,7 @@ export default function SentenceSplitting({ exercise, onComplete }: SentenceSpli
     });
 
     const score = Math.round((correctCount / totalSentences) * 100);
-    onComplete(score);
+    onComplete(score, totalSentences);
   };
 
   return (

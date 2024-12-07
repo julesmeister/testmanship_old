@@ -67,7 +67,7 @@ export default function MultipleChoice({ exercise, onComplete }: MultipleChoiceP
     }, 0);
     
     const score = Math.round((correctCount / shuffledQuestions.length) * 100);
-    onComplete(score);
+    onComplete(score, shuffledQuestions.length);
   };
 
   if (shuffledQuestions.length === 0) return null;
