@@ -6,50 +6,47 @@ interface SaveExerciseParams {
   supabase: SupabaseClient;
   exerciseId: string;
   content: any;
-  append: boolean;
+  update: boolean;
+  topic: string;
+  exerciseType: string;
 }
 
 export function useSaveExerciseContent() {
   const [isSaving, setIsSaving] = useState(false);
 
-  const saveContent = async ({ supabase, exerciseId, content, append }: SaveExerciseParams) => {
+  const saveContent = async ({ supabase, exerciseId, content, update, topic, exerciseType }: SaveExerciseParams) => {
     setIsSaving(true);
-    try {
+    try {      
+      if (update && exerciseId) {
 
+        // Update existing exercise content
+        const { error: updateError } = await supabase
+          .from('exercise_content')
+          .update({
+            content: content,
+          })
+          .eq('id', exerciseId);
 
-      // Handle content based on append mode
-      let updatedContent;
-      if (append) {
-        // Get current exercise content
-        const { data: exerciseData, error: fetchError } = await supabase
-          .from('exercises')
-          .select('content')
-          .eq('id', exerciseId)
-          .single();
-
-        if (fetchError) throw fetchError;
-        updatedContent = exerciseData?.content || [];
-        updatedContent.push(content);
+        if (updateError) throw updateError;
       } else {
-        updatedContent = content; // Replace existing content
+        // Create new exercise content
+        const { error: insertError } = await supabase
+          .from('exercise_content')
+          .insert({
+            content: content,
+            topic,
+            exercise_type: exerciseType,
+            exercise_id: exerciseId
+          });
+
+        if (insertError) throw insertError;
       }
 
-      // Update exercise with new content
-      const { error: updateError } = await supabase
-        .from('exercises')
-        .update({
-          content: updatedContent,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', exerciseId);
-
-      if (updateError) throw updateError;
-
-      toast.success('Exercise content saved successfully!');
+      toast.success(update ? 'Exercise content updated!' : 'New exercise content created!');
       return { success: true };
     } catch (error) {
       console.error('Error saving exercise content:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to save exercise content');
+      toast.error('Failed to save exercise content');
       return { success: false };
     } finally {
       setIsSaving(false);

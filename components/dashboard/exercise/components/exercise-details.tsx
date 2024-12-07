@@ -26,6 +26,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFetchExerciseContent } from '@/hooks/useFetchExerciseContent';
 
 // Import exercise components
 import FillInTheBlanks from './exercises/fill-in-the-blanks';
@@ -44,6 +45,7 @@ import SentenceSplitting from './exercises/sentence-splitting';
 import SentenceCorrection from './exercises/sentence-correction';
 import WordBuilding from './exercises/word-building';
 import EmptyExercise from './exercises/empty-exercise';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 interface ExerciseDetailsProps {
   exerciseId: string;
@@ -61,6 +63,7 @@ interface ExerciseDetailsProps {
   onStart?: () => void;
   onContinue?: () => void;
   onComplete: (score: number, total: number) => void;
+  supabase: SupabaseClient;
 }
 
 const getExerciseTypeIcon = (type: string) => {
@@ -102,24 +105,38 @@ const getExerciseTypeIcon = (type: string) => {
   }
 };
 
-export default function ExerciseDetails({ exerciseId, exercise, exerciseData, onStart, onContinue, onComplete }: ExerciseDetailsProps) {
+export default function ExerciseDetails({ 
+  exerciseId, 
+  exercise, 
+  exerciseData, 
+  onStart, 
+  onContinue, 
+  onComplete,
+  supabase 
+}: ExerciseDetailsProps) {
   if (!exercise) return null;
 
   const [selectedType, setSelectedType] = useState<string>('');
 
-  // Memoize the filtered exercises and random index
-  const { filteredExercises, randomExercise } = useMemo(() => {
-    const filtered = exercise.content.filter(
-      (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase().replace(/\s+/g, '-')
-    );
-    const randomIndex = Math.floor(Math.random() * filtered.length);
-    onComplete(0, 0);
+  const { isLoading, exerciseContent, fetchContent } = useFetchExerciseContent();
 
-    return {
-      filteredExercises: filtered,
-      randomExercise: filtered.length > 0 ? filtered[randomIndex] : null
-    };
-  }, [selectedType, exercise.content]);
+  useEffect(() => {
+    if (exercise?.id && selectedType) {
+      fetchContent({
+        supabase,
+        exerciseId: exercise.id,
+        exerciseType: selectedType
+      });
+    }
+    console.log(exerciseContent);
+  }, [exercise?.id, selectedType, supabase]);
+
+  // Memoize the filtered exercises and random index
+  const filteredContent = useMemo(() => {
+    if (exerciseContent.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * exerciseContent.length);
+    return exerciseContent[randomIndex];
+  }, [exerciseContent]);
 
   useEffect(() => {
     // Set the first type as default when exercise types change
@@ -149,6 +166,7 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
                 // Only allow changing to a different type, not deselecting
                 if (type !== selectedType) {
                   setSelectedType(type);
+                  console.log(filteredContent);
                 }
               }}
               className={cn(
@@ -231,7 +249,7 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
       </div>
 
       <div className="mt-6">
-        {selectedType && (
+        {selectedType && !isLoading && (
           <motion.div
             key={selectedType}
             initial={{ opacity: 0, y: 20 }}
@@ -243,47 +261,47 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
               {/* Dynamic Exercise Component */}
               {(() => {
-                if (filteredExercises.length === 0) {
+                if (filteredContent?.content == null || filteredContent.exercise_type !== selectedType) {
                   return <EmptyExercise exerciseType={selectedType} />;
                 }
 
-                const exerciseContent = {
-                  ...randomExercise,
+                const exerciseContentJson = {
+                  ...filteredContent.content,
                   id: exercise.id,
                   onComplete: handleSubmit
                 } as any;
 
                 switch (selectedType.toLowerCase().replace(/\s+/g, '-')) {
                   case 'fill-in-the-blanks':
-                    return <FillInTheBlanks exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <FillInTheBlanks exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'matching':
-                    return <Matching exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <Matching exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'conjugation-tables':
-                    return <ConjugationTables exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <ConjugationTables exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'question-formation':
-                    return <QuestionFormation exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <QuestionFormation exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'dialogue-sorting':
-                    return <DialogueSorting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <DialogueSorting exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'multiple-choice':
-                    return <MultipleChoice exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <MultipleChoice exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'sentence-transformation':
-                    return <SentenceTransformation exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <SentenceTransformation exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'drag-and-drop':
-                    return <DragAndDrop exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <DragAndDrop exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'gap-fill':
-                    return <GapFill exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <GapFill exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'word-sorting':
-                    return <WordSorting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <WordSorting exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'sentence-reordering':
-                    return <SentenceReordering exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <SentenceReordering exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'role-playing':
-                    return <RolePlaying exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <RolePlaying exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'sentence-splitting':
-                    return <SentenceSplitting exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <SentenceSplitting exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'sentence-correction':
-                    return <SentenceCorrection exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <SentenceCorrection exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'word-building':
-                    return <WordBuilding exercise={exerciseContent} onComplete={exerciseContent.onComplete} />;
+                    return <WordBuilding exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   default:
                     return <EmptyExercise exerciseType={selectedType} />;
                 }

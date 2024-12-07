@@ -27,6 +27,7 @@ import { useSaveExerciseContent } from '@/hooks/useSaveExerciseContent';
 import { toast } from 'sonner';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useExerciseFilters } from '@/store/exercise-filters';
 
 interface ExerciseManagementProps {
@@ -38,7 +39,6 @@ interface TopicData {
   topic: string;
   description: string;
   exercise_types: string[];
-  exercises: any[];
 }
 
 export default function ExerciseManagement({ supabase }: ExerciseManagementProps) {
@@ -47,82 +47,105 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const [generatedContent, setGeneratedContent] = useState<string>('');
   const [allExercisesContent, setAllExercisesContent] = useState<string>('');
   const [activeAccordion, setActiveAccordion] = useState("exercise-types");
-  const { selectedLevel, selectedTopic, setSelectedLevel, setSelectedTopic } = useExerciseFilters();
+  const { selectedLevel, setSelectedLevel } = useExerciseFilters();
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [activeTab, setActiveTab] = useState<"template" | "generated" | "all">("template");
   const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
+  const [selectedTopic, setSelectedTopic] = useState<string>('');
+  const [selectedTopicOfIndividualExercise, setSelectedTopicOfIndividualExercise] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const { generateContent } = useExerciseContent();
   const { saveContent, isSaving } = useSaveExerciseContent();
 
-  // Fetch topics and exercise types when difficulty level changes
-  useEffect(() => {
-    async function fetchData() {
-      if (!selectedLevel) {
-        setTopics([]);
-        // Only reset topic if we're clearing the level
-        if (selectedTopic) setSelectedTopic(null);
-        return;
-      }
-
-      const { data, error } = await supabase
+  const fetchExercises = async () => {
+    try {
+      setIsLoading(true);
+      // First get all exercises
+      const { data: exercises, error: exercisesError } = await supabase
         .from('exercises')
-        .select('id, topic, exercise_types, description, content')
-        .eq('difficulty_level', selectedLevel);
+        .select('id, topic, description, exercise_types');
 
-      if (error) {
-        toast.error(`Error fetching data: ${error.message}`);
-        return;
+      if (exercisesError) throw exercisesError;
+
+      // Then get exercise content for the selected topic if any
+      let exerciseContent = [];
+      if (selectedTopic) {
+        const { data: content, error: contentError } = await supabase
+          .from('exercise_content')
+          .select('*')
+          .in('exercise_id', exercises
+            .filter(ex => ex.topic === selectedTopic)
+            .map(ex => ex.id)
+          );
+        
+        if (contentError) throw contentError;
+        exerciseContent = content || [];
       }
 
-      // Group topics with same name and combine their exercise types
-      const topicsMap = data.reduce((acc, curr) => {
+      // Process exercises into topics
+      const topicsMap = exercises.reduce((acc: Record<string, TopicData>, curr) => {
         if (!acc[curr.topic]) {
           acc[curr.topic] = {
             id: curr.id,
             topic: curr.topic,
             description: curr.description,
             exercise_types: curr.exercise_types || [],
-            exercises: curr.content || []
           };
         } else {
+          // Keep the existing id and update exercise_types
           acc[curr.topic].exercise_types = Array.from(new Set([
             ...acc[curr.topic].exercise_types,
             ...(curr.exercise_types || [])
           ]));
-          acc[curr.topic].exercises = [...acc[curr.topic].exercises, ...curr.content];
         }
         return acc;
       }, {} as Record<string, TopicData>);
 
       setTopics(Object.values(topicsMap));
       
-      // Only reset topic if it's not available in the new level
-      if (selectedTopic && !Object.keys(topicsMap).includes(selectedTopic)) {
-        setSelectedTopic(null);
+      // Update exercise content if topic is selected
+      if (selectedTopic && exerciseContent.length > 0) {
+        setAllExercisesContent(JSON.stringify(exerciseContent, null, 2));
+      } else if (selectedTopic) {
+        setAllExercisesContent('[]');
       }
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+    } finally {
+      setIsLoading(false);
     }
-
-    fetchData();
-  }, [selectedLevel, supabase]);
+  };
 
   useEffect(() => {
-    if (selectedTopic) {
-      setAllExercisesContent(JSON.stringify(topics.find(topic => topic.topic === selectedTopic)?.exercises || [], null, 2));
-    }
-  }, [selectedTopic, topics]);
+    fetchExercises();
+  }, [selectedTopic]);
 
-  const handleSave = async (add: boolean = false) => {
+  useEffect(() => {
+    if (selectedLevel) {
+      fetchExercises();
+    } else {
+      setTopics([]);
+    }
+  }, [selectedLevel]);
+
+  const handleSave = async (isUpdate: boolean = false) => {
     try {
-      // Validate JSON
+      // Validate JSON and topic
       const contentToSave = activeTab === "all" ? allExercisesContent : generatedContent;
-      JSON.parse(contentToSave);
-      
+
+      if (activeTab !== "all" && !selectedTopicOfIndividualExercise.trim()) {
+        toast.error('Topic is required');
+        return;
+      }
+            console.log(topics.find(t => t.topic === selectedTopic)?.id);
       await saveContent({
         supabase,
         exerciseId: topics.find(t => t.topic === selectedTopic)?.id || '',
         content: JSON.parse(contentToSave),
-        append: add,
+        update: activeTab === "all",
+        topic: selectedTopicOfIndividualExercise,
+        exerciseType: selectedConfig || '', // Default to conjugation-tables if no config selected
       });
     } catch (error) {
       toast.error('Invalid JSON format');
@@ -406,7 +429,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                 <SelectContent className="bg-white dark:bg-zinc-900">
                   {topics.map((topicData) => (
                     <SelectItem 
-                      key={topicData.id} 
+                      key={topicData.topic} 
                       value={topicData.topic}
                       className="text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     >
@@ -416,6 +439,33 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                 </SelectContent>
               </Select>
             </div>
+            // Topic field
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label 
+                    htmlFor="topic" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"
+                  >
+                    Topic
+                  </Label>
+                  {activeTab !== "all" && (
+                    <span className="text-xs text-destructive">
+                      Required
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="topic"
+                  placeholder="Enter the topic for this exercise..."
+                  className="text-sm transition-colors placeholder:text-muted-foreground/60"
+                  value={selectedTopicOfIndividualExercise}
+                  onChange={(e) => setSelectedTopicOfIndividualExercise(e.target.value)}
+                  required={activeTab !== "all"}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Specify the topic or subject area for this exercise.
+                </p>
+              </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label 

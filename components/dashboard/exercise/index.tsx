@@ -151,6 +151,8 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     return null;
   }
 
+  const selectedExercise = exercises.find(exercise => exercise.id === selectedExerciseId);
+
   return (
     <DashboardLayout
       user={user} 
@@ -185,6 +187,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
                 onComplete={handleExerciseComplete}
                 onStart={() => console.log('Starting exercise...')}
                 onContinue={() => console.log('Continuing exercise...')}
+                supabase={supabase}
               />
             ) : (
               <ExercisePlaceholder />

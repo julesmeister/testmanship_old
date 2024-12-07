@@ -487,24 +487,29 @@ GRANT SELECT ON weekly_challenge_stats TO authenticated;
 -- Grant usage on schema to authenticated users
 GRANT USAGE ON SCHEMA public TO authenticated;
 
--- Create exercise_types enum
+-- Drop dependent objects first
+DROP TABLE IF EXISTS exercise_content CASCADE;
+DROP TABLE IF EXISTS exercises CASCADE;
+DROP TYPE IF EXISTS exercise_type;
+
+-- Recreate exercise_type enum with normalized values
 CREATE TYPE exercise_type AS ENUM (
-    'Fill-in-the-blanks',
-    'Matching',
-    'Conjugation tables',
-    'Question formation',
-    'Dialogue sorting',
-    'Multiple-choice',
-    'Sentence transformation',
-    'Drag-and-drop',
-    'Gap-fill',
-    'Word sorting',
-    'Sentence reordering',
-    'Role-playing',
-    'Verb conjugation table',
-    'Sentence splitting',
-    'Sentence correction',
-    'Word building'
+    'fill-in-the-blanks',
+    'matching',
+    'conjugation-tables',
+    'question-formation',
+    'dialogue-sorting',
+    'multiple-choice',
+    'sentence-transformation',
+    'drag-and-drop',
+    'gap-fill',
+    'word-sorting',
+    'sentence-reordering',
+    'role-playing',
+    'verb-conjugation-table',
+    'sentence-splitting',
+    'sentence-correction',
+    'word-building'
 );
 
 -- Create exercises table
@@ -514,7 +519,6 @@ CREATE TABLE IF NOT EXISTS public.exercises (
     description TEXT NOT NULL,
     exercise_types exercise_type[] NOT NULL,
     difficulty_level VARCHAR(20) DEFAULT 'A1',
-    content jsonb[] not null, -- Store exercise-specific data here
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
@@ -523,6 +527,36 @@ CREATE TABLE IF NOT EXISTS public.exercises (
     order_index INTEGER,
     prerequisites uuid[] -- References other exercise IDs that should be completed first
 );
+
+-- New table for exercise content
+CREATE TABLE IF NOT EXISTS public.exercise_content (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    exercise_id uuid REFERENCES exercises(id) ON DELETE CASCADE,
+    topic VARCHAR(255) NOT NULL,
+    content jsonb NOT NULL, -- Specific exercise content (conjugations, questions, etc.)
+    exercise_type exercise_type NOT NULL, -- Single type per content
+    order_index INTEGER, -- Order within the exercise
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(exercise_id, order_index) -- Ensure unique ordering within an exercise
+);
+
+-- Add indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_exercise_content_exercise_id ON exercise_content(exercise_id);
+CREATE INDEX IF NOT EXISTS idx_exercise_content_type ON exercise_content(exercise_type);
+CREATE INDEX IF NOT EXISTS idx_exercise_content_topic ON exercise_content(topic);
+
+-- Add comments for better documentation
+COMMENT ON TABLE exercise_content IS 'Stores individual content items for exercises';
+COMMENT ON COLUMN exercise_content.content IS 'JSON content specific to exercise type (e.g., conjugations, questions)';
+COMMENT ON COLUMN exercise_content.exercise_type IS 'Type of exercise (e.g., conjugation-tables, multiple-choice)';
+COMMENT ON COLUMN exercise_content.order_index IS 'Order of content within the exercise';
+
+-- Trigger for updating timestamps
+CREATE TRIGGER update_exercise_content_updated_at
+    BEFORE UPDATE ON exercise_content
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- Add indexes
 CREATE INDEX IF NOT EXISTS idx_exercises_topic ON exercises(topic);
@@ -535,6 +569,14 @@ ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
 -- Create new policy for all operations
 CREATE POLICY "Allow all operations on exercises" 
   ON exercises FOR ALL 
+  USING (true);
+
+-- Enable RLS for exercise_content
+ALTER TABLE exercise_content ENABLE ROW LEVEL SECURITY;
+
+-- Create new policy for all operations on exercise_content
+CREATE POLICY "Allow all operations on exercise_content" 
+  ON exercise_content FOR ALL 
   USING (true);
 
 -- Add comments
@@ -572,143 +614,188 @@ INSERT INTO public.exercises (
     (
         'Conjugate verbs (regular and irregular)',
         'Learn how to conjugate both regular and irregular verbs in the present tense.',
-        ARRAY['Fill-in-the-blanks', 'Matching', 'Conjugation tables']::exercise_type[],
+        ARRAY['fill-in-the-blanks', 'matching', 'conjugation-tables']::exercise_type[],
         'Verb Conjugation',
         1
     ),
     (
         'W-Questions (Wer, Was, Wo, etc.)',
         'Understand and form open-ended questions using interrogatives.',
-        ARRAY['Question formation', 'Dialogue sorting', 'Multiple-choice']::exercise_type[],
+        ARRAY['question-formation', 'dialogue-sorting', 'multiple-choice']::exercise_type[],
         'Question Formation',
         2
     ),
     (
         'Yes/No Questions',
         'Practice forming and answering yes/no questions.',
-        ARRAY['Multiple-choice', 'Sentence transformation', 'Dialogue sorting']::exercise_type[],
+        ARRAY['multiple-choice', 'sentence-transformation', 'dialogue-sorting']::exercise_type[],
         'Question Formation',
         3
     ),
     (
         'Definite Articles (der, die, das)',
         'Learn the correct usage of definite articles with nouns.',
-        ARRAY['Matching', 'Fill-in-the-blanks', 'Drag-and-drop']::exercise_type[],
+        ARRAY['matching', 'fill-in-the-blanks', 'drag-and-drop']::exercise_type[],
         'Articles',
         4
     ),
     (
         'Indefinite Articles (ein, eine)',
         'Learn how to use indefinite articles with nouns.',
-        ARRAY['Fill-in-the-blanks', 'Multiple-choice', 'Gap-fill']::exercise_type[],
+        ARRAY['fill-in-the-blanks', 'multiple-choice', 'gap-fill']::exercise_type[],
         'Articles',
         5
     ),
     (
         'Negative Article (kein, keine)',
         'Practice negating sentences using the correct form of ''kein''.',
-        ARRAY['Sentence transformation', 'Gap-fill', 'Dialogue sorting']::exercise_type[],
+        ARRAY['sentence-transformation', 'gap-fill', 'dialogue-sorting']::exercise_type[],
         'Articles',
         6
     ),
     (
         'Plural Forms of Nouns',
         'Learn the plural forms of common German nouns.',
-        ARRAY['Drag-and-drop', 'Matching', 'Word sorting']::exercise_type[],
+        ARRAY['drag-and-drop', 'matching', 'word-sorting']::exercise_type[],
         'Nouns',
         7
     ),
     (
         'Verb Position in Sentences',
         'Understand the correct placement of verbs in main and subordinate clauses.',
-        ARRAY['Sentence reordering', 'Fill-in-the-blanks', 'Sentence transformation']::exercise_type[],
+        ARRAY['sentence-reordering', 'fill-in-the-blanks', 'sentence-transformation']::exercise_type[],
         'Sentence Structure',
         8
     ),
     (
         'Accusative Case',
         'Learn to use the accusative case with articles and direct objects.',
-        ARRAY['Gap-fill', 'Multiple-choice', 'Fill-in-the-blanks']::exercise_type[],
+        ARRAY['gap-fill', 'multiple-choice', 'fill-in-the-blanks']::exercise_type[],
         'Cases',
         9
     ),
     (
         'Modal Verbs: ''können'' (can)',
         'Practice the conjugation and usage of ''können'' to express ability.',
-        ARRAY['Dialogue sorting', 'Sentence transformation', 'Conjugation tables']::exercise_type[],
+        ARRAY['dialogue-sorting', 'sentence-transformation', 'conjugation-tables']::exercise_type[],
         'Modal Verbs',
         10
     ),
     (
         'Modal Verbs: ''mögen'' (like) and ''möchten'' (would like)',
         'Learn how to use ''mögen'' and ''möchten'' to express preferences and wishes.',
-        ARRAY['Dialogue sorting', 'Gap-fill', 'Multiple-choice']::exercise_type[],
+        ARRAY['dialogue-sorting', 'gap-fill', 'multiple-choice']::exercise_type[],
         'Modal Verbs',
         11
     ),
     (
         'Verbs with Vowel Change (e.g., fahren, sehen)',
         'Understand and practice verbs that change their stem vowels in conjugation.',
-        ARRAY['Conjugation tables', 'Fill-in-the-blanks', 'Matching']::exercise_type[],
+        ARRAY['conjugation-tables', 'fill-in-the-blanks', 'matching']::exercise_type[],
         'Verb Conjugation',
         12
     ),
     (
         'Separable Verbs (e.g., aufstehen, anrufen)',
         'Learn how separable verbs are used in sentences and conjugated.',
-        ARRAY['Sentence splitting', 'Matching', 'Gap-fill']::exercise_type[],
+        ARRAY['sentence-splitting', 'matching', 'gap-fill']::exercise_type[],
         'Verb Types',
         13
     ),
     (
         'Non-Separable Verbs (e.g., besuchen, verstehen)',
         'Practice using non-separable verbs correctly in sentences.',
-        ARRAY['Sentence correction', 'Fill-in-the-blanks', 'Multiple-choice']::exercise_type[],
+        ARRAY['sentence-correction', 'fill-in-the-blanks', 'multiple-choice']::exercise_type[],
         'Verb Types',
         14
     ),
     (
         'Sentence Bracket (e.g., modal verbs with infinitives)',
         'Learn how modal verbs create a sentence bracket with the infinitive at the end.',
-        ARRAY['Fill-in-the-blanks', 'Gap-fill', 'Dialogue sorting']::exercise_type[],
+        ARRAY['fill-in-the-blanks', 'gap-fill', 'dialogue-sorting']::exercise_type[],
         'Sentence Structure',
         15
     ),
     (
         'Temporal Prepositions (e.g., am, im, um)',
         'Understand how to use prepositions to express time.',
-        ARRAY['Multiple-choice', 'Matching', 'Fill-in-the-blanks']::exercise_type[],
+        ARRAY['multiple-choice', 'matching', 'fill-in-the-blanks']::exercise_type[],
         'Prepositions',
         16
     ),
     (
         'Compound Nouns (e.g., Haus + Tür = Haustür)',
         'Learn how to form and understand compound nouns.',
-        ARRAY['Word building', 'Matching', 'Drag-and-drop']::exercise_type[],
+        ARRAY['word-building', 'matching', 'drag-and-drop']::exercise_type[],
         'Nouns',
         17
     ),
     (
         'Perfect Tense with ''haben''',
         'Practice forming sentences in the perfect tense with ''haben''.',
-        ARRAY['Sentence transformation', 'Fill-in-the-blanks', 'Dialogue sorting']::exercise_type[],
+        ARRAY['sentence-transformation', 'fill-in-the-blanks', 'dialogue-sorting']::exercise_type[],
         'Perfect Tense',
         18
     ),
     (
         'Perfect Tense with ''sein''',
         'Learn when and how to use ''sein'' to form the perfect tense.',
-        ARRAY['Gap-fill', 'Multiple-choice', 'Dialogue sorting']::exercise_type[],
+        ARRAY['gap-fill', 'multiple-choice', 'dialogue-sorting']::exercise_type[],
         'Perfect Tense',
         19
     ),
     (
         'Perfect Tense with ''haben'' and ''sein''',
         'Understand the distinction between ''haben'' and ''sein'' in perfect tense usage.',
-        ARRAY['Dialogue sorting', 'Gap-fill', 'Sentence transformation']::exercise_type[],
+        ARRAY['dialogue-sorting', 'gap-fill', 'sentence-transformation']::exercise_type[],
         'Perfect Tense',
         20
     );
+
+-- Migration: Move data from exercises.content to exercise_content
+CREATE OR REPLACE FUNCTION migrate_exercise_content()
+RETURNS void AS $$
+DECLARE
+    exercise_record RECORD;
+    content_index integer;
+BEGIN
+    -- Loop through each exercise
+    FOR exercise_record IN SELECT id, content, topic, exercise_types FROM exercises WHERE content IS NOT NULL
+    LOOP
+        content_index := 0;
+        -- Loop through each content item in the array
+        FOR i IN 1..array_length(exercise_record.content, 1)
+        LOOP
+            -- Insert into new exercise_content table
+            INSERT INTO exercise_content (
+                exercise_id,
+                topic,
+                content,
+                exercise_type,
+                order_index
+            )
+            SELECT
+                exercise_record.id,
+                exercise_record.topic,
+                exercise_record.content[i],
+                -- Extract exercise_type from content or use first type from exercise_types
+                COALESCE(
+                    (exercise_record.content[i]->>'exercise_type')::exercise_type,
+                    exercise_record.exercise_types[1]
+                ),
+                content_index;
+
+            content_index := content_index + 1;
+        END LOOP;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Execute migration
+SELECT migrate_exercise_content();
+
+-- After verifying the migration, you can remove the content column
+-- ALTER TABLE exercises DROP COLUMN content;
 
 -- Create user exercise progress table
 CREATE TABLE IF NOT EXISTS public.user_exercise_progress (
