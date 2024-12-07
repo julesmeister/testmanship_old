@@ -109,6 +109,12 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     }
   }, [user, supabase, difficulty]);
 
+  const smoothScrollToTop = () => {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
   const handleLevelChange = async (newLevel: string) => {
     const result = await updateLevel(newLevel);
     if (!result || !result.success) {
@@ -121,10 +127,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setCorrectCount(score);
     setTotalQuestions(total);
     setShowResults(true);
-    // Smooth scroll to top of the page
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+    smoothScrollToTop();
   };
 
   const handleTryAgain = () => {
@@ -136,6 +139,11 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setTimeout(() => {
       setSelectedExerciseId(currentExerciseId);
     }, 100);
+  };
+
+  const handleExerciseSelect = (exerciseId: string) => {
+    setSelectedExerciseId(exerciseId);
+    smoothScrollToTop();
   };
 
   if (!user) {
@@ -165,7 +173,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
             <ExerciseList
               exercises={exercises}
               selectedId={selectedExerciseId}
-              onSelect={setSelectedExerciseId}
+              onSelect={handleExerciseSelect}
             />
           </div>
 

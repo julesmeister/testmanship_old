@@ -103,7 +103,7 @@ export default function DialogueSorting({ exercise, onComplete }: DialogueSortin
               }`}
             >
               <div className="relative">
-                {isSubmitted && (
+                {isSubmitted && line.correctPosition !== index && (
                   <div className="absolute -left-36 top-1/2 -translate-y-1/2 flex items-center">
                     <div className="flex items-center gap-2 bg-white dark:bg-gray-900 px-3 py-1.5 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
                       <span className="text-sm font-medium bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
