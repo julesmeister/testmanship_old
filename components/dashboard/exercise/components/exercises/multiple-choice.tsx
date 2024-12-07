@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -9,33 +9,72 @@ import { Check, X, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MultipleChoiceProps } from '@/types/exercises';
 
+interface ShuffledQuestion {
+  text: string;
+  options: string[];
+  correctAnswer: number;
+  explanation?: string;
+  originalCorrectAnswer: number;
+}
+
 export default function MultipleChoice({ exercise, onComplete }: MultipleChoiceProps) {
   const [answers, setAnswers] = useState<number[]>(new Array(exercise.questions.length).fill(-1));
   const [showResults, setShowResults] = useState(false);
+  const [shuffledQuestions, setShuffledQuestions] = useState<ShuffledQuestion[]>([]);
+
+  useEffect(() => {
+    // Reset answers when questions change
+    setAnswers(new Array(exercise.questions.length).fill(-1));
+    setShowResults(false);
+    
+    // Shuffle options and track the new position of correct answer
+    const shuffled = exercise.questions.map(question => {
+      const originalCorrectOption = question.options[question.correctAnswer];
+      const optionsWithIndices = question.options.map((opt, idx) => ({ opt, idx }));
+      const shuffledOptions = optionsWithIndices.sort(() => Math.random() - 0.5);
+      
+      return {
+        text: question.text,
+        options: shuffledOptions.map(item => item.opt),
+        correctAnswer: shuffledOptions.findIndex(item => item.idx === question.correctAnswer),
+        explanation: question.explanation,
+        originalCorrectAnswer: question.correctAnswer
+      };
+    });
+    
+    setShuffledQuestions(shuffled);
+  }, [exercise.questions]);
 
   const handleAnswerChange = (questionIndex: number, value: number) => {
+    if (showResults) return; // Prevent changes after submission
+    
     const newAnswers = [...answers];
     newAnswers[questionIndex] = value;
     setAnswers(newAnswers);
     
     // Check if all questions are answered
-    if (!newAnswers.includes(-1)) {
-      checkAnswers();
+    if (!newAnswers.includes(-1) && shuffledQuestions.length > 0) {
+      checkAnswers(newAnswers);
     }
   };
 
-  const checkAnswers = () => {
+  const checkAnswers = (finalAnswers: number[]) => {
     setShowResults(true);
-    const correctAnswers = answers.reduce((count, answer, index) => {
-      return answer === exercise.questions[index].correctAnswer ? count + 1 : count;
+    
+    const correctCount = finalAnswers.reduce((count, answer, index) => {
+      const isCorrect = answer === shuffledQuestions[index].correctAnswer;
+      return isCorrect ? count + 1 : count;
     }, 0);
-    const score = Math.round((correctAnswers / exercise.questions.length) * 100);
+    
+    const score = Math.round((correctCount / shuffledQuestions.length) * 100);
     onComplete(score);
   };
 
+  if (shuffledQuestions.length === 0) return null;
+
   return (
     <div className="p-6 space-y-8">
-      {exercise.questions.map((question, questionIndex) => (
+      {shuffledQuestions.map((question, questionIndex) => (
         <motion.div
           key={questionIndex}
           initial={{ opacity: 0, y: 20 }}
@@ -177,7 +216,7 @@ export default function MultipleChoice({ exercise, onComplete }: MultipleChoiceP
           <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Results:</h4>
           <div className="text-sm text-gray-700 dark:text-gray-300">
             Correct answers: {answers.reduce((count, answer, index) => 
-              answer === exercise.questions[index].correctAnswer ? count + 1 : count, 0
+              answer === shuffledQuestions[index].correctAnswer ? count + 1 : count, 0
             )} out of {exercise.questions.length}
           </div>
         </motion.div>

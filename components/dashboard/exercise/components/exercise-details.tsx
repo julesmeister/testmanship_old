@@ -113,6 +113,8 @@ export default function ExerciseDetails({ exerciseId, exercise, exerciseData, on
       (content: any) => content.exercise_type?.toLowerCase() === selectedType.toLowerCase().replace(/\s+/g, '-')
     );
     const randomIndex = Math.floor(Math.random() * filtered.length);
+    onComplete(0, 0);
+
     return {
       filteredExercises: filtered,
       randomExercise: filtered.length > 0 ? filtered[randomIndex] : null

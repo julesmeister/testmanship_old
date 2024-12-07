@@ -1,10 +1,35 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { DialogueSortingProps } from '@/types/exercises';
 import { AlertCircle, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
+import cn from 'classnames';
+
+const speakerColors = {
+  box: {
+    1: 'bg-blue-500 text-white',
+    2: 'bg-violet-500 text-white',
+    3: 'bg-emerald-500 text-white',
+    4: 'bg-amber-500 text-white',
+    default: 'bg-gray-100 dark:bg-gray-800'
+  },
+  speaker: {
+    1: 'text-blue-50',
+    2: 'text-violet-50',
+    3: 'text-emerald-50',
+    4: 'text-amber-50',
+    default: 'text-gray-600 dark:text-gray-300'
+  },
+  text: {
+    1: 'text-white',
+    2: 'text-white',
+    3: 'text-white',
+    4: 'text-white',
+    default: 'text-gray-700 dark:text-gray-400'
+  }
+};
 
 export default function DialogueSorting({ exercise, onComplete }: DialogueSortingProps) {
   // Store the original order
@@ -19,6 +44,11 @@ export default function DialogueSorting({ exercise, onComplete }: DialogueSortin
   );
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+
+  const speakerIndices = useMemo(() => {
+    const speakers = new Set(exercise.dialogueLines.map(line => line.speaker));
+    return Object.fromEntries([...speakers].map((speaker, index) => [speaker, (index + 1) > 4 ? 'default' : (index + 1).toString()]));
+  }, [exercise.dialogueLines]);
 
   const moveItem = (fromIndex: number, toIndex: number) => {
     if (isSubmitted) return;
@@ -113,24 +143,23 @@ export default function DialogueSorting({ exercise, onComplete }: DialogueSortin
                     </div>
                   </div>
                 )}
-                <div className={`p-4 rounded-2xl ${
+                <div className={cn(
+                  "p-4 rounded-2xl",
+                  speakerColors.box[speakerIndices[line.speaker] as keyof typeof speakerColors.box],
                   line.speaker === exercise.dialogueLines[0].speaker 
-                    ? 'bg-blue-500 text-white ml-auto rounded-br-sm max-w-[80%]' 
-                    : 'bg-gray-100 dark:bg-gray-800 mr-auto rounded-bl-sm max-w-[80%]'
-                }`}>
+                    ? 'ml-auto rounded-br-sm max-w-[80%]' 
+                    : 'mr-auto rounded-bl-sm max-w-[80%]'
+                )}>
                   <div className="flex flex-col gap-1">
-                    <span className={`text-sm font-medium ${
-                      line.speaker === exercise.dialogueLines[0].speaker
-                        ? 'text-blue-50'
-                        : 'text-gray-600 dark:text-gray-300'
-                    }`}>
+                    <span className={cn(
+                      "text-sm font-medium",
+                      speakerColors.speaker[speakerIndices[line.speaker] as keyof typeof speakerColors.speaker]
+                    )}>
                       {line.speaker}
                     </span>
-                    <span className={`${
-                      line.speaker === exercise.dialogueLines[0].speaker
-                        ? 'text-white'
-                        : 'text-gray-700 dark:text-gray-400'
-                    }`}>
+                    <span className={cn(
+                      speakerColors.text[speakerIndices[line.speaker] as keyof typeof speakerColors.text]
+                    )}>
                       {line.text}
                     </span>
                   </div>

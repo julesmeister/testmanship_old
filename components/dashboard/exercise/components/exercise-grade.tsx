@@ -11,7 +11,7 @@ interface ExerciseGradeProps {
 }
 
 export function ExerciseGrade({ showResults, correctCount, totalQuestions, onTryAgain }: ExerciseGradeProps) {
-  if (!showResults) {
+  if (!showResults || totalQuestions === 0) {
     return (
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
