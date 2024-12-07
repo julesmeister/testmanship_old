@@ -4,7 +4,7 @@ export interface ConjugationTablesProps {
         verb: string;
         tense: string;
         pronouns: string[];
-        conjugations: string[];
+        conjugations: { pronoun: string; conjugation: string }[];
     };
     onComplete: (score: number) => void;
 }

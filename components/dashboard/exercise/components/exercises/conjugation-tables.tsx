@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import type { ConjugationTablesProps } from '@/types/exercises';
 
 export default function ConjugationTables({ exercise, onComplete }: ConjugationTablesProps) {
-  const [answers, setAnswers] = useState<string[]>(new Array(exercise.pronouns.length).fill(''));
+  const [answers, setAnswers] = useState<string[]>(new Array(exercise.conjugations.length).fill(''));
   const [showResults, setShowResults] = useState(false);
 
   const handleAnswerChange = (index: number, value: string) => {
@@ -18,113 +18,208 @@ export default function ConjugationTables({ exercise, onComplete }: ConjugationT
     setAnswers(newAnswers);
   };
 
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (index < exercise.conjugations.length - 1) {
+        // If not the last input, focus the next one
+        const nextInput = document.querySelector(`input[data-index="${index + 1}"]`) as HTMLInputElement;
+        if (nextInput) nextInput.focus();
+      } else {
+        // If it's the last field, check answers immediately
+        checkAnswers();
+      }
+    }
+  };
+
+  // Helper function to get conjugation answer
+  const getConjugationAnswer = (conjugation: { pronoun: string; conjugation: string }) => {
+    return conjugation.conjugation;
+  };
+
   const checkAnswers = () => {
     setShowResults(true);
-    const correctAnswers = answers.reduce((count, answer, index) => {
-      return answer.toLowerCase() === exercise.conjugations[index].toLowerCase() ? count + 1 : count;
-    }, 0);
-    const score = Math.round((correctAnswers / exercise.pronouns.length) * 100);
+    
+    const results = exercise.conjugations.map((conjugation, index) => {
+      const answer = answers[index];
+      if (!answer) {
+        return false;
+      }
+      
+      const userAnswer = answer.trim().toLowerCase();
+      const correctAnswer = conjugation.conjugation.toLowerCase().trim();
+      
+      console.log(`Comparing answers at index ${index}:`, {
+        pronoun: conjugation.pronoun,
+        userAnswer,
+        correctAnswer,
+      });
+
+      return userAnswer === correctAnswer;
+    });
+
+    const correctAnswers = results.filter(result => result).length;
+    const totalAnswered = answers.filter(answer => answer.trim().length > 0).length;
+    console.log('Score calculation:', {
+      correctAnswers,
+      totalAnswered,
+      score: totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0
+    });
+
+    // Calculate score based on answered questions only
+    const score = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
     onComplete(score);
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            Conjugate: 
-            <span className="ml-2 text-violet-600 dark:text-violet-400">{exercise.verb}</span>
-          </h3>
-          <span className="px-2 py-1 text-sm bg-violet-50 dark:bg-violet-900/50 text-violet-600 dark:text-violet-300 rounded-md">
-            {exercise.tense}
-          </span>
-        </div>
-
-        <div className="grid gap-4">
-          {exercise.pronouns.map((pronoun, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex items-center gap-4"
-            >
-              <div className="w-24 text-right">
-                <span className="text-gray-700 dark:text-gray-300 font-medium">{pronoun}</span>
+    <div className="p-6 space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-4"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
+                  {exercise.verb}
+                </h2>
+                <div className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-violet-400 rounded-full opacity-50" />
               </div>
+              <div className="px-3 py-1.5 text-sm font-medium text-violet-700 dark:text-violet-400 bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/30 dark:to-violet-800/30 rounded-full border border-violet-200 dark:border-violet-700/50 shadow-sm">
+                {exercise.tense}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="w-2 h-2 rounded-full bg-violet-400 dark:bg-violet-600" />
+              <p>
+                Complete the conjugation table for <span className="font-medium text-violet-700 dark:text-violet-400">{exercise.verb}</span> in <span className="font-medium text-violet-700 dark:text-violet-400">{exercise.tense}</span> tense
+              </p>
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-100 dark:border-violet-800/30">
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-violet-100 dark:bg-violet-800/50">
+              <span className="text-sm font-semibold text-violet-700 dark:text-violet-400">
+                {exercise.conjugations.length}
+              </span>
+            </div>
+            <span className="text-sm text-violet-700 dark:text-violet-400">
+              conjugations
+            </span>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid gap-4">
+        {exercise.conjugations.map((conjugation, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ 
+              delay: index * 0.1,
+              type: "spring",
+              stiffness: 100,
+              damping: 10
+            }}
+            className={cn(
+              "relative flex items-center gap-4",
+              "p-4 rounded-lg transition-all duration-200",
+              "border-2 bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50",
+              !showResults && "hover:border-violet-500/50 hover:from-violet-50 hover:to-violet-50/50 dark:hover:from-violet-900/10 dark:hover:to-violet-900/5",
+              !showResults && "focus-within:border-violet-500 focus-within:from-violet-50 focus-within:to-violet-50/50 dark:focus-within:from-violet-900/10 dark:focus-within:to-violet-900/5",
+              showResults ? (
+                answers[index]?.toLowerCase() === conjugation.conjugation.toLowerCase()
+                  ? "border-green-500 from-green-50 to-green-50/50 dark:from-green-900/20 dark:to-green-900/10"
+                  : "border-red-500 from-red-50 to-red-50/50 dark:from-red-900/20 dark:to-red-900/10"
+              ) : "border-gray-200 dark:border-gray-700"
+            )}
+          >
+            <span className="w-24 text-sm font-medium text-gray-700 dark:text-gray-300">
+              {conjugation.pronoun}
+            </span>
+            <div className="flex-1">
               <Input
-                type="text"
-                value={answers[index]}
+                value={answers[index] || ''}
                 onChange={(e) => handleAnswerChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                data-index={index}
                 className={cn(
-                  "max-w-[200px]",
+                  "w-full transition-all duration-200",
+                  "bg-transparent border-0 outline-none focus:ring-0 focus:outline-none text-lg",
+                  "placeholder:text-gray-400 dark:placeholder:text-gray-600",
                   showResults && (
-                    answers[index].toLowerCase() === exercise.conjugations[index].toLowerCase()
-                      ? "border-green-500 bg-green-50 dark:bg-green-950/50"
-                      : "border-red-500 bg-red-50 dark:bg-red-950/50"
-                  )
+                    answers[index]?.toLowerCase() === conjugation.conjugation.toLowerCase()
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  ),
+                  !showResults && "focus:text-violet-600 dark:focus:text-violet-400"
                 )}
-                placeholder="Type conjugation..."
+                placeholder={`Type the ${exercise.tense} form...`}
                 disabled={showResults}
               />
               {showResults && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.5 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-2"
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 20
+                  }}
+                  className="flex items-center gap-2 mt-2"
                 >
-                  {answers[index].toLowerCase() === exercise.conjugations[index].toLowerCase() ? (
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 rounded-full">
+                  {answers[index]?.toLowerCase() === conjugation.conjugation.toLowerCase() ? (
+                    <motion.span
+                      initial={{ rotate: -180 }}
+                      animate={{ rotate: 0 }}
+                      className="inline-flex items-center justify-center w-5 h-5 bg-green-500 rounded-full"
+                    >
                       <Check className="w-3 h-3 text-white" />
-                    </span>
+                    </motion.span>
                   ) : (
                     <>
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-red-500 rounded-full">
+                      <motion.span
+                        initial={{ rotate: 180 }}
+                        animate={{ rotate: 0 }}
+                        className="inline-flex items-center justify-center w-5 h-5 bg-red-500 rounded-full"
+                      >
                         <X className="w-3 h-3 text-white" />
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Correct: <span className="font-medium text-gray-900 dark:text-gray-200">{exercise.conjugations[index]}</span>
-                      </span>
+                      </motion.span>
+                      <motion.span
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="text-sm text-gray-600 dark:text-gray-400"
+                      >
+                        Correct: <span className="font-medium text-gray-900 dark:text-gray-200">
+                          {conjugation.conjugation}
+                        </span>
+                      </motion.span>
                     </>
                   )}
                 </motion.div>
               )}
-            </motion.div>
-          ))}
-        </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      {!showResults && (
+      <div className="flex justify-between items-center">
         <Button
           onClick={checkAnswers}
-          className="w-full sm:w-auto"
-          disabled={answers.some(answer => !answer)}
+          disabled={showResults || answers.some(answer => !answer?.trim())}
+          className={cn(
+            "w-full sm:w-auto transition-all duration-200",
+            !showResults && !answers.some(answer => !answer?.trim()) &&
+            "bg-violet-600 hover:bg-violet-700 text-white"
+          )}
         >
-          Check Answers
+          {showResults ? 'Answers Checked' : 'Check Answers'}
         </Button>
-      )}
+      </div>
 
-      {showResults && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-        >
-          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-            Study the correct conjugations:
-          </h4>
-          <div className="grid grid-cols-2 gap-4">
-            {exercise.pronouns.map((pronoun, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600 dark:text-gray-400">{pronoun}:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">
-                  {exercise.conjugations[index]}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+    
     </div>
   );
 }

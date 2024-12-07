@@ -21,7 +21,10 @@ const interfaceStructures = {
     verb: '',
     tense: '',
     pronouns: [],
-    conjugations: []
+    conjugations: [{
+      pronoun: '',
+      conjugation: ''
+    }]
   },
   'dialogue-sorting': {
     exercise_type: 'dialogue-sorting',
