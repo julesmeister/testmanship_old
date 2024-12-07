@@ -144,6 +144,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   const handleExerciseSelect = (exerciseId: string) => {
     setSelectedExerciseId(exerciseId);
     smoothScrollToTop();
+    setShowResults(false);
   };
 
   if (!user) {
@@ -188,6 +189,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
                 onStart={() => console.log('Starting exercise...')}
                 onContinue={() => console.log('Continuing exercise...')}
                 supabase={supabase}
+                setShowResults={setShowResults}
               />
             ) : (
               <ExercisePlaceholder />

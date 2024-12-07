@@ -64,6 +64,7 @@ interface ExerciseDetailsProps {
   onContinue?: () => void;
   onComplete: (score: number, total: number) => void;
   supabase: SupabaseClient;
+  setShowResults: (show: boolean) => void;
 }
 
 const getExerciseTypeIcon = (type: string) => {
@@ -112,7 +113,8 @@ export default function ExerciseDetails({
   onStart, 
   onContinue, 
   onComplete,
-  supabase 
+  supabase,
+  setShowResults
 }: ExerciseDetailsProps) {
   if (!exercise) return null;
 
@@ -127,6 +129,7 @@ export default function ExerciseDetails({
         exerciseId: exercise.id,
         exerciseType: selectedType
       });
+      setShowResults(false);
     }
     console.log(exerciseContent);
   }, [exercise?.id, selectedType, supabase]);
@@ -220,7 +223,9 @@ export default function ExerciseDetails({
                 >
                   {getExerciseTypeIcon(type.replace(/\s/g, "-"))}
                 </motion.span>
-                {type.replace(/-/g, " ")}
+                {type.replace(/-/g, " ").split(' ').map(word => 
+                  word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ')}
               </span>
               {selectedType === type && (
                 <motion.div

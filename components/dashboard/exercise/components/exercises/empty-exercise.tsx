@@ -10,6 +10,35 @@ interface EmptyExerciseProps {
 export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
   return (
     <div className="flex flex-col items-center justify-center p-12 space-y-6 text-center">
+
+<motion.div
+        initial={{ y: 0 }}
+        animate={{ 
+          y: [0, -20, 0],
+          rotate: [0, 10, -10, 0]
+        }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="text-5xl mb-4"
+      >
+        👆
+      </motion.div>
+      <p className="text-sm font-medium text-gray-600 dark:text-gray-300 
+        bg-gray-100 dark:bg-gray-800 
+        px-3 py-1 
+        rounded-full 
+        inline-block 
+        shadow-sm 
+        hover:bg-gray-200 dark:hover:bg-gray-700 
+        transition-all duration-300 
+        cursor-default
+        select-none"
+      >
+        Please select another exercise
+      </p>
       <motion.div
         className="relative"
         initial={{ scale: 0 }}
@@ -36,7 +65,7 @@ export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
           <BookOpen className="w-8 h-8 text-blue-500" />
         </motion.div>
       </motion.div>
-
+          
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -63,6 +92,8 @@ export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
           <span>Coming Soon</span>
         </div>
       </motion.div>
+
+      
     </div>
   );
 }

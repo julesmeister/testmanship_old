@@ -131,7 +131,7 @@ export default function Settings(props: Props) {
                     {props.userDetails?.full_name}
                   </h2>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Writing Enthusiast
+                    Language Enthusiast
                   </p>
                 </div>
               </div>

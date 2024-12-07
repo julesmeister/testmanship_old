@@ -30,7 +30,7 @@ import { toast } from 'sonner';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { useExerciseFilters } from '@/store/exercise-filters';
+import { useExerciseFilters } from '@/stores/exercise-filters';
 import { any } from 'zod';
 
 interface ExerciseManagementProps {
@@ -52,11 +52,10 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const [contentToEdit, setContentToEdit] = useState<string>('');
   const [contentToEditId, setContentToEditId] = useState<string>('');
   const [activeAccordion, setActiveAccordion] = useState("exercise-types");
-  const { selectedLevel, setSelectedLevel } = useExerciseFilters();
+  const { selectedLevel, setSelectedLevel, selectedTopic, setSelectedTopic } = useExerciseFilters();
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [activeTab, setActiveTab] = useState<"template" | "generated" | "edit">("template");
   const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
-  const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [selectedTopicOfIndividualExercise, setSelectedTopicOfIndividualExercise] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -79,6 +78,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
         const exerciseIds = exercises
           .filter(ex => ex.topic === selectedTopic)
           .map(ex => ex.id);
+          console.log(exerciseIds);
 
         const { data: content, error: contentError } = await supabase
           .from('exercise_content')
@@ -140,14 +140,29 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
       // Validate JSON and topic
       const contentToSave = activeTab === "edit" ? allContentsOfThisType : generatedContent;
 
+      // Topic should not be empty
       if (activeTab !== "edit" && !selectedTopicOfIndividualExercise.trim()) {
         toast.error('Topic is required');
         return;
       }
-      console.log(contentToEditId);
+
+      // Topic should not exist before creating
+      if (activeTab !== "edit" && topics.some(topic => topic.topic === selectedTopicOfIndividualExercise)) {
+        toast.error('Please choose another topic, this topic already exists');
+        return;
+      }
+
+      // Get the first exercise ID for the selected topic
+      const exerciseIds = topics
+        .filter(topic => topic.topic === selectedTopic)
+        .map(topic => topic.id);
+
+      console.log('Exercise IDs:', exerciseIds);
+      console.log('Content to Edit ID:', contentToEditId);
+
       await saveContent({
         supabase,
-        exerciseId: activeTab === "edit" ? contentToEditId : '',
+        exerciseId: activeTab === "edit" ? contentToEditId : (exerciseIds[0] || ''),
         content: activeTab === "edit" ? JSON.parse(contentToEdit) : JSON.parse(contentToSave),
         update: activeTab === "edit",
         topic: selectedTopicOfIndividualExercise,
