@@ -212,6 +212,9 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                           onClick={() => {
                             setSelectedConfig(type);
                             setJsonContent(JSON.stringify(getExerciseTemplate(type), null, 2));
+                            setGeneratedContent('');
+                            setSelectedTopicOfIndividualExercise('');
+                            setAdditionalInstructions('');
                           }}
                         >
                           {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}

@@ -64,6 +64,20 @@ export default function QuestionFormation({ exercise, onComplete }: QuestionForm
           <HelpCircle className="w-5 h-5" />
         </div>
         <p className="text-sm font-medium">Form questions based on the given statements</p>
+        {!showResults && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="ml-auto"
+          >
+            <Button
+              onClick={checkAnswers}
+              className="px-6 font-medium transition-colors bg-violet-500 hover:bg-violet-600 text-white"
+            >
+              Check Answers
+            </Button>
+          </motion.div>
+        )}
       </div>
 
       <div className="space-y-8">
@@ -153,21 +167,26 @@ export default function QuestionFormation({ exercise, onComplete }: QuestionForm
                 Your question
                 <ArrowRight className="w-4 h-4 text-gray-400" />
               </label>
-              <Textarea
-                value={answers[index]}
-                onChange={(e) => handleAnswerChange(index, e.target.value)}
-                className={cn(
-                  "resize-none transition-colors",
-                  showResults && (
-                    answers[index].toLowerCase().trim() === statement.expectedQuestion.toLowerCase().trim()
-                      ? "border-green-500 bg-green-50 dark:bg-green-950/50 focus-visible:ring-green-500"
-                      : "border-red-500 bg-red-50 dark:bg-red-950/50 focus-visible:ring-red-500"
-                  )
-                )}
-                placeholder="Type your question here..."
-                disabled={showResults}
-                rows={2}
-              />
+              {(!showResults || 
+                (showResults && 
+                  answers[index].toLowerCase().trim() === statement.expectedQuestion.toLowerCase().trim()
+                )) && (
+                <Textarea
+                  value={answers[index]}
+                  onChange={(e) => handleAnswerChange(index, e.target.value)}
+                  className={cn(
+                    "resize-none transition-colors",
+                    showResults && (
+                      answers[index].toLowerCase().trim() === statement.expectedQuestion.toLowerCase().trim()
+                        ? "border-green-500 bg-green-50 dark:bg-green-950/50 focus-visible:ring-green-500"
+                        : "border-red-500 bg-red-50 dark:bg-red-950/50 focus-visible:ring-red-500"
+                    )
+                  )}
+                  placeholder="Type your question here..."
+                  disabled={showResults}
+                  rows={2}
+                />
+              )}
               {showResults && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -193,21 +212,6 @@ export default function QuestionFormation({ exercise, onComplete }: QuestionForm
           </motion.div>
         ))}
       </div>
-
-      {!showResults && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex justify-end"
-        >
-          <Button
-            onClick={checkAnswers}
-            className="px-6 font-medium transition-colors bg-violet-500 hover:bg-violet-600 text-white"
-          >
-            Check Answers
-          </Button>
-        </motion.div>
-      )}
     </div>
   );
 }
