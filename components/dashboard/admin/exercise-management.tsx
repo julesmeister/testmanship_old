@@ -20,6 +20,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from "@/components/ui/select";
 import cn from 'classnames';
 import { useExerciseContent } from '@/hooks/useExerciseContent';
@@ -29,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useExerciseFilters } from '@/store/exercise-filters';
+import { any } from 'zod';
 
 interface ExerciseManagementProps {
   supabase: SupabaseClient;
@@ -45,11 +48,13 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [generatedContent, setGeneratedContent] = useState<string>('');
-  const [allExercisesContent, setAllExercisesContent] = useState<string>('');
+  const [allContentsOfThisType, setAllContentsOfThisType] = useState<string>('');
+  const [contentToEdit, setContentToEdit] = useState<string>('');
+  const [contentToEditId, setContentToEditId] = useState<string>('');
   const [activeAccordion, setActiveAccordion] = useState("exercise-types");
   const { selectedLevel, setSelectedLevel } = useExerciseFilters();
   const [topics, setTopics] = useState<TopicData[]>([]);
-  const [activeTab, setActiveTab] = useState<"template" | "generated" | "all">("template");
+  const [activeTab, setActiveTab] = useState<"template" | "generated" | "edit">("template");
   const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
   const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [selectedTopicOfIndividualExercise, setSelectedTopicOfIndividualExercise] = useState<string>('');
@@ -69,15 +74,16 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
       if (exercisesError) throw exercisesError;
 
       // Then get exercise content for the selected topic if any
-      let exerciseContent = [];
+      let exerciseContent: any[] = [];
       if (selectedTopic) {
+        const exerciseIds = exercises
+          .filter(ex => ex.topic === selectedTopic)
+          .map(ex => ex.id);
+
         const { data: content, error: contentError } = await supabase
           .from('exercise_content')
           .select('*')
-          .in('exercise_id', exercises
-            .filter(ex => ex.topic === selectedTopic)
-            .map(ex => ex.id)
-          );
+          .in('exercise_id', exerciseIds);
         
         if (contentError) throw contentError;
         exerciseContent = content || [];
@@ -95,7 +101,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
         } else {
           // Keep the existing id and update exercise_types
           acc[curr.topic].exercise_types = Array.from(new Set([
-            ...acc[curr.topic].exercise_types,
+            ...(acc[curr.topic].exercise_types || []),
             ...(curr.exercise_types || [])
           ]));
         }
@@ -106,9 +112,9 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
       
       // Update exercise content if topic is selected
       if (selectedTopic && exerciseContent.length > 0) {
-        setAllExercisesContent(JSON.stringify(exerciseContent, null, 2));
+        setAllContentsOfThisType(JSON.stringify(exerciseContent, null, 2));
       } else if (selectedTopic) {
-        setAllExercisesContent('[]');
+        setAllContentsOfThisType('[]');
       }
     } catch (error) {
       console.error('Error fetching exercises:', error);
@@ -132,18 +138,18 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const handleSave = async (isUpdate: boolean = false) => {
     try {
       // Validate JSON and topic
-      const contentToSave = activeTab === "all" ? allExercisesContent : generatedContent;
+      const contentToSave = activeTab === "edit" ? allContentsOfThisType : generatedContent;
 
-      if (activeTab !== "all" && !selectedTopicOfIndividualExercise.trim()) {
+      if (activeTab !== "edit" && !selectedTopicOfIndividualExercise.trim()) {
         toast.error('Topic is required');
         return;
       }
-            console.log(topics.find(t => t.topic === selectedTopic)?.id);
+      console.log(contentToEditId);
       await saveContent({
         supabase,
-        exerciseId: topics.find(t => t.topic === selectedTopic)?.id || '',
-        content: JSON.parse(contentToSave),
-        update: activeTab === "all",
+        exerciseId: activeTab === "edit" ? contentToEditId : '',
+        content: activeTab === "edit" ? JSON.parse(contentToEdit) : JSON.parse(contentToSave),
+        update: activeTab === "edit",
         topic: selectedTopicOfIndividualExercise,
         exerciseType: selectedConfig || '', // Default to conjugation-tables if no config selected
       });
@@ -279,16 +285,16 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                   Generated Content
                 </button>
                 <button
-                  onClick={() => setActiveTab("all")}
+                  onClick={() => setActiveTab("edit")}
                   className={cn(
                     "px-4 h-full inline-flex items-center justify-center",
                     "text-sm font-medium transition-colors hover:text-primary",
-                    activeTab === "all"
+                    activeTab === "edit"
                       ? "border-b-2 border-primary text-primary"
                       : "text-muted-foreground"
                   )}
                 >
-                  All Exercises
+                  Edit Exercise
                 </button>
               </div>
             </div>
@@ -349,45 +355,98 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
               />
             )}
 
-            {activeTab === "all" && (
+            {activeTab === "edit" && (
               <div>
+                {/* Select Exercise Individual Topic */}
+                <div className="mb-4 flex items-center gap-4">
+                  <Select 
+                    value={selectedTopicOfIndividualExercise} 
+                    onValueChange={(topic) => {
+                      setSelectedTopicOfIndividualExercise(topic);
+                      
+                      // Filter and set contentToEdit when a topic is selected
+                      if (allContentsOfThisType && allContentsOfThisType.trim() !== '') {
+                        try {
+                          const parsedContents = JSON.parse(allContentsOfThisType);
+                          const filteredContent = parsedContents.filter(
+                            (content) => content.topic === topic
+                          );
+                          
+                          // If filtered content exists, set it to contentToEdit
+                          if (filteredContent.length > 0) {
+                            setSelectedConfig(filteredContent[0].exercise_type);
+                            setContentToEditId(filteredContent[0].id);
+                            setContentToEdit(JSON.stringify(filteredContent[0].content, null, 2));
+                          } else {
+                            setContentToEdit('');
+                            setContentToEditId('');
+                          }
+                        } catch (error) {
+                          console.error('Error filtering content:', error);
+                          setContentToEdit('');
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="bg-background text-foreground">
+                      <SelectValue 
+                        placeholder="Select a topic to edit" 
+                        className="text-muted-foreground"
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-zinc-900">
+                      <SelectGroup>
+                        {Array.from(new Set(
+                          allContentsOfThisType && allContentsOfThisType.trim() !== '' 
+                            ? JSON.parse(allContentsOfThisType).map(content => 
+                                content.topic
+                              )
+                            : []
+                        )).map((topic, index) => (
+                          topic ? (
+                            <SelectItem 
+                              key={index} 
+                              value={topic as string}
+                              className="text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            >
+                              {topic as string}
+                            </SelectItem>
+                          ) : null
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  {selectedTopicOfIndividualExercise && (
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => setSelectedTopicOfIndividualExercise('')}
+                    >
+                      Clear Selection
+                    </Button>
+                  )}
+                </div>
+
                 <Editor
                   key="all-exercises-editor"
                   height="700px"
                   defaultLanguage="json"
-                  value={allExercisesContent}
-                  onChange={(value) => setAllExercisesContent(value || '')}
+                  value={contentToEdit}
+                  onChange={(value) => {
+                    if (value) {
+                      try {
+                        setContentToEdit(value);
+                      } catch (error) {
+                        console.error('Error parsing value:', error);
+                      }
+                    }
+                  }}
+                  theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    fontSize: 14,
-                    lineNumbers: "on",
-                    renderLineHighlight: "none",
-                    occurrencesHighlight: false,
-                    tabSize: 2,
-                    wordWrap: "on",
-                    wrappingIndent: "indent",
-                    theme: "vs-dark",
-                    contextmenu: false,
-                    quickSuggestions: false,
-                    parameterHints: { enabled: false },
-                    suggestOnTriggerCharacters: false,
-                    acceptSuggestionOnEnter: "off",
-                    tabCompletion: "off",
-                    wordBasedSuggestions: false,
-                    readOnly: false
-                  }}
-                  beforeMount={(monaco) => {
-                    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-                      validate: true,
-                      allowComments: false,
-                      schemas: [],
-                    });
+                    automaticLayout: true,
                   }}
                 />
-                <p className="text-xs text-muted-foreground">
-                  This shows all exercises for the selected topic
-                </p>
+                
               </div>
             )}
           </div>
@@ -451,7 +510,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                   >
                     Topic
                   </Label>
-                  {activeTab !== "all" && (
+                  {activeTab !== "edit" && (
                     <span className="text-xs text-destructive">
                       Required
                     </span>
@@ -463,7 +522,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                   className="text-sm transition-colors placeholder:text-muted-foreground/60"
                   value={selectedTopicOfIndividualExercise}
                   onChange={(e) => setSelectedTopicOfIndividualExercise(e.target.value)}
-                  required={activeTab !== "all"}
+                  required={activeTab !== "edit"}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Specify the topic or subject area for this exercise.
@@ -504,7 +563,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
             </div>
               <Button
                 className="w-full"
-                onClick={() => handleSave(activeTab === "all" ? false: true)}
+                onClick={() => handleSave(activeTab === "edit")}
                 disabled={!selectedConfig || isSaving}
               >
                 <Save className="w-4 h-4 mr-2" />
