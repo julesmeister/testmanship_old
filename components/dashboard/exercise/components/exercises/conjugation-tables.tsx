@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,17 @@ import { cn } from '@/lib/utils';
 import type { ConjugationTablesProps } from '@/types/exercises';
 
 export default function ConjugationTables({ exercise, onComplete }: ConjugationTablesProps) {
-  const [answers, setAnswers] = useState<string[]>(new Array(exercise.conjugations.length).fill(''));
+  const [answers, setAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [randomizedConjugations, setRandomizedConjugations] = useState<typeof exercise.conjugations>([]);
+
+  // Initialize randomized conjugations on mount
+  useEffect(() => {
+    const shuffled = [...exercise.conjugations]
+      .sort(() => Math.random() - 0.5);
+    setRandomizedConjugations(shuffled);
+    setAnswers(new Array(shuffled.length).fill(''));
+  }, [exercise.conjugations]);
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];
@@ -21,7 +30,7 @@ export default function ConjugationTables({ exercise, onComplete }: ConjugationT
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (index < exercise.conjugations.length - 1) {
+      if (index < randomizedConjugations.length - 1) {
         // If not the last input, focus the next one
         const nextInput = document.querySelector(`input[data-index="${index + 1}"]`) as HTMLInputElement;
         if (nextInput) nextInput.focus();
@@ -40,7 +49,7 @@ export default function ConjugationTables({ exercise, onComplete }: ConjugationT
   const checkAnswers = () => {
     setShowResults(true);
     
-    const results = exercise.conjugations.map((conjugation, index) => {
+    const results = randomizedConjugations.map((conjugation, index) => {
       const answer = answers[index];
       if (!answer) {
         return false;
@@ -101,7 +110,7 @@ export default function ConjugationTables({ exercise, onComplete }: ConjugationT
           <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-100 dark:border-violet-800/30">
             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-violet-100 dark:bg-violet-800/50">
               <span className="text-sm font-semibold text-violet-700 dark:text-violet-400">
-                {exercise.conjugations.length}
+                {randomizedConjugations.length}
               </span>
             </div>
             <span className="text-sm text-violet-700 dark:text-violet-400">
@@ -112,7 +121,7 @@ export default function ConjugationTables({ exercise, onComplete }: ConjugationT
       </motion.div>
 
       <div className="grid gap-4">
-        {exercise.conjugations.map((conjugation, index) => (
+        {randomizedConjugations.map((conjugation, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, x: -20 }}
