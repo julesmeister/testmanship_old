@@ -147,12 +147,12 @@ export default function GuessTheIdiom({ exercise, onComplete }: GuessTheIdiomPro
                 </div>
                 
                 {idiom.context && (
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start space-x-2 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                     <Info 
                       className="w-4 h-4 text-gray-500 dark:text-gray-400 
                       flex-shrink-0 opacity-70 mt-1"
                     />
-                    <p className="text-gray-600 mb-3">
+                    <p className="text-gray-600 dark:text-gray-300 mb-0">
                        {idiom.context}
                     </p>
                   </div>
