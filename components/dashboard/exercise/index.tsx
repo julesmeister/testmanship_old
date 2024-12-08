@@ -1,9 +1,9 @@
 "use client";
 
+import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/auth-helpers-nextjs';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import DashboardLayout from '@/components/layout';
 import ExerciseOverview from './components/overview';
 import { useUserProgress } from '@/hooks/useUserProgress';
@@ -21,7 +21,7 @@ interface Props {
 
 export default function Exercise({ title, description, user, userDetails }: Props) {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(true);
 
   const [weakestSkills, setWeakestSkills] = useState<string[]>([]);
@@ -44,7 +44,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
 
   const { updateLevel } = useUserLevel({ user, setLevel: setDifficulty, initialLevel: difficulty || 'A1' });
 
-  useUserProgress(supabase, user?.id as string, {
+  const { clearCache } = useUserProgress(supabase, user?.id as string, {
     setWeakestSkills,
     setUserProgressId,
     setUpdatedAt,

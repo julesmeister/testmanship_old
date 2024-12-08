@@ -131,7 +131,6 @@ export default function ExerciseDetails({
       });
       setShowResults(false);
     }
-    console.log(exerciseContent);
   }, [exercise?.id, selectedType, supabase]);
 
   // Memoize the filtered exercises and random index
@@ -169,7 +168,6 @@ export default function ExerciseDetails({
                 // Only allow changing to a different type, not deselecting
                 if (type !== selectedType) {
                   setSelectedType(type);
-                  console.log(filteredContent);
                 }
               }}
               className={cn(
