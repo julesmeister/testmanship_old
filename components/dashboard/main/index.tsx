@@ -4,10 +4,7 @@
 import MainChart from '@/components/dashboard/main/cards/MainChart';
 import MainDashboardTable from '@/components/dashboard/main/cards/MainDashboardTable';
 import DashboardLayout from '@/components/layout';
-import { User } from '@supabase/supabase-js';
-import { UserDetails } from '@/types/types';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
-import { redirect } from 'next/navigation';
 import { useSupabase } from '@/app/supabase-provider';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';

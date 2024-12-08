@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { UserDetails, UserSession } from '@/types/types';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { useGradeTheExercise } from '@/hooks/useGradeTheExercise';
 import { useExerciseAccepted } from '@/hooks/useExerciseAccepted';
@@ -21,7 +21,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
   const [exercisesTaken, setExerciseTaken] = useState<number | 0>(0);
   const [difficulty, setDifficulty] = useState<string | null>(null);
 
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const { clearCache: clearUserProgressCache } = useUserProgress(supabase, user.id, {
     setWeakestSkills,
