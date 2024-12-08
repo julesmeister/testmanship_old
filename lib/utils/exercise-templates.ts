@@ -1,9 +1,9 @@
-type ExerciseType = 
+export type ExerciseType =
   | 'conjugation-tables'
-  | 'dialogue-completion'
+  | 'dialogue-sorting'
   | 'drag-and-drop'
   | 'fill-in-the-blanks'
-  | 'gap-fill'
+  | 'guess-the-idiom'
   | 'matching'
   | 'multiple-choice'
   | 'question-formation'
@@ -57,6 +57,28 @@ const interfaceStructures = {
       word: '',
       position: 0
     }]
+  },
+  'guess-the-idiom': {
+    exercise_type: 'guess-the-idiom',
+    title: '',
+    description: '',
+    idioms: [
+      {
+        id: '',
+        phrase: '',
+        meaning: '',
+        context: '',
+        question: '',
+        options: [
+          {
+            text: '',
+            isCorrect: false
+          }
+        ],
+        explanation: '',
+        hint: ''
+      }
+    ]
   },
   'matching': {
     exercise_type: 'matching',

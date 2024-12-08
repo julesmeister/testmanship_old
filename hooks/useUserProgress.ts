@@ -39,12 +39,17 @@ export const useUserProgress = (
   };
 
   // Function to calculate current streak based on last activity date
-  const calculateCurrentStreak = (lastActiveDate: Date | null, currentStreak: number): number => {
+  const calculateCurrentStreak = (lastActiveDate: Date | string | null, currentStreak: number): number => {
     if (!lastActiveDate) return currentStreak;
+
+    // Convert to Date if it's a string
+    const dateObj = lastActiveDate instanceof Date 
+      ? lastActiveDate 
+      : new Date(lastActiveDate);
 
     const currentDate = new Date();
     const daysSinceLastActivity = Math.floor(
-      (currentDate.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24)
+      (currentDate.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24)
     );
 
     // Reset streak if more than 1 day has passed since last activity

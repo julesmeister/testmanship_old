@@ -23,7 +23,11 @@ import {
   Scissors, 
   CheckSquare, 
   Blocks,
-  RotateCcw
+  RotateCcw,
+  Languages,
+  MessageCircleQuestion,
+  Lightbulb,
+  Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFetchExerciseContent } from '@/hooks/useFetchExerciseContent';
@@ -37,7 +41,7 @@ import DialogueSorting from './exercises/dialogue-sorting';
 import MultipleChoice from './exercises/multiple-choice';
 import SentenceTransformation from './exercises/sentence-transformation';
 import DragAndDrop from './exercises/drag-and-drop';
-import GapFill from './exercises/gap-fill';
+import GuessTheIdiom from './exercises/guess-the-idiom';
 import WordSorting from './exercises/word-sorting';
 import SentenceReordering from './exercises/sentence-reordering';
 import RolePlaying from './exercises/role-playing';
@@ -87,8 +91,8 @@ const getExerciseTypeIcon = (type: string) => {
       return <ArrowLeftRight className={iconClass} />;
     case 'drag-and-drop':
       return <GripVertical className={iconClass} />;
-    case 'gap-fill':
-      return <Square className={iconClass} />;
+    case 'guess-the-idiom':
+      return <Languages className={iconClass} />;
     case 'word-sorting':
       return <SortAsc className={iconClass} />;
     case 'sentence-reordering':
@@ -291,8 +295,8 @@ export default function ExerciseDetails({
                     return <SentenceTransformation exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'drag-and-drop':
                     return <DragAndDrop exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
-                  case 'gap-fill':
-                    return <GapFill exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
+                  case 'guess-the-idiom':
+                    return <GuessTheIdiom exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'word-sorting':
                     return <WordSorting exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'sentence-reordering':

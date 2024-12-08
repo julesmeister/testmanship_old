@@ -54,19 +54,28 @@ export interface FillInTheBlanksProps {
     onComplete: (score: number, total: number) => void;
 }
 
-export interface GapFillProps {
+export interface GuessTheIdiomProps {
     exercise: {
         id: string;
-        text: string;
-        gaps: {
+        title: string;
+        description: string;
+        idioms: {
             id: string;
-            answer: string;
+            phrase: string;
+            meaning: string;
+            context: string;
+            question: string;
+            options: {
+                text: string;
+                isCorrect: boolean;
+            }[];
+            explanation: string;
             hint?: string;
-            acceptableAnswers?: string[];
         }[];
     };
     onComplete: (score: number, total: number) => void;
 }
+
 
 export interface MatchingProps {
     exercise: {

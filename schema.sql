@@ -502,7 +502,7 @@ CREATE TYPE exercise_type AS ENUM (
     'multiple-choice',
     'sentence-transformation',
     'drag-and-drop',
-    'gap-fill',
+    'guess-the-idiom',
     'word-sorting',
     'sentence-reordering',
     'role-playing',

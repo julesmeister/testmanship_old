@@ -78,7 +78,6 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
         const exerciseIds = exercises
           .filter(ex => ex.topic === selectedTopic)
           .map(ex => ex.id);
-          console.log(exerciseIds);
 
         const { data: content, error: contentError } = await supabase
           .from('exercise_content')
@@ -156,9 +155,6 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
       const exerciseIds = topics
         .filter(topic => topic.topic === selectedTopic)
         .map(topic => topic.id);
-
-      console.log('Exercise IDs:', exerciseIds);
-      console.log('Content to Edit ID:', contentToEditId);
 
       await saveContent({
         supabase,
