@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { exerciseCache, CachedExerciseContent } from '@/lib/db/exercise-cache';
 
 interface ExerciseContent {
   id: string;
@@ -21,9 +22,33 @@ export const useFetchExerciseContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [exerciseContent, setExerciseContent] = useState<ExerciseContent[]>([]);
 
-  const fetchContent = async ({ supabase, exerciseId, exerciseType }: FetchParams) => {
+  const fetchContent = useCallback(async ({ supabase, exerciseId, exerciseType }: FetchParams) => {
     setIsLoading(true);
     try {
+      // First, check cache
+      const cachedContent = await exerciseCache.getCachedContent(
+        exerciseId, 
+        exerciseType!.toLowerCase().replace(/\s+/g, '-')
+      );
+
+      if (cachedContent.length > 0) {
+        console.log(`🟢 Cache Hit: Retrieved ${cachedContent.length} exercise content items for exercise ${exerciseId}`, {
+          exerciseId,
+          exerciseType,
+          cacheSize: cachedContent.length,
+          cacheTimestamp: new Date(cachedContent[0].cached_at).toISOString()
+        });
+        setExerciseContent(cachedContent as ExerciseContent[]);
+        setIsLoading(false);
+        return { success: true, data: cachedContent, fromCache: true };
+      }
+
+      console.log(`🔵 Cache Miss: No valid cache found for exercise ${exerciseId}`, {
+        exerciseId,
+        exerciseType
+      });
+
+      // If no valid cache, fetch from Supabase
       let query = supabase
         .from('exercise_content')
         .select('*')
@@ -33,14 +58,34 @@ export const useFetchExerciseContent = () => {
       const { data, error } = await query;
 
       if (error) {
+        console.error(`🔴 Fetch Error: Failed to retrieve exercise content`, {
+          exerciseId,
+          exerciseType,
+          errorMessage: error.message
+        });
         toast.error('Error fetching exercise content', {
           id: 'fetch-error',
         });
         return { success: false, data: null };
       }
-      console.log('Fetched exercise content:', data);
+
+      // Cache the fetched data
+      if (data && data.length > 0) {
+        await exerciseCache.cacheContent(data as CachedExerciseContent[]);
+        console.log(`🟠 Cache Update: Stored ${data.length} exercise content items`, {
+          exerciseId,
+          exerciseType,
+          itemCount: data.length
+        });
+      }
+
+      console.log(`🟣 Fresh Fetch: Retrieved ${data?.length || 0} exercise content items`, {
+        exerciseId,
+        exerciseType,
+        itemCount: data?.length || 0
+      });
       setExerciseContent(data || []);
-      return { success: true, data };
+      return { success: true, data, fromCache: false };
     } catch (error) {
       toast.error('Unexpected error occurred', {
         id: 'unexpected-error',
@@ -49,11 +94,17 @@ export const useFetchExerciseContent = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Optional: Add a method to clear expired cache periodically
+  const clearExpiredCache = useCallback(async () => {
+    await exerciseCache.clearExpiredCache();
+  }, []);
 
   return {
     isLoading,
     exerciseContent,
     fetchContent,
+    clearExpiredCache,
   };
 };

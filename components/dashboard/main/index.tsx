@@ -44,7 +44,12 @@ export default function Main({user, userDetails}) {
           <MainChart user={user} userDetails={userDetails} session={session} />
         </div>
         <div className="w-full rounded-lg">
-          <MainDashboardTable user={user} userDetails={userDetails} session={session} />
+          <MainDashboardTable 
+            user={user} 
+            userDetails={userDetails} 
+            session={session} 
+            supabase={supabase} 
+          />
         </div>
       </div>
     </DashboardLayout>

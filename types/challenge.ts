@@ -26,3 +26,19 @@ export interface Challenge {
   created_at?: string;
   created_by: string;
 }
+
+export interface ChallengeAttempt {
+  id: string;
+  challenge_id: string;
+  user_id: string;
+  title: string;
+  difficulty: string;
+  performance: number;
+  paragraphs: number;
+  word_count: number;
+  completed_at: Date;
+  time_spent: number;
+  format: string;
+  content: string;
+  feedback?: string;
+}
