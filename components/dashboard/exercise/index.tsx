@@ -9,9 +9,12 @@ import ExerciseOverview from './components/overview';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import ExerciseList from './components/exercise-list';
-import ExerciseDetails from './components/exercise-details'; 
+import ExerciseDetails from './components/exercise-details';
 import ExercisePlaceholder from './components/exercise-placeholder'; // Changed to default import
 import { ExerciseGrade } from './components/exercise-grade'; // Changed to named import
+import { useExercises } from '@/hooks/useExercises';
+import { exerciseCacheByDifficulty } from '@/lib/db/exercise-cache-by-difficulty';
+
 interface Props {
   title?: string;
   description?: string;
@@ -31,16 +34,9 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   const [exercisesTaken, setExercisesTaken] = useState(0);
   const [difficulty, setDifficulty] = useState<string | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
-  const [exercises, setExercises] = useState<Array<{
-    id: string;
-    title: string;
-    description: string;
-    completed?: boolean;
-    score?: number;
-  }>>([]);
-  const [showResults, setShowResults] = useState(false); 
-  const [correctCount, setCorrectCount] = useState(0); 
-  const [totalQuestions, setTotalQuestions] = useState(0); 
+  const [showResults, setShowResults] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
 
   const { updateLevel } = useUserLevel({ user, setLevel: setDifficulty, initialLevel: difficulty || 'A1' });
 
@@ -53,61 +49,25 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setDifficulty,
   });
 
+  const { exercises: fetchedExercises, isLoading: exercisesLoading } = useExercises({
+    supabase,
+    user: user ?? null,
+    difficulty: difficulty || 'A1'
+  });
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+        // await exerciseCacheByDifficulty.clearAllExerciseCache();
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching exercise data:', error);
+        console.error('Error clearing exercise cache:', error);
         setIsLoading(false);
       }
     };
 
     fetchInitialData();
   }, []);
-
-  useEffect(() => {
-    const fetchExercises = async () => {
-      try {
-        const { data: exercisesData, error } = await supabase
-          .from('exercises')
-          .select('*')
-          .eq('difficulty_level', difficulty)
-          .order('order_index', { ascending: true });
-
-        if (error) throw error;
-
-        // Get user progress for completed exercises
-        const { data: userProgress, error: progressError } = await supabase
-          .from('user_exercise_progress')
-          .select('exercise_id, score')
-          .eq('user_id', user?.id);
-
-        if (progressError) throw progressError;
-
-        // Map database exercises to component format
-        const formattedExercises = exercisesData.map(exercise => ({
-          id: exercise.id,
-          title: exercise.topic,
-          description: exercise.description,
-          exercise_types: exercise.exercise_types,
-          content: exercise.content,
-          completed: userProgress?.some(progress => progress.exercise_id === exercise.id) ?? false,
-          score: userProgress?.find(progress => progress.exercise_id === exercise.id)?.score
-        }));
-
-        setExercises(formattedExercises);
-      } catch (error) {
-        console.error('Error fetching exercises:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchExercises();
-    }
-  }, [user, supabase, difficulty]);
 
   const smoothScrollToTop = () => {
     setTimeout(() => {
@@ -152,12 +112,12 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     return null;
   }
 
-  const selectedExercise = exercises.find(exercise => exercise.id === selectedExerciseId);
+  const selectedExercise = fetchedExercises.find(exercise => exercise.id === selectedExerciseId);
 
   return (
     <DashboardLayout
-      user={user} 
-      userDetails={userDetails} 
+      user={user}
+      userDetails={userDetails}
       title={title || 'Exercises'}
       description={description || "Practice your language skills with targeted exercises."}>
       <div className="grid gap-6">
@@ -172,38 +132,38 @@ export default function Exercise({ title, description, user, userDetails }: Prop
         {/* Exercise Grading will go here */}
       </div>
       <div className="mt-6 grid md:grid-cols-5 gap-6">
-          <div className="md:col-span-1 space-y-6">
-            <ExerciseList
-              exercises={exercises}
-              selectedId={selectedExerciseId}
-              onSelect={handleExerciseSelect}
-            />
-          </div>
+        <div className="md:col-span-1 space-y-6">
+          <ExerciseList
+            exercises={fetchedExercises}
+            selectedId={selectedExerciseId}
+            onSelect={handleExerciseSelect}
+          />
+        </div>
 
-          <div className="md:col-span-3">
-            {selectedExerciseId ? (
-              <ExerciseDetails
-                exerciseId={selectedExerciseId}
-                exercise={exercises.find(exercise => exercise.id === selectedExerciseId)}
-                onComplete={handleExerciseComplete}
-                onStart={() => console.log('Starting exercise...')}
-                onContinue={() => console.log('Continuing exercise...')}
-                supabase={supabase}
-                setShowResults={setShowResults}
-              />
-            ) : (
-              <ExercisePlaceholder />
-            )}
-          </div>
-          {/* Grading Section */}
-          <div className="mt-6" id="grading-section">
-            <ExerciseGrade
-              showResults={showResults}
-              correctCount={correctCount}
-              totalQuestions={totalQuestions}
-              onTryAgain={handleTryAgain}
+        <div className="md:col-span-3">
+          {selectedExerciseId ? (
+            <ExerciseDetails
+              exerciseId={selectedExerciseId}
+              exercise={fetchedExercises.find(exercise => exercise.id === selectedExerciseId)}
+              onComplete={handleExerciseComplete}
+              onStart={() => console.log('Starting exercise...')}
+              onContinue={() => console.log('Continuing exercise...')}
+              supabase={supabase}
+              setShowResults={setShowResults}
             />
-          </div>
+          ) : (
+            <ExercisePlaceholder />
+          )}
+        </div>
+        {/* Grading Section */}
+        <div className="mt-6" id="grading-section">
+          <ExerciseGrade
+            showResults={showResults}
+            correctCount={correctCount}
+            totalQuestions={totalQuestions}
+            onTryAgain={handleTryAgain}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

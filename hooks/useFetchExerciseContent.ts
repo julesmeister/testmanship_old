@@ -96,15 +96,21 @@ export const useFetchExerciseContent = () => {
     }
   }, []);
 
-  // Optional: Add a method to clear expired cache periodically
-  const clearExpiredCache = useCallback(async () => {
-    await exerciseCache.clearExpiredCache();
+  // Manual cache clearing method
+  const clearCache = useCallback(async (exerciseId?: string, exerciseType?: string) => {
+    if (exerciseId && exerciseType) {
+      // Clear specific exercise cache
+      await exerciseCache.clearSpecificCache(exerciseId, exerciseType);
+    } else {
+      // Clear entire exercise cache
+      await exerciseCache.clearAllCache();
+    }
   }, []);
 
   return {
     isLoading,
     exerciseContent,
     fetchContent,
-    clearExpiredCache,
+    clearCache,
   };
 };

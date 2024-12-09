@@ -4,24 +4,13 @@ import { motion } from 'framer-motion';
 import { BookOpen, ChevronRight, Trophy, CheckCircle2, BookOpenCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextFit } from '@/hooks/useTextFit';
+import { Exercise } from '@/hooks/useExercises';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-interface Exercise {
-  id: string;
-  title: string;
-  description: string;
-  duration: number;
-  difficulty: string;
-  completed?: boolean;
-  score?: number;
-  progress?: number;
-  objectives: string[];
-}
 
 interface ExerciseListProps {
   exercises: Exercise[];
@@ -70,7 +59,9 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
       </div>
 
       <div className="space-y-3">
-        {exercises.map((exercise, index) => (
+        {exercises
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+          .map((exercise, index) => (
           <motion.div
             key={exercise.id}
             initial={{ opacity: 0, y: 20 }}
@@ -97,7 +88,7 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                             ? "text-violet-700 dark:text-violet-300" 
                             : "text-gray-900 group-hover:text-violet-600 dark:text-gray-100 dark:group-hover:text-violet-300"
                         )}>
-                          {exercise.title}
+                          {exercise.topic}
                         </h4>
                         <div className="flex items-center gap-1 text-sm">
                           {exercise.completed && exercise.score && (

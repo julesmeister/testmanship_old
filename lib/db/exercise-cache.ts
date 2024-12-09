@@ -21,14 +21,9 @@ export class ExerciseCacheDB extends Dexie {
     this.exerciseContent = this.table('exerciseContent');
   }
 
-  // Cache is valid for 1 hour
-  private static CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-
   async getCachedContent(exerciseId: string, exerciseType: string): Promise<CachedExerciseContent[]> {
-    const now = Date.now();
     return this.exerciseContent
       .where({ exercise_id: exerciseId, exercise_type: exerciseType })
-      .and(item => now - item.cached_at < ExerciseCacheDB.CACHE_DURATION)
       .toArray();
   }
 
@@ -40,12 +35,19 @@ export class ExerciseCacheDB extends Dexie {
     await this.exerciseContent.bulkPut(cachedContent);
   }
 
-  async clearExpiredCache() {
-    const now = Date.now();
+  async clearSpecificCache(exerciseId: string, exerciseType: string) {
     await this.exerciseContent
-      .where('cached_at')
-      .below(now - ExerciseCacheDB.CACHE_DURATION)
+      .where({ exercise_id: exerciseId, exercise_type: exerciseType })
       .delete();
+  }
+
+  async clearAllCache() {
+    await this.exerciseContent.clear();
+  }
+
+  async clearExpiredCache() {
+    // Kept for backwards compatibility, but does nothing
+    return;
   }
 }
 
