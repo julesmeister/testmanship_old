@@ -87,19 +87,42 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
     setIsAnimating(true);
     setTimeout(() => {
       setShowResults(true);
-      const correct = safeExercise.blanks.filter((blank, index) => 
-        blank.word.toLowerCase().trim() === answers[index].toLowerCase().trim()
-      );
+      console.log('Safe Exercise Blanks:', safeExercise.blanks);
+      console.log('User Answers:', answers);
 
-      setCorrectAnswers(correct.map(blank => blank.word));
-      const score = Math.round(
-        (safeExercise.blanks?.reduce((acc, blank, index) => {
-          return acc + (blank.word.toLowerCase() === answers[index].toLowerCase() ? 1 : 0);
-        }, 0) ??
-          0) /
-        (safeExercise.blanks?.length ?? 0)
-      );
-      onComplete?.(score, safeExercise.blanks.length);
+      const scoreDetails = safeExercise.blanks?.map((blank, index) => {
+        const correctWord = blank.word.toLowerCase().trim();
+        const userAnswer = answers[index].toLowerCase().trim();
+        const isCorrect = correctWord === userAnswer;
+        
+        return {
+          index,
+          correctWord,
+          userAnswer,
+          isCorrect
+        };
+      }) || [];
+
+      console.log('Score Details:', scoreDetails);
+
+      const score = scoreDetails.reduce((acc, detail) => {
+        return acc + (detail.isCorrect ? 1 : 0);
+      }, 0);
+      
+      const totalBlanks = safeExercise.blanks?.length ?? 0;
+      const scorePercentage = totalBlanks > 0 
+        ? Math.round((score / totalBlanks) * 100)
+        : 0;
+
+      console.log('Calculated Score:', {
+        score,
+        totalBlanks,
+        scorePercentage
+      });
+
+      const correct = scoreDetails.filter(detail => detail.isCorrect).map(detail => detail.correctWord);
+      setCorrectAnswers(correct);
+      onComplete?.(scorePercentage, totalBlanks);
     }, 300);
   }, [safeExercise.blanks, answers, onComplete]);
 
