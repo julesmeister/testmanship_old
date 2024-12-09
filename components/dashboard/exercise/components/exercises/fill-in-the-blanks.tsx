@@ -7,7 +7,16 @@ import type { FillInTheBlanksProps } from '@/types/exercises';
 import { cn } from '@/lib/utils';
 
 export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlanksProps) {
-  const [answers, setAnswers] = useState<string[]>(new Array(exercise.blanks.length).fill(''));
+  // Add null checks and provide default values
+  const safeExercise = exercise ?? {
+    id: 'default-fill-in-the-blanks',
+    sentence: '',
+    blanks: []
+  };
+
+  const [answers, setAnswers] = useState<string[]>(
+    new Array(safeExercise.blanks?.length ?? 0).fill('')
+  );
   const [showResults, setShowResults] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentBlankIndex, setCurrentBlankIndex] = useState<number | null>(null);
@@ -27,6 +36,8 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
   }, [colors]);
 
   const handleAnswerChange = (index: number, value: string) => {
+    if (index < 0 || index >= (safeExercise.blanks?.length ?? 0)) return;
+
     const newAnswers = [...answers];
     newAnswers[index] = value;
     setAnswers(newAnswers);
@@ -64,29 +75,46 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
   };
 
   const choices = useMemo(() => {
-    return exercise.blanks.map(blank => blank.word).sort(() => Math.random() - 0.5);
-  }, [exercise.blanks]);
+    return safeExercise.blanks?.map(blank => blank.word).sort(() => Math.random() - 0.5) ?? [];
+  }, [safeExercise.blanks]);
 
-  const checkAnswers = () => {
+  const checkAnswers = useCallback(() => {
+    if (!safeExercise.blanks?.length) {
+      onComplete?.(0, 0);
+      return;
+    }
+
     setIsAnimating(true);
     setTimeout(() => {
       setShowResults(true);
-      const correct = exercise.blanks.map(blank => blank.word);
-      setCorrectAnswers(correct);
-      const score = Math.round(
-        (exercise.blanks.reduce((acc, blank, index) => {
-          return acc + (blank.word.toLowerCase() === answers[index].toLowerCase() ? 1 : 0);
-        }, 0) /
-          exercise.blanks.length) *
-        100
+      const correct = safeExercise.blanks.filter((blank, index) => 
+        blank.word.toLowerCase().trim() === answers[index].toLowerCase().trim()
       );
-      onComplete(score, exercise.blanks.length);
+
+      setCorrectAnswers(correct.map(blank => blank.word));
+      const score = Math.round(
+        (safeExercise.blanks?.reduce((acc, blank, index) => {
+          return acc + (blank.word.toLowerCase() === answers[index].toLowerCase() ? 1 : 0);
+        }, 0) ??
+          0) /
+        (safeExercise.blanks?.length ?? 0)
+      );
+      onComplete?.(score, safeExercise.blanks.length);
     }, 300);
-  };
+  }, [safeExercise.blanks, answers, onComplete]);
+
+  // Render method to handle empty exercise case
+  if (!safeExercise.blanks?.length) {
+    return (
+      <div className="text-center text-gray-500 p-6">
+        No blanks available for this exercise.
+      </div>
+    );
+  }
 
   const renderSentenceWithBlanks = () => {
     // Split by one or more underscores
-    const parts = exercise.sentence.split(/(_+)/g);
+    const parts = safeExercise.sentence.split(/(_+)/g);
     let blankIndex = 0;
 
     return (
@@ -121,13 +149,13 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
                     >
                       {answer}
                     </motion.button>
-                    {showResults && answer.toLowerCase() !== exercise.blanks[currentBlankIndex].word.toLowerCase() && (
+                    {showResults && answer.toLowerCase() !== safeExercise.blanks?.[currentBlankIndex].word.toLowerCase() && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: -50 }}
                         className="absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded"
                       >
-                        {exercise.blanks[currentBlankIndex].word}
+                        {safeExercise.blanks?.[currentBlankIndex].word}
                       </motion.div>
                     )}
                   </motion.div>

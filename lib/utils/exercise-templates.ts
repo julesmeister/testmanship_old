@@ -12,6 +12,7 @@ export type ExerciseType =
   | 'sentence-reordering'
   | 'sentence-splitting'
   | 'sentence-transformation'
+  | 'spot-the-mistake'
   | 'word-building'
   | 'word-sorting';
 
@@ -161,6 +162,15 @@ const interfaceStructures = {
       hint: ''
     }],
     instruction: ''
+  },
+  'spot-the-mistake': {
+    exercise_type: 'spot-the-mistake',
+    paragraph: '',
+    focus_words: [{
+      word: '',
+      position: 0,
+      isMistake: false
+    }]
   },
   'word-building': {
     exercise_type: 'word-building',

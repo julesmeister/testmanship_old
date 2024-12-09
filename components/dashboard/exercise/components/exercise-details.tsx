@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFetchExerciseContent } from '@/hooks/useFetchExerciseContent';
+import { exerciseCache } from '@/lib/db/exercise-cache';
 
 // Import exercise components
 import FillInTheBlanks from './exercises/fill-in-the-blanks';
@@ -41,7 +42,7 @@ import DialogueSorting from './exercises/dialogue-sorting';
 import MultipleChoice from './exercises/multiple-choice';
 import SentenceTransformation from './exercises/sentence-transformation';
 import DragAndDrop from './exercises/drag-and-drop';
-import GuessTheIdiom from './exercises/guess-the-idiom';
+import GuessTheIdiom from './exercises/spot-the-mistake';
 import WordSorting from './exercises/word-sorting';
 import SentenceReordering from './exercises/sentence-reordering';
 import RolePlaying from './exercises/role-playing';
@@ -50,6 +51,7 @@ import SentenceCorrection from './exercises/sentence-correction';
 import WordBuilding from './exercises/word-building';
 import EmptyExercise from './exercises/empty-exercise';
 import { SupabaseClient } from '@supabase/supabase-js';
+import SpotTheMistake from './exercises/spot-the-mistake';
 
 interface ExerciseDetailsProps {
   exerciseId: string;
@@ -91,7 +93,7 @@ const getExerciseTypeIcon = (type: string) => {
       return <ArrowLeftRight className={iconClass} />;
     case 'drag-and-drop':
       return <GripVertical className={iconClass} />;
-    case 'guess-the-idiom':
+    case 'spot-the-mistake':
       return <Languages className={iconClass} />;
     case 'word-sorting':
       return <SortAsc className={iconClass} />;
@@ -127,6 +129,8 @@ export default function ExerciseDetails({
   const { isLoading, exerciseContent, fetchContent } = useFetchExerciseContent();
 
   useEffect(() => {
+    // clear cache when exerciseId changes
+    // exerciseCache.clearSpecificCache(exerciseId, selectedType);
     if (exercise?.id && selectedType) {
       fetchContent({
         supabase,
@@ -295,8 +299,8 @@ export default function ExerciseDetails({
                     return <SentenceTransformation exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'drag-and-drop':
                     return <DragAndDrop exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
-                  case 'guess-the-idiom':
-                    return <GuessTheIdiom exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
+                  case 'spot-the-mistake':
+                    return <SpotTheMistake exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'word-sorting':
                     return <WordSorting exercise={exerciseContentJson} onComplete={exerciseContentJson.onComplete} />;
                   case 'sentence-reordering':

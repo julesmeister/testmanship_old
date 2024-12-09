@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Check, X, Info } from 'lucide-react';
+import { Check, X, Info, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MultipleChoiceProps } from '@/types/exercises';
 
@@ -103,93 +100,51 @@ export default function MultipleChoice({ exercise, onComplete }: MultipleChoiceP
             </div>
           </div>
 
-          <RadioGroup
-            value={answers[questionIndex].toString()}
-            onValueChange={(value) => handleAnswerChange(questionIndex, parseInt(value))}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {question.options.map((option, optionIndex) => (
               <div 
-                key={optionIndex} 
+                key={optionIndex}
                 className={cn(
-                  "relative flex items-center",
-                  "p-4 rounded-lg transition-all duration-200",
-                  "border-2 bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50",
-                  !showResults && "hover:border-violet-500/50 hover:from-violet-50 hover:to-violet-50/50 dark:hover:from-violet-900/10 dark:hover:to-violet-900/5",
-                  showResults ? (
-                    optionIndex === question.correctAnswer
-                      ? "border-green-500 from-green-50 to-green-50/50 dark:from-green-900/20 dark:to-green-900/10"
-                      : answers[questionIndex] === optionIndex
-                        ? "border-red-500 from-red-50 to-red-50/50 dark:from-red-900/20 dark:to-red-900/10"
-                        : "border-gray-200 dark:border-gray-700"
-                  ) : "border-gray-200 dark:border-gray-700"
+                  "relative cursor-pointer group transition-all duration-300 ease-in-out",
+                  "border-2 rounded-xl p-4 text-center",
+                  "hover:shadow-lg hover:scale-[1.02]",
+                  answers[questionIndex] === optionIndex && !showResults
+                    ? "border-purple-500 bg-purple-50 dark:bg-purple-900/30 scale-105" 
+                    : "border-gray-200 dark:border-gray-700",
+                  showResults && optionIndex === question.correctAnswer
+                    ? "border-green-500 bg-green-50 dark:bg-green-900/30"
+                    : "",
+                  showResults && answers[questionIndex] === optionIndex && optionIndex !== question.correctAnswer
+                    ? "border-red-500 bg-red-50 dark:bg-red-900/30"
+                    : ""
                 )}
+                onClick={() => !showResults && handleAnswerChange(questionIndex, optionIndex)}
               >
-                <RadioGroupItem
-                  value={optionIndex.toString()}
-                  id={`q${questionIndex}-o${optionIndex}`}
-                  disabled={showResults}
-                  className={cn(
-                    "transition-colors",
-                    showResults && (
-                      optionIndex === question.correctAnswer
-                        ? "border-green-500 text-green-500"
-                        : answers[questionIndex] === optionIndex
-                          ? "border-red-500 text-red-500"
-                          : ""
-                    )
+                <div className="flex items-center justify-center space-x-3 relative">
+                  {showResults && optionIndex === question.correctAnswer && (
+                    <Check className="w-6 h-6 text-green-500 absolute top-1/2 left-2 -translate-y-1/2" />
                   )}
-                />
-                <Label
-                  htmlFor={`q${questionIndex}-o${optionIndex}`}
-                  className={cn(
-                    "flex-1 ml-3 text-base font-medium leading-relaxed",
-                    !showResults && "text-gray-800 dark:text-gray-200",
-                    showResults && (
-                      optionIndex === question.correctAnswer
-                        ? "text-green-700 dark:text-green-300"
-                        : answers[questionIndex] === optionIndex
-                          ? "text-red-700 dark:text-red-300"
-                          : "text-gray-600 dark:text-gray-400"
-                    )
+                  {showResults && answers[questionIndex] === optionIndex && optionIndex !== question.correctAnswer && (
+                    <X className="w-6 h-6 text-red-500 absolute top-1/2 left-2 -translate-y-1/2" />
                   )}
-                >
-                  {option}
-                </Label>
-                {showResults && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="absolute right-4"
-                  >
-                    {optionIndex === question.correctAnswer ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-green-600 dark:text-green-400">Correct!</span>
-                        <motion.div
-                          initial={{ rotate: -180, scale: 0 }}
-                          animate={{ rotate: 0, scale: 1 }}
-                          transition={{ type: "spring", duration: 0.5 }}
-                        >
-                          <Check className="w-5 h-5 text-green-500" />
-                        </motion.div>
-                      </div>
-                    ) : answers[questionIndex] === optionIndex && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-red-600 dark:text-red-400">Try Again</span>
-                        <motion.div
-                          initial={{ rotate: 180, scale: 0 }}
-                          animate={{ rotate: 0, scale: 1 }}
-                          transition={{ type: "spring", duration: 0.5 }}
-                        >
-                          <X className="w-5 h-5 text-red-500" />
-                        </motion.div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
+                  <span className={cn(
+                    "text-base font-medium transition-colors pl-8",
+                    answers[questionIndex] === optionIndex && !showResults
+                      ? "text-purple-700 dark:text-purple-300"
+                      : "text-gray-700 dark:text-gray-300",
+                    showResults && optionIndex === question.correctAnswer
+                      ? "text-green-700 dark:text-green-300"
+                      : "",
+                    showResults && answers[questionIndex] === optionIndex && optionIndex !== question.correctAnswer
+                      ? "text-red-700 dark:text-red-300"
+                      : ""
+                  )}>
+                    {option}
+                  </span>
+                </div>
               </div>
             ))}
-          </RadioGroup>
+          </div>
 
           {showResults && question.explanation && answers[questionIndex] !== question.correctAnswer && (
             <motion.div

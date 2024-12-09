@@ -191,6 +191,19 @@ export interface SentenceTransformationProps {
     onComplete: (score: number, total: number) => void;
 }
 
+export interface SpotTheMistakeProps {
+    exercise: {
+        id: string;
+        paragraph: string;
+        focus_words: {
+            word: string;
+            position: number;
+            isMistake: boolean;
+        }[];
+    };
+    onComplete: (score: number, total: number) => void;
+}
+
 export interface WordBuildingProps {
     exercise: {
         id: string;
