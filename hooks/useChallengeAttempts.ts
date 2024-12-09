@@ -99,12 +99,45 @@ export const useChallengeAttempts = () => {
     }
   }, []);
 
+  const clearCache = useCallback(async (userId?: string) => {
+    try {
+      // If no userId is provided, clear the entire cache
+      if (!userId) {
+        await challengeAttemptsCache.challengeAttempts.clear();
+        return { success: true, message: 'Entire cache cleared' };
+      }
+
+      // Clear cache for specific user
+      const deletedCount = await challengeAttemptsCache.challengeAttempts
+        .where('user_id').equals(userId)
+        .delete();
+
+      // Reset local state
+      setChallengesAttempts([]);
+      setTotalCount(0);
+
+      return { 
+        success: true, 
+        message: `Cleared cache for user ${userId}`, 
+        deletedCount 
+      };
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      return { 
+        success: false, 
+        message: 'Failed to clear cache', 
+        error 
+      };
+    }
+  }, []);
+
   return { 
     challengesAttempts, 
     totalCount, 
     isLoading, 
     fetchChallengeAttempts,
     setChallengesAttempts,
-    setTotalCount
+    setTotalCount,
+    clearCache
   };
 };

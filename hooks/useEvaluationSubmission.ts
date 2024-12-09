@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { calculateStreak } from '@/utils/helpers';
+import { challengeAttemptsCache } from '@/lib/db/challenge-attempts-cache';
 
 interface EvaluationSubmissionParams {
   supabase: SupabaseClient;
@@ -189,8 +190,19 @@ export const useEvaluationSubmission = () => {
         throw new Error(`Failed to update user progress: ${progressError.message}`);
       }
 
+      // Clear challenge attempts cache for the user
+      await challengeAttemptsCache.clear(session.user.id);
+
+      setIsSubmitting(false);
+      toast.success('Evaluation submitted successfully!', {
+        id: 'saving-evaluation',
+      });
+
       console.log('Evaluation submission completed successfully');
-      return { success: true };
+      return { 
+        success: true, 
+        data: attemptRecord 
+      };
     } catch (error) {
       console.error('Evaluation submission error:', error);
       if (error instanceof Error) {

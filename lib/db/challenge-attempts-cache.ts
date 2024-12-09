@@ -106,6 +106,20 @@ export class ChallengeAttemptsCache extends Dexie {
       .where('cache_expiry').below(currentTime)
       .delete();
   }
+
+  async clear(userId?: string): Promise<number> {
+    if (!userId) {
+      // Clear entire cache and return number of records deleted
+      const count = await this.challengeAttempts.count();
+      await this.challengeAttempts.clear();
+      return count;
+    }
+    
+    // Clear cache for specific user and return number of records deleted
+    const count = await this.challengeAttempts.where('user_id').equals(userId).count();
+    await this.challengeAttempts.where('user_id').equals(userId).delete();
+    return count;
+  }
 }
 
 export const challengeAttemptsCache = new ChallengeAttemptsCache();
