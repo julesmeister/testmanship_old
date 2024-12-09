@@ -169,7 +169,8 @@ const interfaceStructures = {
     focus_words: [{
       word: '',
       position: 0,
-      isMistake: false
+      isMistake: false,
+      correctWord: '',
     }]
   },
   'word-building': {

@@ -199,6 +199,7 @@ export interface SpotTheMistakeProps {
             word: string;
             position: number;
             isMistake: boolean;
+            correctWord: string;
         }[];
     };
     onComplete: (score: number, total: number) => void;

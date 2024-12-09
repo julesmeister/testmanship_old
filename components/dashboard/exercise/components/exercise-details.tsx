@@ -130,7 +130,7 @@ export default function ExerciseDetails({
 
   useEffect(() => {
     // clear cache when exerciseId changes
-    // exerciseCache.clearSpecificCache(exerciseId, selectedType);
+    exerciseCache.clearSpecificCache(exerciseId, selectedType);
     if (exercise?.id && selectedType) {
       fetchContent({
         supabase,

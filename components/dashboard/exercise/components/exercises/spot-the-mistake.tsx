@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, AlertTriangle, Quote } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Quote, RefreshCw } from 'lucide-react';
 import type { SpotTheMistakeProps } from '@/types/exercises';
 import { cn } from '@/lib/utils';
 
@@ -25,9 +25,8 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
     setTimeout(() => {
       setShowResults(true);
 
-      const correctMistakes = safeExercise.focus_words
-        .filter(fw => fw.isMistake)
-        .map(fw => fw.position);
+      const correctMistakes = safeExercise.focus_words?.filter(fw => fw.isMistake)
+        .map(fw => fw.position) ?? [];
 
       const totalMistakes = correctMistakes.length;
       const correctlySelectedMistakes = selectedWordIndices.filter(index => correctMistakes.includes(index));
@@ -36,16 +35,16 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
       // Calculate score with penalty for incorrect selections
       const score = totalMistakes > 0
         ? Math.round(
-            (correctlySelectedMistakes.length / totalMistakes) * 100 - 
-            (incorrectlySelectedWords.length * 20) // Penalty for each incorrect selection
-          )
+          (correctlySelectedMistakes.length / totalMistakes) * 100 -
+          (incorrectlySelectedWords.length * 20) // Penalty for each incorrect selection
+        )
         : 0;
 
       // Ensure score doesn't go below 0
-      const finalScore = Math.max(0, score);
-      
+      const finalScore = Math.max(score, 0);
+
       if (correctlySelectedMistakes.length > 0) {
-        setCorrectlyIdentifiedMistakes(prev => 
+        setCorrectlyIdentifiedMistakes(prev =>
           [...prev, ...correctlySelectedMistakes]
         );
       }
@@ -70,19 +69,43 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
     return colors[Math.min(Math.max(0, index % colors.length), colors.length - 1)];
   }, [colors]);
 
-  // Render method to handle empty exercise case
-  if (!safeExercise.focus_words?.length) {
-    return (
-      <div className="text-center text-gray-500 p-6">
-        No words available for this exercise.
-      </div>
-    );
-  }
+
 
   const renderParagraphWithWords = () => {
-    const words = safeExercise.paragraph.split(/\s+/);
+    const words = (safeExercise.paragraph ?? '').split(/\s+/);
 
-    return (
+    return (!safeExercise.focus_words?.length) ? (
+      <div className="flex flex-col items-center justify-center p-12 space-y-6 text-center">
+        <motion.div
+          initial={{ y: 0 }}
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [0, 10, -10, 0]
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="text-5xl mb-4"
+        >
+          🔍
+        </motion.div>
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 
+          bg-gray-100 dark:bg-gray-800 
+          px-3 py-1 
+          rounded-full 
+          inline-block 
+          shadow-sm 
+          hover:bg-gray-200 dark:hover:bg-gray-700 
+          transition-all duration-300 
+          cursor-default
+          select-none"
+        >
+          No mistakes to spot in this exercise
+        </p>
+      </div>
+    ) : (
       <div className="text-lg leading-relaxed space-y-6">
         {words.map((word, index) => (
           <motion.span
@@ -99,46 +122,56 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
                 "group cursor-pointer",
                 "border-2 border-transparent",
                 "text-gray-600",
-                "font-['Inter','system-ui','Segoe UI','Roboto','Helvetica','Arial','sans-serif']",
-                !selectedWordIndices.includes(index) 
+                "font-['Ubuntu', 'Nunito', 'Poppins', 'Arial', 'sans-serif']",
+                !selectedWordIndices.includes(index)
                   ? cn(
-                      `hover:border-${getColorForWord(index).bg.split('-')[1]}-200 dark:hover:border-${getColorForWord(index).bg.split('-')[1]}-800/50`,
-                      getColorForWord(index).hoverText
-                    )
+                    `hover:border-${getColorForWord(index).bg.split('-')[1]}-200 dark:hover:border-${getColorForWord(index).bg.split('-')[1]}-800/50`,
+                    getColorForWord(index).hoverText
+                  )
                   : cn(
-                      `hover:border-${getColorForWord(index).bg.split('-')[1]}-200 dark:hover:border-${getColorForWord(index).bg.split('-')[1]}-800/50`,
-                      getColorForWord(index).hoverText
-                    ),
+                    `hover:border-${getColorForWord(index).bg.split('-')[1]}-200 dark:hover:border-${getColorForWord(index).bg.split('-')[1]}-800/50`,
+                    getColorForWord(index).hoverText
+                  ),
                 "hover:bg-violet-50 dark:hover:bg-violet-900/20",
                 "hover:scale-[1.02] hover:shadow-sm",
                 selectedWordIndices.includes(index)
                   ? cn(
-                      `bg-${getColorForWord(index).bg.split('-')[1]}-100 dark:bg-${getColorForWord(index).bg.split('-')[1]}-900/30`,
-                      `text-${getColorForWord(index).bg.split('-')[1]}-700 dark:text-${getColorForWord(index).bg.split('-')[1]}-300`,
-                      `border-${getColorForWord(index).bg.split('-')[1]}-200 dark:border-${getColorForWord(index).bg.split('-')[1]}-800/50`
-                    )
+                    `bg-${getColorForWord(index).bg.split('-')[1]}-100 dark:bg-${getColorForWord(index).bg.split('-')[1]}-900/30`,
+                    `text-${getColorForWord(index).bg.split('-')[1]}-700 dark:text-${getColorForWord(index).bg.split('-')[1]}-300`,
+                    `border-${getColorForWord(index).bg.split('-')[1]}-200 dark:border-${getColorForWord(index).bg.split('-')[1]}-800/50`
+                  )
                   : cn(
-                      getColorForWord(index).hoverText,
-                      getColorForWord(index).hover
-                    ),
-                showResults && safeExercise.focus_words.some(fw => fw.position === index && fw.isMistake)
-                  ? (correctlyIdentifiedMistakes.includes(index) 
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800/50" 
-                      : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/50")
+                    getColorForWord(index).hoverText,
+                    getColorForWord(index).hover
+                  ),
+                showResults && safeExercise.focus_words?.some(fw => fw.position === index && fw.isMistake)
+                  ? (correctlyIdentifiedMistakes.includes(index)
+                    ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800/50"
+                    : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/50")
                   : ""
               )}
               onClick={() => {
                 if (!showResults) {
-                  setSelectedWordIndices(prev => 
-                    prev.includes(index) 
-                      ? prev.filter(i => i !== index) 
+                  setSelectedWordIndices(prev =>
+                    prev.includes(index)
+                      ? prev.filter(i => i !== index)
                       : [...prev, index]
                   );
                 }
               }}
               whileTap={{ scale: 0.95 }}
+              style={{ position: 'relative' }}
             >
               {word}
+              {showResults && safeExercise.focus_words?.some(fw => fw.position === index && fw.isMistake && !correctlyIdentifiedMistakes.includes(index)) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: -50 }}
+                  className="absolute left-1/2 transform -translate-x-1/2 px-2 py-1 font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-2xl border border-green-200 dark:border-green-800/50 z-10"
+                >
+                  {safeExercise.focus_words.find(fw => fw.position === index && fw.isMistake)?.correctWord}
+                </motion.div>
+              )}
             </motion.button>
           </motion.span>
         ))}
@@ -162,7 +195,7 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Button 
+              <Button
                 onClick={checkAnswer}
                 disabled={selectedWordIndices.length === 0}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -203,7 +236,7 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
                   tracking-tighter
                   transition-all duration-300 
                   group-hover:text-violet-900 dark:group-hover:text-violet-100">
-                  {safeExercise.focus_words.filter(word => word.isMistake).length}
+                  {safeExercise.focus_words?.filter(word => word.isMistake).length ?? 0}
                 </p>
               </div>
             </div>
@@ -213,13 +246,13 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
         {/* Paragraph with Clickable Words */}
         <div className="text-center relative flex items-start justify-center gap-3 w-full">
           <div className="self-start mt-1">
-          <Quote className="w-8 h-8 text-gray-400 dark:text-gray-500 opacity-100 transform scale-x-[-1]" />
+            <Quote className="w-8 h-8 text-gray-400 dark:text-gray-500 opacity-100 transform scale-x-[-1]" />
           </div>
           <div className="flex-grow">
             {renderParagraphWithWords()}
           </div>
           <div className="self-end mt-1">
-          <Quote className="w-8 h-8 text-gray-400 dark:text-gray-500 opacity-100" />
+            <Quote className="w-8 h-8 text-gray-400 dark:text-gray-500 opacity-100" />
           </div>
         </div>
 
@@ -238,11 +271,10 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
                   Mistakes Identified
                 </h3>
               </div>
-              {safeExercise.focus_words
-                .filter(word => word.isMistake)
+              {safeExercise.focus_words?.filter(word => word?.isMistake)
                 .map((mistakeWord, index) => (
-                  <motion.div 
-                    key={index} 
+                  <motion.div
+                    key={index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -261,7 +293,7 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
                     </div>
                   </motion.div>
                 ))}
-              {safeExercise.focus_words.filter(word => word.isMistake).length === 0 && (
+              {safeExercise.focus_words?.filter(word => word?.isMistake).length === 0 && (
                 <div className="text-center text-green-600 dark:text-green-400 font-medium">
                   No mistakes found! Great job! 🎉
                 </div>
