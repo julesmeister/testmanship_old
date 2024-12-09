@@ -24,6 +24,8 @@ export const useFetchExerciseContent = () => {
 
   const fetchContent = useCallback(async ({ supabase, exerciseId, exerciseType }: FetchParams) => {
     setIsLoading(true);
+    setExerciseContent([]); // Reset content when starting a new fetch
+
     try {
       // First, check cache
       const cachedContent = await exerciseCache.getCachedContent(
@@ -39,7 +41,6 @@ export const useFetchExerciseContent = () => {
           cacheTimestamp: new Date(cachedContent[0].cached_at).toISOString()
         });
         setExerciseContent(cachedContent as ExerciseContent[]);
-        setIsLoading(false);
         return { success: true, data: cachedContent, fromCache: true };
       }
 
@@ -69,24 +70,36 @@ export const useFetchExerciseContent = () => {
         return { success: false, data: null };
       }
 
-      // Cache the fetched data
-      if (data && data.length > 0) {
-        await exerciseCache.cacheContent(data as CachedExerciseContent[]);
-        console.log(`🟠 Cache Update: Stored ${data.length} exercise content items`, {
+      // Handle empty results
+      if (!data || data.length === 0) {
+        console.warn(`⚠️ No exercise content found`, {
           exerciseId,
-          exerciseType,
-          itemCount: data.length
+          exerciseType
         });
+        // toast.warning('No exercise content available', {
+        //   id: 'no-content',
+        // });
+        return { success: true, data: [], fromCache: false };
       }
 
-      console.log(`🟣 Fresh Fetch: Retrieved ${data?.length || 0} exercise content items`, {
+      // Cache the fetched data
+      await exerciseCache.cacheContent(data as CachedExerciseContent[]);
+      console.log(`🟠 Cache Update: Stored ${data.length} exercise content items`, {
         exerciseId,
         exerciseType,
-        itemCount: data?.length || 0
+        itemCount: data.length
       });
-      setExerciseContent(data || []);
+
+      console.log(`🟣 Fresh Fetch: Retrieved ${data.length} exercise content items`, {
+        exerciseId,
+        exerciseType,
+        itemCount: data.length
+      });
+      
+      setExerciseContent(data);
       return { success: true, data, fromCache: false };
     } catch (error) {
+      console.error('🚨 Unexpected error in fetchContent', error);
       toast.error('Unexpected error occurred', {
         id: 'unexpected-error',
       });

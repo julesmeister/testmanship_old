@@ -146,7 +146,7 @@ export default function ExerciseDetails({
 
   useEffect(() => {
     // Set the first type as default when exercise types change
-    if (exercise?.exercise_types?.length > 0 && !selectedType) {
+    if (exercise?.exercise_types?.length > 0) {
       setSelectedType(exercise.exercise_types[0]);
     }
   }, [exercise?.exercise_types]);

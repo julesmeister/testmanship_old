@@ -73,7 +73,7 @@ export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
         className="space-y-2"
       >
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          No {exerciseType} Exercises Available
+          No&nbsp;<span className="capitalize">{exerciseType.replace(/-/g, ' ')}</span>&nbsp;Exercises Available
         </h3>
         <p className="text-gray-500 dark:text-gray-400 max-w-md">
           We're working on adding more exercises for this category. 
