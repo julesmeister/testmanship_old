@@ -229,7 +229,7 @@ export default function DragAndDrop({ exercise: exercise, onComplete }: DragAndD
                             : "border-gray-200 dark:border-gray-700"
                         )}
                       >
-                        {itemLocations[target.id].length > 0 && (
+                        {itemLocations[target.id]?.length > 0 && (
                           <div className="absolute top-2 right-2 flex items-center gap-2">
                             <span className="px-2 py-1 text-xs font-medium rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300">
                               {itemLocations[target.id].length} items
@@ -244,7 +244,7 @@ export default function DragAndDrop({ exercise: exercise, onComplete }: DragAndD
                             )}
                           </div>
                         )}
-                        {(expandedTargets[target.id] ? itemLocations[target.id] : itemLocations[target.id].slice(0, 5)).map((itemId, index) => {
+                        {(expandedTargets[target.id] ? itemLocations[target.id] : itemLocations[target.id]?.slice(0, 5))?.map((itemId, index) => {
                           const item = items.find(i => i.id === itemId);
                           if (!item) return null; // Skip if item not found
 
@@ -296,9 +296,9 @@ export default function DragAndDrop({ exercise: exercise, onComplete }: DragAndD
                             </Draggable>
                           );
                         })}
-                        {itemLocations[target.id].length > 5 && (
+                        {itemLocations[target.id]?.length > 5 && (
                           <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-                            {itemLocations[target.id].length - 5} more items hidden
+                            {itemLocations[target.id]?.length - 5} more items hidden
                           </div>
                         )}
                         {provided.placeholder}
