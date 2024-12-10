@@ -15,7 +15,7 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
   };
 
   const [answers, setAnswers] = useState<string[]>(
-    new Array(safeExercise.blanks?.length ?? 0).fill('')
+    new Array((safeExercise.blanks?.filter(blank => blank.position !== 0) ?? []).length).fill('')
   );
   const [showResults, setShowResults] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -46,7 +46,7 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
 
   const handleBlankClick = (index: number) => {
     if (showResults) return;
-    
+
     // If there's an answer and we click the same blank, clear it
     if (answers[index]?.trim()) {
       const newAnswers = [...answers];
@@ -60,7 +60,7 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
 
   const handleChoiceClick = (choice: string) => {
     if (showResults) return;
-    
+
     // If a blank is selected, fill that one
     if (currentBlankIndex !== null) {
       handleAnswerChange(currentBlankIndex, choice);
@@ -87,14 +87,14 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
     setIsAnimating(true);
     setTimeout(() => {
       setShowResults(true);
-      console.log('Safe Exercise Blanks:', safeExercise.blanks);
+      console.log('Safe Exercise Blanks:', safeExercise.blanks?.filter(blank => blank.position !== 0));
       console.log('User Answers:', answers);
 
-      const scoreDetails = safeExercise.blanks?.map((blank, index) => {
+      const scoreDetails = safeExercise.blanks?.filter(blank => blank.position !== 0).map((blank, index) => {
         const correctWord = blank.word.toLowerCase().trim();
-        const userAnswer = answers[index].toLowerCase().trim();
-        const isCorrect = correctWord === userAnswer;
-        
+        const userAnswer = answers[index]?.toLowerCase().trim();
+        const isCorrect = blank.word.toLowerCase() === userAnswer;
+
         return {
           index,
           correctWord,
@@ -108,9 +108,9 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
       const score = scoreDetails.reduce((acc, detail) => {
         return acc + (detail.isCorrect ? 1 : 0);
       }, 0);
-      
-      const totalBlanks = safeExercise.blanks?.length ?? 0;
-      const scorePercentage = totalBlanks > 0 
+
+      const totalBlanks = safeExercise.blanks?.filter(blank => blank.position !== 0).length ?? 0;
+      const scorePercentage = totalBlanks > 0
         ? Math.round((score / totalBlanks) * 100)
         : 0;
 
@@ -135,12 +135,44 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
     );
   }
 
-  const renderSentenceWithBlanks = () => {
-    // Split by one or more underscores
-    const parts = safeExercise.sentence.split(/(_+)/g);
-    let blankIndex = 0;
 
-    return (
+  const parts = safeExercise && safeExercise.sentence ? safeExercise.sentence.split(/(_+)/g) : [];
+  let blankIndex = 0;
+
+  const renderSentenceWithBlanks = () => {
+    return (!safeExercise || !safeExercise.sentence) ? (
+      <div className="flex flex-col items-center justify-center p-12 space-y-6 text-center">
+        <motion.div
+          initial={{ y: 0 }}
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 10, -10, 0]
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="text-5xl mb-4"
+        >
+          🔍
+        </motion.div>
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 
+          bg-gray-100 dark:bg-gray-800 
+          px-3 py-1 
+          rounded-full 
+          inline-block 
+          shadow-sm 
+          hover:bg-gray-200 dark:hover:bg-gray-700 
+          transition-all duration-300 
+          cursor-default
+          select-none"
+        >
+          No sentence available for this exercise
+        </p>
+      </div>
+    ) : (
+      // Split by one or more underscores
       <div className="text-lg leading-relaxed space-y-6">
         {parts.map((part, index) => {
           if (part.match(/_+/)) {
@@ -172,13 +204,13 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
                     >
                       {answer}
                     </motion.button>
-                    {showResults && answer.toLowerCase() !== safeExercise.blanks?.[currentBlankIndex].word.toLowerCase() && (
+                    {showResults && answer.toLowerCase() !== safeExercise.blanks?.find(blank => blank.position === currentBlankIndex + 1)?.word.toLowerCase() && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: -50 }}
                         className="absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded"
                       >
-                        {safeExercise.blanks?.[currentBlankIndex].word}
+                        {safeExercise.blanks?.find(blank => blank.position === currentBlankIndex + 1)?.word}
                       </motion.div>
                     )}
                   </motion.div>
