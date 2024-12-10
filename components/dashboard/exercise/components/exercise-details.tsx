@@ -135,7 +135,7 @@ export default function ExerciseDetails({
 
   const [selectedType, setSelectedType] = useState<string>('');
 
-  const { isLoading, exerciseContent, fetchContent } = useFetchExerciseContent();
+  const { isLoading, exerciseContent, fetchContent, clearCache } = useFetchExerciseContent();
 
   useEffect(() => {
     // clear cache when exerciseId changes
@@ -155,15 +155,15 @@ export default function ExerciseDetails({
   // Memoize the filtered exercises and random index
   const filteredContent = useMemo(() => {
     if (exerciseContent.length === 0) return null;
-    
+
     // Filter by topic if a topic is selected
-    const topicFilteredContent = selectedTopic 
+    const topicFilteredContent = selectedTopic
       ? exerciseContent.filter(content => content.topic === selectedTopic)
       : exerciseContent;
-    
+
     // If no content after filtering, return null
     if (topicFilteredContent.length === 0) return null;
-    
+
     // Select a random exercise from filtered content
     const randomIndex = Math.floor(Math.random() * topicFilteredContent.length);
     return topicFilteredContent[randomIndex];
@@ -286,9 +286,19 @@ export default function ExerciseDetails({
             <div className="flex-1" />
 
             <div className="relative">
-              <Select 
-                value={selectedTopic || undefined} 
-                onValueChange={(value) => setSelectedTopic(value || null)}
+              <Select
+                value={selectedTopic || undefined}
+                onValueChange={async (value) => {
+                  if (value === 'refresh') {
+                    await clearCache(supabase, exercise.id, selectedType); // Call clearCache when "Refresh" is selected
+                    // Select a fresh new topic
+                    if (uniqueTopics.length > 0) {
+                      setSelectedTopic(uniqueTopics[0]);
+                    }
+                  } else {
+                    setSelectedTopic(value || null);
+                  }
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a Topic" />
@@ -302,6 +312,9 @@ export default function ExerciseDetails({
                         ).join(' ')}
                       </SelectItem>
                     ))}
+                    <SelectItem key="refresh" value="refresh">
+                      Refresh
+                    </SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

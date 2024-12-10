@@ -110,10 +110,11 @@ export const useFetchExerciseContent = () => {
   }, []);
 
   // Manual cache clearing method
-  const clearCache = useCallback(async (exerciseId?: string, exerciseType?: string) => {
+  const clearCache = useCallback(async (supabase: SupabaseClient, exerciseId?: string, exerciseType?: string) => {
     if (exerciseId && exerciseType) {
       // Clear specific exercise cache
       await exerciseCache.clearSpecificCache(exerciseId, exerciseType);
+      fetchContent({ supabase, exerciseId, exerciseType });
     } else {
       // Clear entire exercise cache
       await exerciseCache.clearAllCache();
