@@ -287,6 +287,8 @@ export default function SpotTheMistake({ exercise, onComplete }: SpotTheMistakeP
                         </p>
                         <p className="text-xl font-bold text-blue-900 dark:text-blue-100 mt-1">
                           {mistakeWord.word}
+                          <span style={{ margin: '0 5px' }}>→</span> {/* Arrow pointing to the correct word */}
+                          {mistakeWord.correctWord}
                         </p>
                       </div>
                       <AlertTriangle className="w-6 h-6 text-red-500 dark:text-red-400" />
