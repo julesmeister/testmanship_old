@@ -40,7 +40,7 @@ export const routes: IRoute[] = [
     name: 'Exercise',
     path: '/dashboard/exercise',
     icon: (<HiOutlinePuzzlePiece className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />),
-    collapse: false,
+    collapse: true,
   },
   {
     name: 'Performance',

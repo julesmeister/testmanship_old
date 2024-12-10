@@ -7,12 +7,13 @@ import { Check, X, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DragAndDropProps } from '@/types/exercises';
 
-export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) {
+export default function DragAndDrop({ exercise: exercise, onComplete }: DragAndDropProps) {
+  const stableExercise = useMemo(() => exercise, [exercise.id]);
   const [items, setItems] = useState(() => 
-    [...exercise.items].sort(() => Math.random() - 0.5)
+    [...stableExercise.items].sort(() => Math.random() - 0.5)
   );
   const [itemLocations, setItemLocations] = useState<Record<string, string[]>>(() => 
-    exercise.targets.reduce((acc, target) => ({ ...acc, [target.id]: [] }), {})
+    stableExercise.targets.reduce((acc, target) => ({ ...acc, [target.id]: [] }), {})
   );
   const [showResults, setShowResults] = useState(false);
   const [expandedTargets, setExpandedTargets] = useState<Record<string, boolean>>({});
@@ -50,7 +51,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
 
   const checkAnswers = () => {
     // Check if all items are placed
-    const allItemsPlaced = exercise.items.every(item => 
+    const allItemsPlaced = stableExercise.items.every(item => 
       Object.values(itemLocations).some(targetItems => 
         targetItems.includes(item.id)
       )
@@ -67,15 +68,15 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
     // Check each target
     Object.entries(itemLocations).forEach(([targetId, itemIds]) => {
       itemIds.forEach(itemId => {
-        const item = exercise.items.find(i => i.id === itemId);
+        const item = stableExercise.items.find(i => i.id === itemId);
         if (item?.correctTarget === targetId) {
           correctCount++;
         }
       });
     });
 
-    const score = Math.round((correctCount / exercise.items.length) * 100);
-    onComplete(score, exercise.items.length);
+    const score = Math.round((correctCount / stableExercise.items.length) * 100);
+    onComplete(score, stableExercise.items.length);
   };
 
   const getUnassignedItems = () => {
@@ -106,16 +107,24 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
   // - Correct: All 10 items are distributed across targets
   // - Incorrect: 9/10 items placed, or an item left in the source
   const allItemsPlaced = useMemo(() => 
-    exercise.items.every(item => 
+    stableExercise.items.every(item => 
       Object.values(itemLocations).some(targetItems => 
         targetItems.includes(item.id)
       )
     ), 
-    [exercise.items, itemLocations]
+    [stableExercise.items, itemLocations]
   );
 
   useEffect(() => {
-    // Automatically check answers when all items are placed
+    console.log('Exercise has changed:', stableExercise.id);
+    setItems([...stableExercise.items].sort(() => Math.random() - 0.5));
+    setItemLocations(
+      stableExercise.targets.reduce((acc, target) => ({ ...acc, [target.id]: [] }), {})
+  );
+  }, [stableExercise]);
+
+  useEffect(() => {
+    // Automatically check answers when all items are placed in their respective targets
     if (allItemsPlaced) {
       checkAnswers();
     }
@@ -128,7 +137,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
           <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
             <GripVertical className="w-5 h-5" />
           </div>
-          <p className="text-sm font-medium">{exercise.instruction}</p>
+          <p className="text-sm font-medium">{stableExercise.instruction}</p>
         </div>
 
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -190,14 +199,14 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
             {/* Drop targets */}
             <div className={cn(
               "space-y-4",
-              exercise.targets.length > 3 && "grid grid-cols-2 md:grid-cols-2 gap-4"
+              stableExercise.targets.length > 3 && "grid grid-cols-2 md:grid-cols-2 gap-4"
             )}>
-              {exercise.targets.map((target) => (
+              {stableExercise.targets.map((target) => (
                 <div 
                   key={target.id} 
                   className={cn(
                     "space-y-2",
-                    exercise.targets.length > 3 && "w-full"
+                    stableExercise.targets.length > 3 && "w-full"
                   )}
                 >
                   <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -211,9 +220,9 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                         className={cn(
                           "p-4 rounded-lg min-h-[100px] border-2 border-dashed relative",
                           "bg-gray-50 dark:bg-gray-900/50",
-                          exercise.targets.length > 3 && "min-h-[150px]",
+                          stableExercise.targets.length > 3 && "min-h-[150px]",
                           showResults && itemLocations[target.id].every(itemId => {
-                            const item = exercise.items.find(i => i.id === itemId);
+                            const item = stableExercise.items.find(i => i.id === itemId);
                             return item?.correctTarget === target.id;
                           })
                             ? "border-green-500/50"
@@ -251,7 +260,7 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                                   className={cn(
                                     "flex items-center gap-3 p-3 mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm",
                                     "border transition-colors",
-                                    exercise.targets.length > 3 && "p-2",
+                                    stableExercise.targets.length > 3 && "p-2",
                                     !showResults && "hover:border-violet-300 dark:hover:border-violet-700",
                                     showResults && (
                                       isCorrect
@@ -263,15 +272,15 @@ export default function DragAndDrop({ exercise, onComplete }: DragAndDropProps) 
                                   <GripVertical className="h-4 w-4 text-gray-400 flex-shrink-0" />
                                   <div className={cn(
                                     "flex-1 min-w-0", 
-                                    exercise.targets.length > 3 && "text-sm"
+                                    stableExercise.targets.length > 3 && "text-sm"
                                   )}>
                                     <span className="block truncate">{item.content}</span>
                                     {showResults && !isCorrect && (
                                       <div className={cn(
                                         "text-xs text-gray-500 dark:text-gray-400 mt-1",
-                                        exercise.targets.length > 3 && "text-[10px]"
+                                        stableExercise.targets.length > 3 && "text-[10px]"
                                       )}>
-                                        Should be in: {exercise.targets.find(t => t.id === item.correctTarget)?.label}
+                                        Should be in: {stableExercise.targets.find(t => t.id === item.correctTarget)?.label}
                                       </div>
                                     )}
                                   </div>

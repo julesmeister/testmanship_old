@@ -329,7 +329,7 @@ export default function ExerciseDetails({
 
                 const exerciseContentJson = {
                   ...filteredContent.content,
-                  id: exercise.id,
+                  id: filteredContent.id,
                   onComplete: handleSubmit
                 } as any;
 

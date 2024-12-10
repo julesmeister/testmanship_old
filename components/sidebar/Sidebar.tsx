@@ -31,6 +31,8 @@ export default function Sidebar(props: SidebarProps) {
   const user = useContext(UserContext);
   const userDetails = useContext(UserDetailsContext);
 
+  const { setIsCollapsed } = useSidebarStore();
+
   const handleSignOut = async (e) => {
     e.preventDefault();
     const redirectMethod = getRedirectMethod();
@@ -114,6 +116,7 @@ export default function Sidebar(props: SidebarProps) {
                 )}
                 onClick={() => {
                   startProgress();
+                  setIsCollapsed(true);
                   router?.push(route.path);
                 }}
               >

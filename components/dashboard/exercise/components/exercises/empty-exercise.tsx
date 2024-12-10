@@ -9,20 +9,20 @@ interface EmptyExerciseProps {
 
 export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-12 space-y-6 text-center">
+    <div className="flex flex-col items-center justify-center p-12 space-y-6 text-center relative">
 
-<motion.div
+      <motion.div
         initial={{ y: 0 }}
-        animate={{ 
+        animate={{
           y: [0, -20, 0],
-          rotate: [0, 10, -10, 0]
+          rotate: [0, 75, 0]
         }}
         transition={{
           duration: 1.5,
           repeat: Infinity,
           ease: "easeInOut"
         }}
-        className="text-5xl mb-4"
+        className="text-5xl mb-4 absolute top-0 right-0"
       >
         👆
       </motion.div>
@@ -37,7 +37,7 @@ export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
         cursor-default
         select-none"
       >
-        Please select another exercise
+        Go ahead and select a topic from the dropdown
       </p>
       <motion.div
         className="relative"
@@ -65,18 +65,18 @@ export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
           <BookOpen className="w-8 h-8 text-blue-500" />
         </motion.div>
       </motion.div>
-          
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="space-y-2"
+        className="space-y-4"
       >
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          No&nbsp;<span className="capitalize">{exerciseType.replace(/-/g, ' ')}</span>&nbsp;Exercises Available
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Have you tried selecting a different topic from the dropdown menu?&nbsp;<span className="capitalize">{exerciseType.replace(/-/g, ' ')}</span>&nbsp;exercises might be hiding in there!
         </h3>
-        <p className="text-gray-500 dark:text-gray-400 max-w-md">
-          We're working on adding more exercises for this category. 
+        <p className="text-gray-500 dark:text-gray-400 max-w">
+          We're working on adding more exercises for this category.
           Check back soon or try a different exercise type!
         </p>
       </motion.div>
@@ -93,7 +93,7 @@ export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
         </div>
       </motion.div>
 
-      
+
     </div>
   );
 }

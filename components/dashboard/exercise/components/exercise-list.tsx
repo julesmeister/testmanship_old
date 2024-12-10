@@ -11,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
 
 interface ExerciseListProps {
   exercises: Exercise[];
@@ -102,16 +103,7 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                         
                         {exercise.progress !== undefined && (
                           <div className="mt-3 space-y-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Progress</span>
-                              <span className="text-xs font-medium text-violet-600 dark:text-violet-300">{exercise.progress}%</span>
-                            </div>
-                            <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-violet-500 dark:bg-violet-400 rounded-full transition-all duration-300"
-                                style={{ width: `${exercise.progress}%` }}
-                              />
-                            </div>
+                            <Progress value={exercise.progress} className="h-2 rounded-full bg-gray-100/30 dark:bg-gray-800/30 mt-2 mb-1" />
                           </div>
                         )}
                       </div>
@@ -145,20 +137,6 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
-            {exercise.progress !== undefined && !exercise.completed && (
-              <div className="h-0.5 bg-gray-100/50 dark:bg-gray-800/50">
-                <div 
-                  className={cn(
-                    "h-full transition-all duration-300",
-                    selectedId === exercise.id 
-                      ? "bg-violet-500 dark:bg-violet-400" 
-                      : "bg-violet-400 group-hover:bg-violet-500 dark:bg-violet-500 dark:group-hover:bg-violet-400"
-                  )}
-                  style={{ width: `${exercise.progress}%` }}
-                />
-              </div>
-            )}
           </motion.div>
         ))}
       </div>
