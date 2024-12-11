@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'sonner';
 import { type Challenge } from '@/types/challenge';
+import { challengeCache } from '@/lib/db/challenge-cache';
 
 export const useChallenge = (
   onStartChallenge: (challenge: Challenge) => void,
@@ -27,6 +28,23 @@ export const useChallenge = (
   const fetchChallenges = useCallback(async () => {
     try {
       setIsLoading(true);
+
+      // Check cache first
+      const cachedChallenges = await challengeCache.getCachedChallenges(selectedLevel, searchQuery);
+      
+      if (cachedChallenges.length > 0) {
+        console.log(' Cache Hit: Retrieved challenges from cache', {
+          level: selectedLevel,
+          searchQuery: searchQuery || 'none',
+          count: cachedChallenges.length,
+          cacheTimestamp: new Date(cachedChallenges[0].cached_at).toISOString()
+        });
+        setChallenges(cachedChallenges);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(' Cache Miss: Fetching challenges from Supabase');
       let query = supabase
         .from('challenges')
         .select('*')
@@ -52,6 +70,13 @@ export const useChallenge = (
         ...challenge,
         created_by: challenge.created_by || userId || 'unknown' // Use current user ID or 'unknown' as fallback
       })) || [];
+
+      // Cache the challenges
+      await challengeCache.cacheChallenges(challengesWithCreator, selectedLevel);
+      console.log(' Cache Update: Stored challenges in cache', {
+        level: selectedLevel,
+        count: challengesWithCreator.length
+      });
 
       setChallenges(challengesWithCreator);
     } catch (err) {

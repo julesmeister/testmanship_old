@@ -37,6 +37,7 @@ import { useTestState } from '@/hooks/useTestState';
 import { useEvaluationState } from '@/hooks/useEvaluationState';
 import { PencilIcon, ClockIcon, CheckCircleIcon, ChatBubbleBottomCenterTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import EmptyTestState from './components/EmptyTestState';
+import { useFormatFetch } from '@/hooks/useFormatFetch';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -87,10 +88,9 @@ export default function Test({ user, userDetails }: Props) {
   const [currentSuggestion, setCurrentSuggestion] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [lastTyped, setLastTyped] = useState<number | null>(Date.now());
-  const [format, setFormat] = useState<string>('');
   const [checkedPhrases, setCheckedPhrases] = useState<boolean[]>([]);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
-
+  
   // Debug logging for language selection
   const { selectedLanguageId, languages } = useLanguageStore();
   const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
@@ -140,6 +140,9 @@ export default function Test({ user, userDetails }: Props) {
     handleParagraphChange
   } = useFeedbackManager(generateFeedback);
 
+  // Used for subheader in Challenge Header
+  const format = useFormatFetch(selectedChallenge, supabase);
+
   const {
     insights,
     isLoading: evaluationLoading,
@@ -183,31 +186,7 @@ export default function Test({ user, userDetails }: Props) {
     }
   }, [error, isDailyLimitReached]);
 
-  useEffect(() => {
-    const fetchFormat = async () => {
-      if (selectedChallenge?.format_id) {
-        console.log('Fetching format for format_id:', selectedChallenge.format_id);
-        const { data: formatData, error } = await supabase
-          .from('challenge_formats')
-          .select('name')
-          .eq('id', selectedChallenge.format_id)
-          .single();
-
-        if (formatData) {
-          console.log('Format fetched successfully:', formatData.name);
-          setFormat(formatData.name);
-        } else if (error) {
-          console.error('Error fetching format:', error);
-          setFormat('Unknown Format');
-        }
-      } else {
-        console.log('No format_id available in selectedChallenge');
-        setFormat('Unknown Format');
-      }
-    };
-
-    fetchFormat();
-  }, [selectedChallenge?.format_id, supabase]);
+  
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
