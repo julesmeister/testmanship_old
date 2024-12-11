@@ -35,7 +35,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
   const { exercise, isLoading, error, generateExercise } = useExerciseSuggestions({ weak_skills: weakestSkills, difficulty: difficulty || 'A1' });
   const { gradeExercise } = useGradeTheExercise();
   const { submitExerciseAccepted } = useExerciseAccepted();
-  const { stats: weeklyStats, isLoading: weeklyStatsLoading, error: weeklyStatsError, clearCache } = useWeeklyStats(user.id);
+  const { stats: weeklyStats, isLoading: weeklyStatsLoading, error: weeklyStatsError, clearCache: clearWeeklyStatsCache } = useWeeklyStats(user.id);
 
   useEffect(() => {
     if (exercise?.begin_phrase) {
@@ -87,6 +87,7 @@ export default function MainChart({ user, userDetails, session }: UserSession) {
 
               if (result.success && result.data) {
                 clearUserProgressCache(user.id);
+                clearWeeklyStatsCache(user.id);
                 setCurrentStreak(result.data.current_streak);
                 setExerciseTaken(result.data.total_exercises_completed);
                 setWeakestSkills(result.data.weakest_skills);

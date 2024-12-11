@@ -69,13 +69,34 @@ export function useExerciseSuggestions({ weak_skills = [], difficulty = 'A1' }: 
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
+        let errorMessage = 'Failed to generate exercise';
+        let errorDetails = null;
+
+        try {
+          // Try to parse as JSON first
+          const errorData = await response.json();
+          errorDetails = errorData;
+          
+          // Extract more specific error message if available
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.choices && errorData.choices[0]?.message?.content) {
+            // Handle AI provider response format
+            errorMessage = 'Received unexpected AI response';
+          }
+        } catch {
+          // If not JSON, fall back to text
+          const errorText = await response.text();
+          errorMessage = errorText || `HTTP error ${response.status}: ${response.statusText}`;
+        }
+
         console.error('API Error:', {
           status: response.status,
           statusText: response.statusText,
-          body: errorData
+          details: errorDetails
         });
-        throw new Error('Failed to generate exercise');
+
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
