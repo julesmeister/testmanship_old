@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check, X } from 'lucide-react';
@@ -8,10 +8,14 @@ import { cn } from '@/lib/utils';
 import type { MatchingProps } from '@/types/exercises';
 
 export default function Matching({ exercise, onComplete }: MatchingProps) {
-  const [leftItems] = useState(exercise.pairs.map(p => p.left));
+  // Memoize the exercise object to prevent unnecessary re-renders
+  // Only updates when exercise.id changes, ensuring stable reference
+  const stableExercise = useMemo(() => exercise, [exercise.id]);
+
+  const [leftItems, setLeftItems] = useState(stableExercise.pairs.map(p => p.left));
   const [rightItems, setRightItems] = useState(() => {
     // Shuffle right items
-    return exercise.pairs
+    return stableExercise.pairs
       .map(p => p.right)
       .sort(() => Math.random() - 0.5);
   });
@@ -131,7 +135,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
           // Use the same matching logic as elsewhere
           const leftItem = randomizedLeftItems[leftIndex];
           const rightItem = randomizedRightItems[rightIndex];
-          const isCorrectPair = exercise.pairs.some(
+          const isCorrectPair = stableExercise.pairs.some(
             pair => pair.left === leftItem && pair.right === rightItem
           );
           return isCorrectPair ? "rgb(34 197 94)" : "rgb(239 68 68)"; // green-500 : red-500
@@ -219,21 +223,41 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
       const leftItem = randomizedLeftItems[leftIndex];
       const rightItem = randomizedRightItems[rightIndex];
       // Find if this pair exists in exercise.pairs
-      const isCorrectPair = exercise.pairs.some(
+      const isCorrectPair = stableExercise.pairs.some(
         pair => pair.left === leftItem && pair.right === rightItem
       );
       return isCorrectPair ? count + 1 : count;
     }, 0);
-    const score = Math.round((correctMatches / exercise.pairs.length) * 100);
-    onComplete(score, exercise.pairs.length);
+    const score = Math.round((correctMatches / stableExercise.pairs.length) * 100);
+    onComplete(score, stableExercise.pairs.length);
   };
 
   useEffect(() => {
     // When all pairs are matched, automatically check answers
-    if (!showResults && matches.filter(m => m !== -1).length === exercise.pairs.length) {
+    if (!showResults && matches.filter(m => m !== -1).length === stableExercise.pairs.length) {
       checkAnswers();
     }
   }, [matches, showResults]);
+
+  // Reset exercise state when stableExercise changes (i.e., when a new exercise is loaded)
+  useEffect(() => {
+    // Reset left items to new exercise pairs
+    setLeftItems(stableExercise.pairs.map(p => p.left));
+    
+    // Re-shuffle right items for new exercise
+    setRightItems(
+      stableExercise.pairs
+        .map(p => p.right)
+        .sort(() => Math.random() - 0.5)
+    );
+    
+    // Reset all matches to unmatched state (-1)
+    setMatches(new Array(stableExercise.pairs.length).fill(-1));
+    
+    // Reset selection and results state
+    setSelectedLeft(null);
+    setShowResults(false);
+  }, [stableExercise]); // Only runs when stableExercise reference changes
 
   return (
     <div className="p-6 space-y-6">
@@ -384,11 +408,11 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
                         const leftItem = randomizedLeftItems[leftIndex];
                         const rightItem = randomizedRightItems[rightIndex];
                         // Find if this pair exists in exercise.pairs
-                        const isCorrectPair = exercise.pairs.some(
+                        const isCorrectPair = stableExercise.pairs.some(
                           pair => pair.left === leftItem && pair.right === rightItem
                         );
                         return isCorrectPair ? count + 1 : count;
-                      }, 0)} / {exercise.pairs.length}
+                      }, 0)} / {stableExercise.pairs.length}
                     </span>
                   </div>
                 </div>
@@ -396,7 +420,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
               
               {/* Display grid of all original pairs with their match status */}
               <div className="grid gap-4">
-                {exercise.pairs.map((pair, index) => {
+                {stableExercise.pairs.map((pair, index) => {
                   // Search through current matches to find if this original pair was matched correctly
                   const matchIndex = matches.findIndex((rightIndex, leftIndex) => {
                     if (rightIndex === -1) return false;

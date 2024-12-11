@@ -8,7 +8,14 @@ import { cn } from '@/lib/utils';
 import type { DragAndDropProps } from '@/types/exercises';
 
 export default function DragAndDrop({ exercise: exercise, onComplete }: DragAndDropProps) {
+  // Memoize the exercise object to prevent unnecessary re-renders
+  // Only updates when exercise.id changes, ensuring stable reference
+  // This is crucial for maintaining state consistency during drag operations
   const stableExercise = useMemo(() => exercise, [exercise.id]);
+
+  // Initialize items state with a randomized version of exercise items
+  // useState with callback ensures this randomization only happens once during mount
+  // The spread operator creates a new array to avoid mutating the original exercise items
   const [items, setItems] = useState(() => 
     [...stableExercise.items].sort(() => Math.random() - 0.5)
   );
@@ -115,13 +122,21 @@ export default function DragAndDrop({ exercise: exercise, onComplete }: DragAndD
     [stableExercise.items, itemLocations]
   );
 
+  // Reset exercise state when stableExercise changes (i.e., when a new exercise is loaded)
   useEffect(() => {
     console.log('Exercise has changed:', stableExercise.id);
+    
+    // Re-randomize items when exercise changes
+    // Creates a fresh copy of items array and shuffles them
     setItems([...stableExercise.items].sort(() => Math.random() - 0.5));
+    
+    // Reset all target locations to empty arrays
+    // Creates an object where each target.id maps to an empty array
+    // Example: { target1: [], target2: [], ... }
     setItemLocations(
       stableExercise.targets.reduce((acc, target) => ({ ...acc, [target.id]: [] }), {})
-  );
-  }, [stableExercise]);
+    );
+  }, [stableExercise]); // Only runs when stableExercise reference changes
 
   useEffect(() => {
     // Automatically check answers when all items are placed in their respective targets
