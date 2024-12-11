@@ -64,7 +64,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
   };
 
   const getItemStyles = (index: number, isRight: boolean) => {
-    const baseStyles = "p-4 rounded-xl shadow-lg transition-all duration-200 cursor-pointer border-2";
+    const baseStyles = "p-4 rounded-xl shadow-sm transition-all duration-200 cursor-pointer border-2";
     const color = getItemColor(index, isRight);
     const isMatched = isRight ? matches.includes(index) : matches[index] !== -1;
     const isSelected = !isRight && selectedLeft === index;
@@ -74,7 +74,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
         ? `bg-${color} border-transparent text-white transform hover:-translate-y-1`
         : isSelected
           ? "bg-indigo-500 border-transparent text-white transform hover:-translate-y-1"
-          : "bg-white border-gray-200 hover:border-indigo-500 hover:shadow-xl"
+          : "bg-white border-gray-200 hover:border-indigo-500 hover:shadow-md"
     }`;
   };
 
@@ -393,7 +393,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
           animate={{ opacity: 1, y: 0 }}
           className="mt-8 space-y-6"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">

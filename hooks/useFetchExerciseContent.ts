@@ -115,7 +115,19 @@ export const useFetchExerciseContent = () => {
     if (exerciseId && exerciseType) {
       // Clear specific exercise cache
       await exerciseCache.clearSpecificCache(exerciseId, exerciseType);
-      await exerciseCacheByDifficulty.clearSpecificExerciseCache(exerciseId);
+      
+      // Fetch updated exercise types from the database
+      const { data: exerciseData, error } = await supabase
+        .from('exercises')
+        .select('exercise_types')
+        .eq('id', exerciseId)
+        .single();
+
+      if (!error && exerciseData) {
+        // Update just the exercise types in the cache
+        await exerciseCacheByDifficulty.updateExerciseTypes(exerciseId, exerciseData.exercise_types);
+      }
+
       fetchContent({ supabase, exerciseId, exerciseType });
     } else {
       // Clear entire exercise cache

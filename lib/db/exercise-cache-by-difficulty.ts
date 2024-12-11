@@ -105,6 +105,22 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
     // Kept for backwards compatibility, but does nothing
     return;
   }
+
+  async updateExerciseTypes(exerciseId: string, exercise_types: string[]) {
+    const existingEntries = await this.difficultyExerciseContent
+      .where({ exercise_id: exerciseId })
+      .toArray();
+
+    if (existingEntries.length > 0) {
+      const updates = existingEntries.map(entry => ({
+        ...entry,
+        exercise_types,
+        cached_at: Date.now()
+      }));
+      await this.difficultyExerciseContent.bulkPut(updates);
+      console.log(`🔄 Updated exercise types for exercise ${exerciseId}`);
+    }
+  }
 }
 
 export const exerciseCacheByDifficulty = new ExerciseCacheByDifficultyDB();
