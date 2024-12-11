@@ -24,6 +24,7 @@ export function useSaveExerciseContent() {
           .from('exercise_content')
           .update({
             content: content,
+            topic: topic,
           })
           .eq('id', exerciseId);
 

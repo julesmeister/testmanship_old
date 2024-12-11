@@ -15,7 +15,7 @@ export default function EmptyExercise({ exerciseType }: EmptyExerciseProps) {
         initial={{ y: 0 }}
         animate={{
           y: [0, -20, 0],
-          rotate: [0, 45, 0]
+          rotate: [0, 25, 0]
         }}
         transition={{
           duration: 1.5,

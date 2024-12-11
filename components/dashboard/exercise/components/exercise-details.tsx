@@ -298,6 +298,7 @@ export default function ExerciseDetails({
                   } else {
                     setSelectedTopic(value || null);
                   }
+                  setShowResults(false);
                 }}
               >
                 <SelectTrigger className="w-full">

@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useExerciseFilters } from '@/stores/exercise-filters';
 import { any } from 'zod';
+import { wrap } from 'module';
 
 interface ExerciseManagementProps {
   supabase: SupabaseClient;
@@ -454,6 +455,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                   }}
                   theme="vs-dark"
                   options={{
+                    wordWrap: "on",
                     minimap: { enabled: false },
                     automaticLayout: true,
                   }}

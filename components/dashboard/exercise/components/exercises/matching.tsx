@@ -74,6 +74,22 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
     }`;
   };
 
+  const randomizeItems = (items) => {
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]]; // Swap elements
+    }
+    return items;
+  };
+
+  const [randomizedLeftItems, setRandomizedLeftItems] = useState([]);
+  const [randomizedRightItems, setRandomizedRightItems] = useState([]);
+
+  useEffect(() => {
+    setRandomizedLeftItems(randomizeItems([...leftItems]));
+    setRandomizedRightItems(randomizeItems([...rightItems]));
+  }, [leftItems, rightItems]);
+
   // Update SVG dimensions when container size changes
   useEffect(() => {
     const updateDimensions = () => {
@@ -111,9 +127,15 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
     const controlX = x1 + dx * 0.5;
 
     const color = showResults 
-      ? exercise.pairs[leftIndex].right === rightItems[rightIndex]
-        ? "rgb(34 197 94)" // green-500
-        : "rgb(239 68 68)" // red-500
+      ? (() => {
+          // Use the same matching logic as elsewhere
+          const leftItem = randomizedLeftItems[leftIndex];
+          const rightItem = randomizedRightItems[rightIndex];
+          const isCorrectPair = exercise.pairs.some(
+            pair => pair.left === leftItem && pair.right === rightItem
+          );
+          return isCorrectPair ? "rgb(34 197 94)" : "rgb(239 68 68)"; // green-500 : red-500
+        })()
       : pairColors[leftIndex % pairColors.length];
     
     return {
@@ -140,8 +162,8 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
     if (leftMatch !== -1) {
       newMatches[leftMatch] = -1;
     }
-    newMatches[selectedLeft] = rightIndex;
-    setMatches(newMatches);
+      newMatches[selectedLeft] = rightIndex;
+      setMatches(newMatches);
     setSelectedLeft(null);
   };
 
@@ -193,7 +215,14 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
   const checkAnswers = () => {
     setShowResults(true);
     const correctMatches = matches.reduce((count, rightIndex, leftIndex) => {
-      return exercise.pairs[leftIndex].right === rightItems[rightIndex] ? count + 1 : count;
+      if (rightIndex === -1) return count;
+      const leftItem = randomizedLeftItems[leftIndex];
+      const rightItem = randomizedRightItems[rightIndex];
+      // Find if this pair exists in exercise.pairs
+      const isCorrectPair = exercise.pairs.some(
+        pair => pair.left === leftItem && pair.right === rightItem
+      );
+      return isCorrectPair ? count + 1 : count;
     }, 0);
     const score = Math.round((correctMatches / exercise.pairs.length) * 100);
     onComplete(score, exercise.pairs.length);
@@ -282,7 +311,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
 
         {/* Left Column */}
         <div className="space-y-4">
-          {leftItems.map((item, index) => (
+          {randomizedLeftItems.map((item, index) => (
             <motion.div
               key={index}
               ref={el => leftRefs[index] = el}
@@ -308,7 +337,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
 
         {/* Right Column */}
         <div className="space-y-4">
-          {rightItems.map((item, index) => (
+          {randomizedRightItems.map((item, index) => (
             <motion.div
               key={index}
               ref={el => rightRefs[index] = el}
@@ -346,20 +375,37 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
                   Correct Pairs
                 </h4>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-500">
-                    Score:
-                  </span>
-                  <span className="px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-medium rounded-full">
-                    {matches.reduce((count, rightIndex, leftIndex) => {
-                      return exercise.pairs[leftIndex].right === rightItems[rightIndex] ? count + 1 : count;
-                    }, 0)} / {exercise.pairs.length}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {/* Display score as fraction of correct matches over total pairs */}
+                    <span className="px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-medium rounded-full">
+                      {/* Count correct matches from the current state */}
+                      {matches.reduce((count, rightIndex, leftIndex) => {
+                        if (rightIndex === -1) return count;
+                        const leftItem = randomizedLeftItems[leftIndex];
+                        const rightItem = randomizedRightItems[rightIndex];
+                        // Find if this pair exists in exercise.pairs
+                        const isCorrectPair = exercise.pairs.some(
+                          pair => pair.left === leftItem && pair.right === rightItem
+                        );
+                        return isCorrectPair ? count + 1 : count;
+                      }, 0)} / {exercise.pairs.length}
+                    </span>
+                  </div>
                 </div>
               </div>
               
+              {/* Display grid of all original pairs with their match status */}
               <div className="grid gap-4">
                 {exercise.pairs.map((pair, index) => {
-                  const isCorrect = matches[index] !== -1 && rightItems[matches[index]] === pair.right;
+                  // Search through current matches to find if this original pair was matched correctly
+                  const matchIndex = matches.findIndex((rightIndex, leftIndex) => {
+                    if (rightIndex === -1) return false;
+                    const leftItem = randomizedLeftItems[leftIndex];
+                    const rightItem = randomizedRightItems[rightIndex];
+                    return pair.left === leftItem && pair.right === rightItem;
+                  });
+                  // Pair is correct if it was found in current matches
+                  const isCorrect = matchIndex !== -1;
                   return (
                     <motion.div
                       key={index}
