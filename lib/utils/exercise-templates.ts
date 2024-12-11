@@ -92,7 +92,10 @@ const interfaceStructures = {
     exercise_type: 'multiple-choice',
     questions: [{
       text: '',
-      options: [],
+      options: [{
+        german: '',
+        english: ''
+      }],
       correctAnswer: 0,
       explanation: ''
     }]

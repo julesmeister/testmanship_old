@@ -525,7 +525,8 @@ CREATE TABLE IF NOT EXISTS public.exercises (
     created_by uuid REFERENCES auth.users(id),
     grammar_category VARCHAR(100) NOT NULL,
     order_index INTEGER,
-    prerequisites uuid[] -- References other exercise IDs that should be completed first
+    prerequisites uuid[], -- References other exercise IDs that should be completed first
+    lang VARCHAR(50) DEFAULT 'German'
 );
 
 -- New table for exercise content

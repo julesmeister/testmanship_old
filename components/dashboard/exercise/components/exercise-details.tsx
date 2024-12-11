@@ -286,11 +286,13 @@ export default function ExerciseDetails({
             <div className="flex-1" />
 
             <div className="relative">
-              <div className="absolute -top-2 -right-2 z-10">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
-                  {uniqueTopics.length}
-                </span>
-              </div>
+              {uniqueTopics.length > 0 && (
+                <div className="absolute -top-2 -right-2 z-10">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
+                    {uniqueTopics.length}
+                  </span>
+                </div>
+              )}
               <Select
                 value={selectedTopic || undefined}
                 onValueChange={async (value) => {

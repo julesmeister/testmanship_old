@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { User } from '@supabase/supabase-js';
 import { exerciseCacheByDifficulty } from '@/lib/db/exercise-cache-by-difficulty';
+import { useLanguageStore } from '@/stores/language';
 
 export interface Exercise {
   id: string;
@@ -26,6 +27,8 @@ export interface UseExercisesParams {
 export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams) => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const { selectedLanguageId, languages } = useLanguageStore();
 
   const fetchExercises = useCallback(async () => {
     if (!user) {
@@ -86,6 +89,7 @@ export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams)
         .from('exercises')
         .select('*')
         .eq('difficulty_level', difficulty)
+        .eq('lang', languages.find(lang => lang.id === selectedLanguageId)?.name || 'German')
         .order('order_index', { ascending: true });
 
       if (error) throw error;

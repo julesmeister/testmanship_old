@@ -77,7 +77,7 @@ export default function ConjugationTables({ exercise, onComplete }: ConjugationT
 
     // Calculate score based on answered questions only
     const score = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
-    onComplete(score);
+    onComplete(score, totalAnswered);
   };
 
   return (

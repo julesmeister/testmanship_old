@@ -93,7 +93,10 @@ export interface MultipleChoiceProps {
         id: string;
         questions: {
             text: string;
-            options: string[];
+            options: {
+                german: string;
+                english: string;
+            }[];
             correctAnswer: number;
             explanation?: string;
         }[];

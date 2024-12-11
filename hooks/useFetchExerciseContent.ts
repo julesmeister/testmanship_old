@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { exerciseCache, CachedExerciseContent } from '@/lib/db/exercise-cache';
+import { exerciseCacheByDifficulty } from '@/lib/db/exercise-cache-by-difficulty';
 
 interface ExerciseContent {
   id: string;
@@ -114,6 +115,7 @@ export const useFetchExerciseContent = () => {
     if (exerciseId && exerciseType) {
       // Clear specific exercise cache
       await exerciseCache.clearSpecificCache(exerciseId, exerciseType);
+      await exerciseCacheByDifficulty.clearSpecificExerciseCache(exerciseId);
       fetchContent({ supabase, exerciseId, exerciseType });
     } else {
       // Clear entire exercise cache

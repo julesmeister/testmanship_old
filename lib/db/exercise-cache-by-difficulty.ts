@@ -75,9 +75,9 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
     await this.userProgress.bulkPut(cachedProgress);
   }
 
-  async clearSpecificExerciseCache(exerciseId: string, difficulty: string) {
+  async clearSpecificExerciseCache(exerciseId: string) {
     await this.difficultyExerciseContent
-      .where({ exercise_id: exerciseId, difficulty: difficulty })
+      .where({ exercise_id: exerciseId})
       .delete();
   }
 

@@ -338,7 +338,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
           {randomizedLeftItems.map((item, index) => (
             <motion.div
               key={index}
-              ref={el => leftRefs[index] = el}
+              ref={el => { leftRefs[index] = el; }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleLeftClick(index)}
@@ -364,7 +364,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
           {randomizedRightItems.map((item, index) => (
             <motion.div
               key={index}
-              ref={el => rightRefs[index] = el}
+              ref={el => { rightRefs[index] = el; }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleRightClick(index)}
@@ -376,10 +376,11 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
               }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-lg font-medium">{item}</span>
-                {matches.includes(index) && (
+              {matches.includes(index) && (
                   <div className="w-2 h-2 rounded-full bg-white opacity-75" />
                 )}
+                <span className="text-lg font-medium">{item}</span>
+               
               </div>
             </motion.div>
           ))}
