@@ -377,7 +377,7 @@ export default function Matching({ exercise, onComplete }: MatchingProps) {
             >
               <div className="flex items-center justify-between">
               {matches.includes(index) && (
-                  <div className="w-2 h-2 rounded-full bg-white opacity-75" />
+                  <div className="w-2 h-2 rounded-full bg-white opacity-75 mr-5" />
                 )}
                 <span className="text-lg font-medium">{item}</span>
                
