@@ -34,6 +34,7 @@ import { any } from 'zod';
 import { wrap } from 'module';
 import EditorComponent from './components/editor';
 import TopicSorter from './components/topic-sorter';
+import { useLanguageStore } from '@/stores/language';
 
 interface ExerciseManagementProps {
   supabase: SupabaseClient;
@@ -44,6 +45,7 @@ interface TopicData {
   topic: string;
   description: string;
   exercise_types: string[];
+  order_index: number;
 }
 
 export default function ExerciseManagement({ supabase }: ExerciseManagementProps) {
@@ -55,12 +57,14 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
   const [contentToEditId, setContentToEditId] = useState<string>('');
   const [activeAccordion, setActiveAccordion] = useState("exercise-types");
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | null>(null);
+  const [showTopicSorter, setShowTopicSorter] = useState(false);
   const { selectedLevel, setSelectedLevel, selectedTopic, setSelectedTopic } = useExerciseFilters();
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [activeTab, setActiveTab] = useState<"template" | "generated" | "edit">("template");
   const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
   const [selectedTopicOfIndividualExercise, setSelectedTopicOfIndividualExercise] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const { selectedLanguageId, languages } = useLanguageStore();
 
   const { generateContent } = useExerciseContent();
   const { saveContent, isSaving } = useSaveExerciseContent();
@@ -69,9 +73,11 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
     try {
       setIsLoading(true);
       // First get all exercises
+      const lang = languages.find(lang => lang.id === selectedLanguageId)?.name || 'German';
       const { data: exercises, error: exercisesError } = await supabase
         .from('exercises')
-        .select('id, topic, description, exercise_types');
+        .select('id, topic, description, exercise_types, order_index')
+        .eq('lang', lang);
 
       if (exercisesError) throw exercisesError;
 
@@ -92,13 +98,14 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
       }
 
       // Process exercises into topics
-      const topicsMap = exercises.reduce((acc: Record<string, TopicData>, curr) => {
+      const topicsMap = exercises.reduce((acc: Record<string, TopicData>, curr, index) => {
         if (!acc[curr.topic]) {
           acc[curr.topic] = {
             id: curr.id,
             topic: curr.topic,
             description: curr.description,
             exercise_types: curr.exercise_types || [],
+            order_index: curr.order_index || 0,   
           };
         } else {
           // Keep the existing id and update exercise_types
@@ -164,7 +171,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
         exerciseId: activeTab === "edit" ? contentToEditId : (exerciseIds[0] || ''),
         content: activeTab === "edit" ? JSON.parse(contentToEdit) : JSON.parse(contentToSave),
         update: activeTab === "edit",
-        topic: selectedTopicOfIndividualExercise,
+        topic: selectedTopicOfIndividualExercise ?? 'A1',
         exerciseType: selectedConfig || '', // Default to conjugation-tables if no config selected
       });
       fetchExercises();
@@ -253,9 +260,9 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {}}
+                      onClick={() => setShowTopicSorter(true)}
                     >
-                      Sort
+                      Sort and Manage
                     </Button>
                   </div>
                 </AccordionContent>
@@ -289,9 +296,15 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
 
           {/* Column 2: JSON Editor */}
           <div className="col-span-6">
-            {activeAccordionItem === "sorting" ? (
-              <TopicSorter topics={topics} setTopics={setTopics} />
-            ) : (
+            {showTopicSorter && (
+              <TopicSorter
+                topics={topics}
+                setTopics={setTopics}
+                supabase={supabase}
+                selectedLevel={selectedLevel || 'A1'}
+              />
+            )}
+            {!showTopicSorter && (
               <EditorComponent
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
