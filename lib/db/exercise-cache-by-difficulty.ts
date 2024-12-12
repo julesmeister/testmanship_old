@@ -19,6 +19,7 @@ export interface CachedUserProgressByDifficulty {
   exercise_id: string;
   score?: number;
   cached_at: number;
+  attempts: number;
 }
 
 export class ExerciseCacheByDifficultyDB extends Dexie {
@@ -29,7 +30,7 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
     super('ExerciseCacheByDifficultyDB');
     this.version(1).stores({
       difficultyExerciseContent: '++id, exercise_id, topic, description, content, exercise_types, difficulty, order_index, cached_at',
-      userProgress: '++id, user_id, difficulty, exercise_id, score, cached_at'
+      userProgress: '++id, user_id, difficulty, exercise_id, score, cached_at, attempts'
     });
     this.difficultyExerciseContent = this.table('difficultyExerciseContent');
     this.userProgress = this.table('userProgress');
@@ -122,7 +123,7 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
     }
   }
 
-  async saveUserExerciseScore(userId: string, exerciseId: string, score: number, difficulty: string) {
+  async saveUserExerciseScore(userId: string, exerciseId: string, score: number, difficulty: string, attempts: number) {
     const existingRecord = await this.userProgress
       .where({ user_id: userId, exercise_id: exerciseId })
       .first();
@@ -133,10 +134,10 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
       if (existingRecord.id === undefined) {
         throw new Error('Existing record ID must be defined.');
       }
-      const updateResult = await this.userProgress.update(existingRecord.id, { score, cached_at: Date.now() });
+      const updateResult = await this.userProgress.update(existingRecord.id, { score, cached_at: Date.now(), attempts });
       console.log('Update Result:', updateResult); // Log the result of the update
     } else {
-      const addResult = await this.userProgress.add({ user_id: userId, exercise_id: exerciseId, score, cached_at: Date.now(), difficulty });
+      const addResult = await this.userProgress.add({ user_id: userId, exercise_id: exerciseId, score, cached_at: Date.now(), difficulty, attempts });
       console.log('Add Result:', addResult); // Log the result of the add operation
     }
   }

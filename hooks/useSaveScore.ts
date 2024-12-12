@@ -36,7 +36,7 @@ const useSaveScore = (supabase: SupabaseClient, onScoreSaved?: () => void) => {
         }
 
         // Call to saveUserExerciseScore to update the cache
-        await exerciseCacheByDifficulty.saveUserExerciseScore(userId, exerciseId, averageScore, difficulty);
+        await exerciseCacheByDifficulty.saveUserExerciseScore(userId, exerciseId, averageScore, difficulty, existingRecord.attempts + 1);
         if (onScoreSaved) {
           onScoreSaved();
         }
@@ -52,7 +52,7 @@ const useSaveScore = (supabase: SupabaseClient, onScoreSaved?: () => void) => {
           throw insertError;
         }
 
-        await exerciseCacheByDifficulty.saveUserExerciseScore(userId, exerciseId, score, difficulty);
+        await exerciseCacheByDifficulty.saveUserExerciseScore(userId, exerciseId, score, difficulty, 1);
         if (onScoreSaved) {
           onScoreSaved();
         }

@@ -16,6 +16,7 @@ export interface Exercise {
   duration: number;
   progress: number;
   objectives: string[];
+  attempts: number;
 }
 
 export interface UseExercisesParams {
@@ -62,6 +63,7 @@ export const useExercises = ({ supabase, user, difficulty, refreshKey }: UseExer
 
       // Transform cached exercises to Exercise type
       const transformedCachedExercises = cachedExercises.map(cachedExercise => {
+        const userProgressForExercise = userProgress.find(progress => progress.exercise_id === cachedExercise.exercise_id);
         return {
           id: cachedExercise.exercise_id,
           topic: cachedExercise.topic || 'Unnamed Exercise',
@@ -76,7 +78,8 @@ export const useExercises = ({ supabase, user, difficulty, refreshKey }: UseExer
             const foundProgress = userProgress.find(progress => progress.exercise_id === cachedExercise.exercise_id);
             return foundProgress?.score !== undefined ? (foundProgress.score / 100) * 100 : 0;
           })(),
-          objectives: cachedExercise.exercise_types
+          objectives: cachedExercise.exercise_types,
+          attempts: userProgressForExercise?.attempts || 0
         };
       });
 
@@ -103,7 +106,7 @@ export const useExercises = ({ supabase, user, difficulty, refreshKey }: UseExer
       // Get user progress for completed exercises
       const { data: userProgress, error: progressError } = await supabase
         .from('user_exercise_progress')
-        .select('exercise_id, score')
+        .select('exercise_id, score, attempts')
         .eq('user_id', user.id);
 
       if (progressError) throw progressError;
@@ -123,7 +126,8 @@ export const useExercises = ({ supabase, user, difficulty, refreshKey }: UseExer
         cached_at: Date.now(),
         duration: 10,  // Default duration, adjust as needed
         progress: userProgress.find(progress => progress.exercise_id === exercise.id)?.score !== undefined ? (userProgress.find(progress => progress.exercise_id === exercise.id)?.score / 100) * 100 : 0,
-        objectives: exercise.exercise_types  // Use exercise types as objectives
+        objectives: exercise.exercise_types,  // Use exercise types as objectives
+        attempts: userProgress.find(progress => progress.exercise_id === exercise.id)?.attempts || 0
       })).sort((a, b) => a.order_index - b.order_index);
 
       // Log exercises with their order_index
@@ -153,7 +157,8 @@ export const useExercises = ({ supabase, user, difficulty, refreshKey }: UseExer
         difficulty,
         exercise_id: ex.exercise_id,
         score: ex.score, // Assuming score is part of the exercise object
-        cached_at: Date.now()
+        cached_at: Date.now(),
+        attempts: ex.attempts
       }));
 
       // Cache user progress

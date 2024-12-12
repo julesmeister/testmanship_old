@@ -118,8 +118,18 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                                             </div>
                                           </div>
                                         </TooltipTrigger>
-                                        <TooltipContent className="bg-gray-700 text-white text-xs rounded py-1 px-2 absolute -top-8 left-1/2 transform -translate-x-1/2">
-                                          {exercise.progress.toFixed(0)}%
+                                        <TooltipContent side="right" className="bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 text-xs rounded-lg py-2 px-3">
+                                          <div className="flex items-center gap-3">
+                                            <div className="flex flex-col">
+                                              <div className="text-gray-500 dark:text-gray-400 text-[10px] uppercase tracking-wider font-medium">Progress</div>
+                                              <div className="text-gray-900 dark:text-gray-100 font-semibold">{exercise.progress.toFixed(0)}%</div>
+                                            </div>
+                                            <div className="w-px h-8 bg-gray-200 dark:bg-gray-700" />
+                                            <div className="flex flex-col">
+                                              <div className="text-gray-500 dark:text-gray-400 text-[10px] uppercase tracking-wider font-medium">Attempts</div>
+                                              <div className="text-gray-900 dark:text-gray-100 font-semibold">{exercise.attempts}</div>
+                                            </div>
+                                          </div>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
