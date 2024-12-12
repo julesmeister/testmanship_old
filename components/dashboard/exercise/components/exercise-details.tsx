@@ -66,7 +66,7 @@ interface ExerciseDetailsProps {
   exerciseId: string;
   exercise?: {
     id: string;
-    title: string;
+    topic: string;
     description: string;
     completed?: boolean;
     score?: number;
@@ -313,9 +313,9 @@ export default function ExerciseDetails({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {uniqueTopics.map((topic) => (
-                      <SelectItem key={topic} value={topic}>
-                        {topic.split('-').map(word =>
+                    {uniqueTopics.map((uniqueTopic) => (
+                      <SelectItem key={uniqueTopic} value={uniqueTopic}>
+                        {uniqueTopic.split('-').map(word =>
                           word.charAt(0).toUpperCase() + word.slice(1)
                         ).join(' ')}
                       </SelectItem>

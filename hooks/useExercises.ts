@@ -22,9 +22,10 @@ export interface UseExercisesParams {
   supabase: SupabaseClient;
   user: User | null;
   difficulty: string;
+  refreshKey: number;
 }
 
-export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams) => {
+export const useExercises = ({ supabase, user, difficulty, refreshKey }: UseExercisesParams) => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -41,6 +42,8 @@ export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams)
     const cachedExercises = await exerciseCacheByDifficulty.difficultyExerciseContent
       .where('difficulty').equals(difficulty)
       .toArray();
+    // Fetch cached user progress
+    const userProgress = await exerciseCacheByDifficulty.getCachedUserProgress(user.id, difficulty);
 
     if (cachedExercises.length > 0) {
       console.log(`🟢 Cache Hit: Retrieved ${cachedExercises.length} exercises for ${cacheKey}`, {
@@ -56,12 +59,12 @@ export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams)
           order_index: ex.order_index
         }))
       });
-      
+
       // Transform cached exercises to Exercise type
       const transformedCachedExercises = cachedExercises.map(cachedExercise => {
         return {
           id: cachedExercise.exercise_id,
-          topic: cachedExercise.topic || 'Unnamed Exercise',  
+          topic: cachedExercise.topic || 'Unnamed Exercise',
           description: cachedExercise.description || '',
           exercise_types: cachedExercise.exercise_types,
           content: cachedExercise.content,
@@ -69,7 +72,10 @@ export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams)
           completed: false,
           score: undefined,
           duration: 10,
-          progress: 0,
+          progress: (() => {
+            const foundProgress = userProgress.find(progress => progress.exercise_id === cachedExercise.exercise_id);
+            return foundProgress?.score !== undefined ? (foundProgress.score / 100) * 100 : 0;
+          })(),
           objectives: cachedExercise.exercise_types
         };
       });
@@ -116,7 +122,7 @@ export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams)
         score: userProgress.find(progress => progress.exercise_id === exercise.id)?.score,
         cached_at: Date.now(),
         duration: 10,  // Default duration, adjust as needed
-        progress: userProgress.find(progress => progress.exercise_id === exercise.id)?.score || 0,
+        progress: userProgress.find(progress => progress.exercise_id === exercise.id)?.score !== undefined ? (userProgress.find(progress => progress.exercise_id === exercise.id)?.score / 100) * 100 : 0,
         objectives: exercise.exercise_types  // Use exercise types as objectives
       })).sort((a, b) => a.order_index - b.order_index);
 
@@ -141,6 +147,18 @@ export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams)
         cached_at: ex.cached_at
       })));
 
+      // Prepare user progress data
+      const userProgressData = formattedExercises.map(ex => ({
+        user_id: user.id, // Assuming you have the current user's ID
+        difficulty,
+        exercise_id: ex.exercise_id,
+        score: ex.score, // Assuming score is part of the exercise object
+        cached_at: Date.now()
+      }));
+
+      // Cache user progress
+      await exerciseCacheByDifficulty.cacheUserProgress(userProgressData);
+
       console.log('🔐 Cached Exercises Details:', formattedExercises.map(ex => ({
         id: ex.id,
         topic: ex.topic,
@@ -154,7 +172,7 @@ export const useExercises = ({ supabase, user, difficulty }: UseExercisesParams)
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user, difficulty]);
+  }, [supabase, user, difficulty, refreshKey]);
 
   useEffect(() => {
     fetchExercises();

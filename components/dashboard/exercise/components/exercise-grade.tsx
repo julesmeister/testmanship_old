@@ -1,16 +1,45 @@
 import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RotateCcw, Sparkles, CloudRain, ClipboardList } from "lucide-react";
+import useSaveScore from '@/hooks/useSaveScore';
+import { SupabaseClient } from "@supabase/supabase-js";
 
 interface ExerciseGradeProps {
   showResults: boolean;
   correctCount: number;
   totalQuestions: number;
   onTryAgain: () => void;
+  userId: string;
+  exerciseId?: string | null;
+  supabase: SupabaseClient;
+  difficulty: string;
+  onScoreSaved?: () => void;
 }
 
-export function ExerciseGrade({ showResults, correctCount, totalQuestions, onTryAgain }: ExerciseGradeProps) {
+export function ExerciseGrade({ showResults, correctCount, totalQuestions, onTryAgain, userId, exerciseId, supabase, difficulty, onScoreSaved }: ExerciseGradeProps) {
+  const { saveScore } = useSaveScore(supabase, onScoreSaved);
+
+  const [hasSavedScore, setHasSavedScore] = useState(false);
+
+  useEffect(() => {
+    console.log('Resetting hasSavedScore to false');
+    console.log('hasSavedScore changed to:', false);
+    setHasSavedScore(false);
+  }, [exerciseId, showResults]);
+
+  useEffect(() => {
+    if (showResults && exerciseId && !hasSavedScore) {
+      // Assuming correctCount is already a percentage
+      let score = correctCount;
+      // Clamp score between 0 and 100
+      score = Math.max(0, Math.min(100, score));
+      saveScore(userId, exerciseId, score, difficulty);
+      setHasSavedScore(true); // Mark score as saved
+    }
+  }, [showResults, exerciseId, correctCount]);
+
   if (!showResults || totalQuestions === 0) {
     return (
       <motion.div 

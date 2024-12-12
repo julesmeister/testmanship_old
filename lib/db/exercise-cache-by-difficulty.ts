@@ -52,12 +52,12 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
 
     const cachedContent = content.map(item => ({
       ...item,
-      order_index: item.order_index,  
+      order_index: item.order_index,
       cached_at: Date.now()
     }));
 
     await this.difficultyExerciseContent.bulkPut(cachedContent);
-    console.log(`Cached ${cachedContent.length} exercises with order_index:`, 
+    console.log(`Cached ${cachedContent.length} exercises with order_index:`,
       cachedContent.map(item => `${item.exercise_id}: ${item.order_index}`));
   }
 
@@ -77,7 +77,7 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
 
   async clearSpecificExerciseCache(exerciseId: string) {
     await this.difficultyExerciseContent
-      .where({ exercise_id: exerciseId})
+      .where({ exercise_id: exerciseId })
       .delete();
   }
 
@@ -88,17 +88,17 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
   }
 
   async clearAllExerciseCache() {
-    console.log('🗑️ Clearing ALL exercise cache');
+    console.log(' Clearing ALL exercise cache');
     const cachedExercisesCount = await this.difficultyExerciseContent.count();
     await this.difficultyExerciseContent.clear();
-    console.log(`🧹 Cleared ${cachedExercisesCount} cached exercises`);
+    console.log(` Cleared ${cachedExercisesCount} cached exercises`);
   }
 
   async clearAllUserProgressCache() {
-    console.log('🗑️ Clearing ALL user progress cache');
+    console.log(' Clearing ALL user progress cache');
     const cachedProgressCount = await this.userProgress.count();
     await this.userProgress.clear();
-    console.log(`🧹 Cleared ${cachedProgressCount} user progress entries`);
+    console.log(` Cleared ${cachedProgressCount} user progress entries`);
   }
 
   async clearExpiredCache() {
@@ -118,7 +118,26 @@ export class ExerciseCacheByDifficultyDB extends Dexie {
         cached_at: Date.now()
       }));
       await this.difficultyExerciseContent.bulkPut(updates);
-      console.log(`🔄 Updated exercise types for exercise ${exerciseId}`);
+      console.log(` Updated exercise types for exercise ${exerciseId}`);
+    }
+  }
+
+  async saveUserExerciseScore(userId: string, exerciseId: string, score: number, difficulty: string) {
+    const existingRecord = await this.userProgress
+      .where({ user_id: userId, exercise_id: exerciseId })
+      .first();
+
+    console.log('Existing Record:', existingRecord); // Log the existing record
+
+    if (existingRecord) {
+      if (existingRecord.id === undefined) {
+        throw new Error('Existing record ID must be defined.');
+      }
+      const updateResult = await this.userProgress.update(existingRecord.id, { score, cached_at: Date.now() });
+      console.log('Update Result:', updateResult); // Log the result of the update
+    } else {
+      const addResult = await this.userProgress.add({ user_id: userId, exercise_id: exerciseId, score, cached_at: Date.now(), difficulty });
+      console.log('Add Result:', addResult); // Log the result of the add operation
     }
   }
 }

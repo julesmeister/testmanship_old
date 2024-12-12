@@ -28,10 +28,10 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <div className="relative group">
-            <div ref={exercisesCount.containerRef} 
+            <div ref={exercisesCount.containerRef}
               className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-b from-violet-50 to-violet-100/80 dark:from-violet-950 dark:to-violet-900 rounded-lg ring-1 ring-violet-200 dark:ring-violet-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
               <BookOpen className="w-3.5 h-3.5 text-violet-500 dark:text-violet-300" />
-              <span ref={exercisesCount.textRef} 
+              <span ref={exercisesCount.textRef}
                 className={`font-semibold text-${exercisesCount.fontSize} text-violet-700 dark:text-violet-200`}>
                 {exercises.length}
               </span>
@@ -43,10 +43,10 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
           </div>
 
           <div className="relative group">
-            <div ref={completedCount.containerRef} 
+            <div ref={completedCount.containerRef}
               className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-b from-emerald-50 to-emerald-100/80 dark:from-emerald-950 dark:to-emerald-900 rounded-lg ring-1 ring-emerald-200 dark:ring-emerald-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
               <BookOpenCheck className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-300" />
-              <span ref={completedCount.textRef} 
+              <span ref={completedCount.textRef}
                 className={`font-semibold text-${completedCount.fontSize} text-emerald-700 dark:text-emerald-200`}>
                 {exercises.filter(e => e.completed).length}
               </span>
@@ -63,82 +63,104 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
         {exercises
           .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
           .map((exercise, index) => (
-          <motion.div
-            key={exercise.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className={cn(
-              "relative group cursor-pointer rounded-xl transition-all duration-300",
-              "border border-transparent hover:border-violet-200 dark:hover:border-violet-700",
-              "bg-white/50 hover:bg-gradient-to-r from-violet-50/50 to-white dark:bg-gray-900/50 dark:hover:bg-gradient-to-r dark:from-violet-950/50 dark:to-gray-900",
-              selectedId === exercise.id 
-                ? "bg-gradient-to-r from-violet-50/80 to-white border-violet-200 shadow-[0_2px_8px_-1px_rgba(107,70,193,0.1)] dark:from-violet-950/80 dark:to-gray-900 dark:border-violet-700 dark:shadow-[0_2px_8px_-1px_rgba(139,92,246,0.15)]" 
-                : "border-violet-100 hover:shadow-[0_2px_8px_-1px_rgba(107,70,193,0.05)] dark:border-violet-900/50 dark:hover:shadow-[0_2px_8px_-1px_rgba(139,92,246,0.1)]",
-            )}
-          >
-            <TooltipProvider>
-              <Tooltip delayDuration={300}>
-                <TooltipTrigger asChild>
-                  <div className="p-4" onClick={() => onSelect(exercise.id)}>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1 flex-1">
-                        <h4 className={cn(
-                          "font-medium transition-colors duration-300",
-                          selectedId === exercise.id 
-                            ? "text-violet-700 dark:text-violet-300" 
-                            : "text-gray-900 group-hover:text-violet-600 dark:text-gray-100 dark:group-hover:text-violet-300"
-                        )}>
-                          {exercise.topic}
-                        </h4>
-                        <div className="flex items-center gap-1 text-sm">
-                          {exercise.completed && exercise.score && (
-                            <div className="flex items-center gap-1 text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-950/50 px-2 py-0.5 rounded-full text-xs font-medium">
-                              <Trophy className="w-3 h-3" />
-                              <span>{exercise.score}%</span>
+            <motion.div
+              key={exercise.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={cn(
+                "relative group cursor-pointer rounded-xl transition-all duration-300",
+                "border border-transparent hover:border-violet-200 dark:hover:border-violet-700",
+                "bg-white/50 hover:bg-gradient-to-r from-violet-50/50 to-white dark:bg-gray-900/50 dark:hover:bg-gradient-to-r dark:from-violet-950/50 dark:to-gray-900",
+                selectedId === exercise.id
+                  ? "bg-gradient-to-r from-violet-50/80 to-white border-violet-200 shadow-[0_2px_8px_-1px_rgba(107,70,193,0.1)] dark:from-violet-950/80 dark:to-gray-900 dark:border-violet-700 dark:shadow-[0_2px_8px_-1px_rgba(139,92,246,0.15)]"
+                  : "border-violet-100 hover:shadow-[0_2px_8px_-1px_rgba(107,70,193,0.05)] dark:border-violet-900/50 dark:hover:shadow-[0_2px_8px_-1px_rgba(139,92,246,0.1)]",
+              )}
+            >
+              <TooltipProvider>
+                <Tooltip delayDuration={300}>
+                  <TooltipTrigger asChild>
+                    <div className="p-4" onClick={() => onSelect(exercise.id)}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className={cn(
+                            "font-medium transition-colors duration-300 mb-1",
+                            selectedId === exercise.id
+                              ? "text-violet-700 dark:text-violet-300"
+                              : "text-gray-900 group-hover:text-violet-600 dark:text-gray-100 dark:group-hover:text-violet-300"
+                          )}>
+                            {exercise.topic}
+                          </h4>
+                          <div className="flex items-center gap-1 text-sm mb-2">
+                            {exercise.completed && exercise.score && (
+                              <div className="flex items-center gap-1 text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-950/50 px-2 py-0.5 rounded-full text-xs font-medium">
+                                <Trophy className="w-3 h-3" />
+                                <span>{exercise.score}%</span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 pr-6">{exercise.description}</p>
+
+                          {exercise.progress !== undefined && exercise.progress > 0 && (
+                            <div className="mt-4 space-y-1 relative bg-gray-200 rounded-lg p-1 ease-in-out shadow-md">
+                              <div className="h-3 rounded-lg bg-gray-300 flex items-center">
+                                <div className="h-full rounded-lg bg-gradient-to-r from-violet-400 to-violet-600 transition-all duration-300 ease-in-out" style={{ width: `${exercise.progress}%` }}>
+                                  <div className="relative flex items-center justify-center h-full">
+                                    <TooltipProvider>
+                                      <Tooltip delayDuration={300}>
+                                        <TooltipTrigger asChild>
+                                          <div className="absolute" style={{ 
+                                            right: exercise.progress === 100 ? '0' : 'auto',
+                                            left: exercise.progress === 100 ? 'auto' : '100%',
+                                            transform: exercise.progress === 100 ? 'none' : 'translateX(-50%)'
+                                          }}>
+                                            <div className="w-3 h-3 rounded-full bg-white border-2 border-violet-600 shadow-md">
+                                            </div>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-gray-700 text-white text-xs rounded py-1 px-2 absolute -top-8 left-1/2 transform -translate-x-1/2">
+                                          {exercise.progress.toFixed(0)}%
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 pr-6">{exercise.description}</p>
-                        
-                        {exercise.progress !== undefined && (
-                          <div className="mt-3 space-y-1">
-                            <Progress value={exercise.progress} className="h-2 rounded-full bg-gray-100/30 dark:bg-gray-800/30 mt-2 mb-1" />
-                          </div>
-                        )}
+
+                        <ChevronRight className={cn(
+                          "w-5 h-5 transition-all duration-300 mt-1",
+                          selectedId === exercise.id
+                            ? "text-violet-500 dark:text-violet-400 translate-x-1"
+                            : "text-gray-400 group-hover:text-violet-400 dark:text-gray-500 dark:group-hover:text-violet-400 group-hover:translate-x-1"
+                        )} />
                       </div>
-                      
-                      <ChevronRight className={cn(
-                        "w-5 h-5 transition-all duration-300 mt-1",
-                        selectedId === exercise.id 
-                          ? "text-violet-500 dark:text-violet-400 translate-x-1" 
-                          : "text-gray-400 group-hover:text-violet-400 dark:text-gray-500 dark:group-hover:text-violet-400 group-hover:translate-x-1"
-                      )} />
                     </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent 
-                  side="right" 
-                  className={cn(
-                    "max-w-[300px] p-4 backdrop-blur-lg border shadow-lg",
-                    "bg-white/90 dark:bg-gray-900/90",
-                    "border-violet-100 dark:border-violet-800",
-                    "text-gray-700 dark:text-gray-200",
-                    "rounded-xl"
-                  )}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
-                      <BookOpen className="w-4 h-4" />
-                      <span className="text-sm font-medium">Description</span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className={cn(
+                      "max-w-[300px] p-4 backdrop-blur-lg border shadow-lg",
+                      "bg-white/90 dark:bg-gray-900/90",
+                      "border-violet-100 dark:border-violet-800",
+                      "text-gray-700 dark:text-gray-200",
+                      "rounded-xl"
+                    )}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+                        <BookOpen className="w-4 h-4" />
+                        <span className="text-sm font-medium">Description</span>
+                      </div>
+                      <p className="text-sm leading-relaxed">{exercise.description}</p>
                     </div>
-                    <p className="text-sm leading-relaxed">{exercise.description}</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </motion.div>
-        ))}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </motion.div>
+          ))}
       </div>
     </div>
   );

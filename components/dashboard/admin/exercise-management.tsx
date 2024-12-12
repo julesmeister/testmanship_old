@@ -238,6 +238,7 @@ export default function ExerciseManagement({ supabase }: ExerciseManagementProps
                             selectedConfig === type && "bg-zinc-100 dark:bg-zinc-800"
                           )}
                           onClick={() => {
+                            setShowTopicSorter(false);
                             setSelectedConfig(type);
                             setJsonContent(JSON.stringify(getExerciseTemplate(type), null, 2));
                             setGeneratedContent('');

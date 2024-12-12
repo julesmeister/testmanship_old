@@ -49,25 +49,18 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setDifficulty,
   });
 
+  const [refreshKey, setRefreshKey] = useState(0); // Initialize a refresh key
+
+  const handleScoreSaved = () => {
+    setRefreshKey((prevKey) => prevKey + 1); // Increment the key to trigger a re-fetch
+  };
+
   const { exercises: fetchedExercises, isLoading: exercisesLoading } = useExercises({
     supabase,
     user: user ?? null,
-    difficulty: difficulty || 'A1'
+    difficulty: difficulty || 'A1',
+    refreshKey,
   });
-
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        // await exerciseCacheByDifficulty.clearAllExerciseCache();
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error clearing exercise cache:', error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchInitialData();
-  }, []);
 
   const smoothScrollToTop = () => {
     setTimeout(() => {
@@ -162,6 +155,11 @@ export default function Exercise({ title, description, user, userDetails }: Prop
             correctCount={correctCount}
             totalQuestions={totalQuestions}
             onTryAgain={handleTryAgain}
+            userId={user.id}
+            exerciseId={selectedExerciseId}
+            supabase={supabase}
+            difficulty={difficulty || 'A1'}
+            onScoreSaved={handleScoreSaved}
           />
         </div>
       </div>

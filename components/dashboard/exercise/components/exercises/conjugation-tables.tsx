@@ -12,7 +12,6 @@ export default function ConjugationTables({ exercise, onComplete }: ConjugationT
   const [answers, setAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [randomizedConjugations, setRandomizedConjugations] = useState<typeof exercise.conjugations>([]);
-  console.log(exercise);
   // Initialize randomized conjugations on mount
   useEffect(() => {
     const shuffled = [...exercise.conjugations]
