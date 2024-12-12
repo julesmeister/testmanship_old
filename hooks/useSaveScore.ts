@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { exerciseCacheByDifficulty } from '@/lib/db/exercise-cache-by-difficulty'; // Correct import
+import {useUpdateStreak} from './useUpdateStreak'; // Import the new hook
 
 const useSaveScore = (supabase: SupabaseClient, onScoreSaved?: () => void) => {
   const saveScore = useCallback(async (userId: string, exerciseId: string, score: number, difficulty: string) => {
@@ -51,7 +52,9 @@ const useSaveScore = (supabase: SupabaseClient, onScoreSaved?: () => void) => {
           console.error('Error inserting new record:', insertError);
           throw insertError;
         }
-
+        // update streak
+        const { updateStreak } = useUpdateStreak();
+        await updateStreak(supabase, userId);
         await exerciseCacheByDifficulty.saveUserExerciseScore(userId, exerciseId, score, difficulty, 1);
         if (onScoreSaved) {
           onScoreSaved();
