@@ -38,6 +38,10 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   const [correctCount, setCorrectCount] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
 
+  const [shouldRefresh, setShouldRefresh] = useState(false);
+
+  const [refreshKey, setRefreshKey] = useState(0); // Initialize a refresh key
+
   const { updateLevel } = useUserLevel({ user, setLevel: setDifficulty, initialLevel: difficulty || 'A1' });
 
   const { clearCache } = useUserProgress(supabase, user?.id as string, {
@@ -49,18 +53,26 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setDifficulty,
   });
 
-  const [refreshKey, setRefreshKey] = useState(0); // Initialize a refresh key
-
   const handleScoreSaved = () => {
-    setRefreshKey((prevKey) => prevKey + 1); // Increment the key to trigger a re-fetch
+    // Instead of refreshing immediately, set a flag
+    setShouldRefresh(true);
   };
 
-  const { exercises: fetchedExercises, isLoading: exercisesLoading } = useExercises({
-    supabase,
-    user: user ?? null,
-    difficulty: difficulty || 'A1',
-    refreshKey,
-  });
+  const handleTryAgain = () => {
+    setShowResults(false);
+    // If we have a pending refresh, do it now
+    if (shouldRefresh) {
+      setRefreshKey((prevKey) => prevKey + 1);
+      setShouldRefresh(false);
+    }
+    // Temporarily clear the exercise
+    const currentExerciseId = selectedExerciseId;
+    setSelectedExerciseId(null);
+    // Bring it back after a short delay
+    setTimeout(() => {
+      setSelectedExerciseId(currentExerciseId);
+    }, 100);
+  };
 
   const smoothScrollToTop = () => {
     setTimeout(() => {
@@ -83,17 +95,6 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     smoothScrollToTop();
   };
 
-  const handleTryAgain = () => {
-    setShowResults(false);
-    // Temporarily clear the exercise
-    const currentExerciseId = selectedExerciseId;
-    setSelectedExerciseId(null);
-    // Bring it back after a short delay
-    setTimeout(() => {
-      setSelectedExerciseId(currentExerciseId);
-    }, 100);
-  };
-
   const handleExerciseSelect = (exerciseId: string) => {
     setSelectedExerciseId(exerciseId);
     smoothScrollToTop();
@@ -105,7 +106,13 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     return null;
   }
 
-  const selectedExercise = fetchedExercises.find(exercise => exercise.id === selectedExerciseId);
+
+  const { exercises: fetchedExercises, isLoading: exercisesLoading } = useExercises({
+    supabase,
+    user: user ?? null,
+    difficulty: difficulty || 'A1',
+    refreshKey,
+  });
 
   return (
     <DashboardLayout
