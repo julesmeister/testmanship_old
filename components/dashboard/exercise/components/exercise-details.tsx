@@ -146,9 +146,14 @@ export default function ExerciseDetails({
         exerciseId: exercise.id,
         exerciseType: selectedType
       });
-      setShowResults(false);
     }
   }, [exercise?.id, selectedType, supabase]);
+
+  useEffect(() => {
+    if (selectedType) {
+      setShowResults(false);
+    }
+  }, [selectedType]);
 
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
