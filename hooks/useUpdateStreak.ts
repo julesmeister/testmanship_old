@@ -23,6 +23,7 @@ export const useUpdateStreak = () => {
       user_id: userId,
       streak: updated_streak,
       longest_streak: updated_longest_streak,
+      updated_at: new Date().toISOString(),
     };
 
     // Update the user progress in the database

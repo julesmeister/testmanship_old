@@ -14,6 +14,7 @@ import ExercisePlaceholder from './components/exercise-placeholder'; // Changed 
 import { ExerciseGrade } from './components/exercise-grade'; // Changed to named import
 import { useExercises } from '@/hooks/useExercises';
 import { exerciseCacheByDifficulty } from '@/lib/db/exercise-cache-by-difficulty';
+import { clear } from 'console';
 
 interface Props {
   title?: string;
@@ -93,6 +94,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setTotalQuestions(total);
     setShowResults(true);
     smoothScrollToTop();
+    clearCache();
   };
 
   const handleExerciseSelect = (exerciseId: string) => {
