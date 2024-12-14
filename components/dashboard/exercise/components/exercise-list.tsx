@@ -109,14 +109,6 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                             )}>
                               {exercise.topic}
                             </h4>
-                            <div className="flex items-center gap-1 text-sm mb-2">
-                              {exercise.completed && exercise.score && (
-                                <div className="flex items-center gap-1 text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-950/50 px-2 py-0.5 rounded-full text-xs font-medium">
-                                  <Trophy className="w-3 h-3" />
-                                  <span>{exercise.score}%</span>
-                                </div>
-                              )}
-                            </div>
                             <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 pr-6">{exercise.description}</p>
 
                             {exercise.progress !== undefined && exercise.progress > 0 && (
