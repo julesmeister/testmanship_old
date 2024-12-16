@@ -22,6 +22,11 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
   const [currentBlankIndex, setCurrentBlankIndex] = useState<number | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
 
+  useEffect(() => {
+    // Reset answers when the exercise changes
+    setAnswers(new Array(safeExercise.blanks.length).fill(''));
+  }, [safeExercise.blanks]);
+
   const colors = useMemo(() => [
     { bg: "bg-pink-100 dark:bg-pink-900/30", hover: "hover:bg-pink-200 dark:hover:bg-pink-800/30", text: "text-pink-700 dark:text-pink-300", disabled: "bg-pink-50 dark:bg-pink-900/10 text-pink-300 dark:text-pink-700" },
     { bg: "bg-blue-100 dark:bg-blue-900/30", hover: "hover:bg-blue-200 dark:hover:bg-blue-800/30", text: "text-blue-700 dark:text-blue-300", disabled: "bg-blue-50 dark:bg-blue-900/10 text-blue-300 dark:text-blue-700" },
@@ -126,21 +131,12 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
     }, 300);
   }, [safeExercise.blanks, answers, onComplete]);
 
-  // Render method to handle empty exercise case
-  if (!safeExercise.blanks?.length) {
-    return (
-      <div className="text-center text-gray-500 p-6">
-        No blanks available for this exercise.
-      </div>
-    );
-  }
-
 
   const parts = safeExercise && safeExercise.sentence ? safeExercise.sentence.split(/(_+)/g) : [];
   let blankIndex = 0;
 
   const renderSentenceWithBlanks = () => {
-    return (!safeExercise || !safeExercise.sentence) ? (
+    return (!safeExercise || !safeExercise.sentence || !safeExercise.blanks?.length) ? (
       <div className="flex flex-col items-center justify-center p-12 space-y-6 text-center">
         <motion.div
           initial={{ y: 0 }}

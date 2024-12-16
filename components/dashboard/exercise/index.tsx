@@ -60,16 +60,22 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   };
 
   const handleTryAgain = () => {
+    // Hide the results display
     setShowResults(false);
-    // If we have a pending refresh, do it now
+    
+    // If we have a pending refresh, execute it now
     if (shouldRefresh) {
+      // Increment the refresh key to trigger a re-fetch
       setRefreshKey((prevKey) => prevKey + 1);
+      // Reset the shouldRefresh flag
       setShouldRefresh(false);
     }
-    // Temporarily clear the exercise
+    
+    // Temporarily clear the selected exercise
     const currentExerciseId = selectedExerciseId;
     setSelectedExerciseId(null);
-    // Bring it back after a short delay
+    
+    // Bring back the exercise after a short delay
     setTimeout(() => {
       setSelectedExerciseId(currentExerciseId);
     }, 100);
