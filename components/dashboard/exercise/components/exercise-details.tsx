@@ -319,13 +319,13 @@ export default function ExerciseDetails({
                 <SelectContent>
                   <SelectGroup>
                     {uniqueTopics.map((uniqueTopic) => (
-                      <SelectItem key={uniqueTopic} value={uniqueTopic}>
+                      <SelectItem key={uniqueTopic} value={uniqueTopic} className="dark:hover:text-white hover:text-black">
                         {uniqueTopic.split('-').map(word =>
                           word.charAt(0).toUpperCase() + word.slice(1)
                         ).join(' ')}
                       </SelectItem>
                     ))}
-                    <SelectItem key="refresh" value="refresh">
+                    <SelectItem key="refresh" value="refresh" className="dark:hover:text-white hover:text-black">
                       Refresh
                     </SelectItem>
                   </SelectGroup>
