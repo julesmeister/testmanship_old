@@ -96,6 +96,9 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   };
 
   const handleExerciseComplete = (score: number, total: number) => {
+    console.log('Current correct count before update:', correctCount);
+    console.log('Current total questions before update:', totalQuestions);
+    console.log('Exercise completed with score:', score, 'out of', total);
     setCorrectCount(score);
     setTotalQuestions(total);
     setShowResults(true);
@@ -121,6 +124,12 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     difficulty: difficulty || 'A1',
     refreshKey,
   });
+
+  useEffect(() => {
+    console.log('Fetched exercises length:', fetchedExercises.length);
+    console.log('Current refresh key:', refreshKey);
+    console.log('Fetched exercises:', fetchedExercises);
+  }, [fetchedExercises, refreshKey]);
 
   return (
     <DashboardLayout

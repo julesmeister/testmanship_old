@@ -80,6 +80,7 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
   };
 
   const choices = useMemo(() => {
+    setShowResults(false);
     return safeExercise.blanks?.map(blank => blank.word).sort(() => Math.random() - 0.5) ?? [];
   }, [safeExercise.blanks]);
 
@@ -200,14 +201,16 @@ export default function FillInTheBlanks({ exercise, onComplete }: FillInTheBlank
                     >
                       {answer}
                     </motion.button>
-                    {showResults && answer.toLowerCase() !== safeExercise.blanks?.find(blank => blank.position === currentBlankIndex + 1)?.word.toLowerCase() && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: -50 }}
-                        className="absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded"
-                      >
-                        {safeExercise.blanks?.find(blank => blank.position === currentBlankIndex + 1)?.word}
-                      </motion.div>
+                    {showResults && 
+                      currentBlankIndex < safeExercise.blanks.length && 
+                      answer.trim().toLowerCase() !== safeExercise.blanks[currentBlankIndex].word.toLowerCase() && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: -50 }}
+                          className="absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded"
+                        >
+                          {safeExercise.blanks[currentBlankIndex].word}
+                        </motion.div>
                     )}
                   </motion.div>
                 ) : (
