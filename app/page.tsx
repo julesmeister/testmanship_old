@@ -9,7 +9,7 @@ export default async function Dashboard() {
   const [user] = await Promise.all([getUser(supabase)]);
 
   if (!user) {
-    return redirect('/dashboard/signin');
+    return redirect('/landing/shadcn-landing-page-main/src');
   }
 
   // Redirect to dashboard directly
