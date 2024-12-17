@@ -26,8 +26,6 @@ interface Props {
 export default function Exercise({ title, description, user, userDetails }: Props) {
   const router = useRouter();
   const supabase = createClient();
-  const [isLoading, setIsLoading] = useState(true);
-
   const [weakestSkills, setWeakestSkills] = useState<string[]>([]);
   const [userProgressId, setUserProgressId] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
@@ -38,13 +36,9 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   const [showResults, setShowResults] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
-
   const [shouldRefresh, setShouldRefresh] = useState(false);
-
   const [refreshKey, setRefreshKey] = useState(0); // Initialize a refresh key
-
   const { updateLevel } = useUserLevel({ user, setLevel: setDifficulty, initialLevel: difficulty || 'A1' });
-
   const { clearCache } = useUserProgress(supabase, user?.id as string, {
     setWeakestSkills,
     setUserProgressId,
@@ -55,15 +49,16 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   });
 
   const attemptToRefetchExercise = () => {
-    console.log('attemptToRefetchExercise called');
-    setRefreshKey((prevKey) => prevKey + 1); // Increment refreshKey to trigger a refetch
+    setTimeout(() => {
+      setRefreshKey((prevKey) => prevKey + 1); // Increment refreshKey to trigger a refetch
+    }, 5000);
   };
 
   const handleTryAgain = () => {
     setShowResults(false);
 
     if (shouldRefresh) {
-      attemptToRefetchExercise();
+      setRefreshKey((prevKey) => prevKey + 1); // Increment refreshKey to trigger a refetch
       setShouldRefresh(false);
     }
 

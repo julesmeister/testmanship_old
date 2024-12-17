@@ -24,8 +24,6 @@ export function ExerciseGrade({ showResults, correctCount, totalQuestions, onTry
   const [hasSavedScore, setHasSavedScore] = useState(false);
 
   useEffect(() => {
-    console.log('Resetting hasSavedScore to false');
-    console.log('hasSavedScore changed to:', false);
     setHasSavedScore(false);
   }, [exerciseId, showResults]);
 
@@ -125,8 +123,6 @@ export function ExerciseGrade({ showResults, correctCount, totalQuestions, onTry
       </motion.div>
     );
   }
-
-  const percentage = totalQuestions > 0 ? (correctCount / totalQuestions) : 0;
 
   return (
     <motion.div
