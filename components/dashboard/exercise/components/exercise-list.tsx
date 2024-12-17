@@ -26,7 +26,7 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
   return (
     exercises.length === 0 ? (
       <motion.div
-        className="placeholder flex flex-col items-center justify-center p-5 space-y-4 text-center bg-gray-50 rounded-lg border-2 border-dashed border-blue-200 transition-all duration-300 mt-1"
+        className="placeholder flex flex-col items-center justify-center p-5 space-y-4 text-center bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-blue-200 dark:border-blue-700 transition-all duration-300 mt-1"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
