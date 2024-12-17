@@ -54,28 +54,22 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     setDifficulty,
   });
 
-  const handleScoreSaved = () => {
-    // Instead of refreshing immediately, set a flag
-    setShouldRefresh(true);
+  const attemptToRefetchExercise = () => {
+    console.log('attemptToRefetchExercise called');
+    setRefreshKey((prevKey) => prevKey + 1); // Increment refreshKey to trigger a refetch
   };
 
   const handleTryAgain = () => {
-    // Hide the results display
     setShowResults(false);
-    
-    // If we have a pending refresh, execute it now
+
     if (shouldRefresh) {
-      // Increment the refresh key to trigger a re-fetch
-      setRefreshKey((prevKey) => prevKey + 1);
-      // Reset the shouldRefresh flag
+      attemptToRefetchExercise();
       setShouldRefresh(false);
     }
-    
-    // Temporarily clear the selected exercise
+
     const currentExerciseId = selectedExerciseId;
     setSelectedExerciseId(null);
-    
-    // Bring back the exercise after a short delay
+
     setTimeout(() => {
       setSelectedExerciseId(currentExerciseId);
     }, 100);
@@ -96,9 +90,6 @@ export default function Exercise({ title, description, user, userDetails }: Prop
   };
 
   const handleExerciseComplete = (score: number, total: number) => {
-    console.log('Current correct count before update:', correctCount);
-    console.log('Current total questions before update:', totalQuestions);
-    console.log('Exercise completed with score:', score, 'out of', total);
     setCorrectCount(score);
     setTotalQuestions(total);
     setShowResults(true);
@@ -124,12 +115,6 @@ export default function Exercise({ title, description, user, userDetails }: Prop
     difficulty: difficulty || 'A1',
     refreshKey,
   });
-
-  useEffect(() => {
-    console.log('Fetched exercises length:', fetchedExercises.length);
-    console.log('Current refresh key:', refreshKey);
-    console.log('Fetched exercises:', fetchedExercises);
-  }, [fetchedExercises, refreshKey]);
 
   return (
     <DashboardLayout
@@ -183,7 +168,7 @@ export default function Exercise({ title, description, user, userDetails }: Prop
             exerciseId={selectedExerciseId}
             supabase={supabase}
             difficulty={difficulty || 'A1'}
-            onScoreSaved={handleScoreSaved}
+            onScoreSaved={attemptToRefetchExercise}
           />
         </div>
       </div>
