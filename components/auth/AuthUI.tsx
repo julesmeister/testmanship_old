@@ -60,13 +60,16 @@ export default function AuthUI(props: any) {
         props.allowOauth && (
           <>
             <div className="mt-4 w-full space-y-4">
-              <OauthSignIn />
-              <Separator text="or" />
+              {!showPasswordSignIn && (
+                <>
+                  <OauthSignIn />
+                  <Separator text="or" />
+                </>
+              )}
               {props.viewProp !== 'forgot_password' && (
                 <Button
                   variant="ghost"
-                  className="w-full flex items-center justify-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-                  onClick={() => setShowPasswordSignIn(!showPasswordSignIn)}
+className="w-full flex items-center justify-center gap-2 text-sm text-zinc-600 hover:bg-primary-50 dark:text-zinc-400 dark:hover:bg-zinc-700 transition duration-200"                  onClick={() => setShowPasswordSignIn(!showPasswordSignIn)}
                 >
                   {showPasswordSignIn ? (
                     <>
