@@ -9,6 +9,10 @@ Testmanship is a sophisticated web application designed to help language learner
 - **AI-Powered Feedback**: Receive instant feedback on your writing through advanced AI analysis
 - **Responsive Design**: Seamless experience across desktop and mobile devices
 - **Dark/Light Mode**: Comfortable writing experience in any lighting condition
+- **Variety of Exercises**: Engage with a diverse set of exercises tailored to different proficiency levels, from A1 to C2.
+- **Interactive Learning**: Participate in interactive exercises that adapt to your learning pace and style.
+- **Instant Feedback**: Receive real-time feedback on your answers to help you improve your writing skills.
+- **Customizable Difficulty**: Choose exercises based on your current skill level and desired challenge.
 
 ## CEFR Levels Explained
 
