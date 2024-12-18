@@ -72,7 +72,7 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                 <BookOpenCheck className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-300" />
                 <span ref={completedCount.textRef}
                   className={`font-semibold text-${completedCount.fontSize} text-emerald-700 dark:text-emerald-200`}>
-                  {exercises.filter(e => e.completed).length}
+                  {exercises.filter(e => e.progress >= progressThreshold).length}
                 </span>
               </div>
               <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-emerald-700 dark:bg-emerald-800 text-white text-xs font-medium rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap shadow-lg">
