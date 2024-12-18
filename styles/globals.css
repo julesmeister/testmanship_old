@@ -139,6 +139,10 @@ input:checked.defaultCheckbox::before {
   opacity: 1;
 }
 
+.line-through {
+  text-decoration: line-through;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

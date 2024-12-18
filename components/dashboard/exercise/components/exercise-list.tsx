@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import {  BookOpen, ChevronRight, Trophy, CheckCircle2, BookOpenCheck, AlertTriangle, Frown } from 'lucide-react';
+import { BookOpen, ChevronRight, Trophy, CheckCircle2, BookOpenCheck, AlertTriangle, Frown, Slash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextFit } from '@/hooks/useTextFit';
 import { Exercise } from '@/hooks/useExercises';
@@ -12,6 +13,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from '@/components/ui/slider';
 
 interface ExerciseListProps {
   exercises: Exercise[];
@@ -22,6 +25,9 @@ interface ExerciseListProps {
 export default function ExerciseList({ exercises, selectedId, onSelect }: ExerciseListProps) {
   const exercisesCount = useTextFit();
   const completedCount = useTextFit();
+  const [showAll, setShowAll] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [progressThreshold, setProgressThreshold] = useState(30);
 
   return (
     exercises.length === 0 ? (
@@ -74,11 +80,66 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 transform rotate-45 w-2 h-2 bg-emerald-700 dark:bg-emerald-800"></div>
               </div>
             </div>
+
+            <div className="flex-grow"></div>
+
+            <div className="relative group">
+              <Tabs defaultValue="all" className="relative" onValueChange={(value) => setShowAll(value === 'all')}>
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <TabsTrigger
+                    value="all"
+                    className={cn(
+                      "text-sm font-medium transition-all",
+                      { "bg-blue-500 text-white": showAll, "text-gray-600 dark:text-gray-300": !showAll }
+                    )}
+                  >
+                    <BookOpen className="w-5 h-5" />
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="threshold"
+                    className={cn(
+                      "text-sm font-medium transition-all",
+                      { "bg-blue-500 text-white": !showAll, "text-gray-600 dark:text-gray-300": showAll }
+                    )}
+                  >
+                    <TooltipProvider>
+                      <Tooltip delayDuration={300}>
+                        <TooltipTrigger asChild>
+                        <div style={{ position: 'relative' }}>
+                          <Trophy className="w-5 h-5" />
+                          <Slash className="w-5 h-5 absolute" style={{ left: 0, top: 0, transform: 'translateY(0%) rotate(90deg)' }} />
+                        </div></TooltipTrigger>
+                       <TooltipContent side="top" className="bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 text-xs rounded-lg py-2 px-3">
+                         <div className="flex flex-col">
+                         <span className="text-gray-700 dark:text-gray-300 font-medium mb-2">
+                             Hide scores above: <strong>{progressThreshold}</strong>
+                           </span>
+                          <Slider
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={[progressThreshold]}
+                            onValueChange={([value]) => {
+                              console.log("Updating progressThreshold to:", value); // Add this line
+                              setProgressThreshold(value);
+                            }}
+                            className="w-full"
+                          />
+                         </div>
+                       </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
         </div>
 
+
+
         <div className="space-y-3">
-          {exercises
+          {exercises.filter(e => e.progress == 0 || e.progress == null || showAll || (!showAll && e.progress <= progressThreshold))
             .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
             .map((exercise, index) => (
               <motion.div
@@ -119,7 +180,7 @@ export default function ExerciseList({ exercises, selectedId, onSelect }: Exerci
                                       <TooltipProvider>
                                         <Tooltip delayDuration={300}>
                                           <TooltipTrigger asChild>
-                                            <div className="absolute" style={{ 
+                                            <div className="absolute" style={{
                                               right: exercise.progress === 100 ? '0' : 'auto',
                                               left: exercise.progress === 100 ? 'auto' : '100%',
                                               transform: exercise.progress === 100 ? 'none' : 'translateX(-50%)'
