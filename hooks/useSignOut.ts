@@ -1,12 +1,12 @@
 import { createClient } from '@/utils/supabase/client';
 import { getRedirectMethod } from '@/utils/auth-helpers/settings';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { toast } from "sonner";
 
 const supabase = createClient();
 
 export function useSignOut() {
-  const router = getRedirectMethod() === 'client' ? useRouter() : null;
+  // const router = getRedirectMethod() === 'client' ? useRouter() : null;
 
   const signOut = async (e?: React.MouseEvent) => {
     if (e) {
@@ -32,11 +32,7 @@ export function useSignOut() {
       id: 'signout',
     });
     
-    if (router) {
-      router.push('/dashboard/signin');
-    } else {
-      window.location.href = '/dashboard/signin';
-    }
+    redirect('/'); // To Landing page
     
     return true;
   };
