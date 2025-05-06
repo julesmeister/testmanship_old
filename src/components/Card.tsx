@@ -254,10 +254,10 @@ export function Card(props: CardProps) {
 }
 
 const $containerBase: ThemedStyle<ViewStyle> = (theme) => ({
-  borderRadius: theme.spacing.md,
+  borderRadius: theme.spacing.xs,
   padding: theme.spacing.xs,
   borderWidth: 1,
-  shadowColor: theme.colors.palette.neutral800,
+  shadowColor: theme.colors.palette.neutral100,
   shadowOffset: { width: 0, height: 12 },
   shadowOpacity: 0.08,
   shadowRadius: 12.81,

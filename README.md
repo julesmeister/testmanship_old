@@ -71,7 +71,6 @@ Follow our [Maestro Setup](https://ignitecookbook.com/docs/recipes/MaestroSetup)
 
 Read our [Upgrade Guide](https://ignitecookbook.com/docs/recipes/UpdatingIgnite) to learn how to upgrade your Ignite project.
 
-
 ## Project Model Tree & Data Structure
 
 This app is designed to help users annotate PDFs, create occlusion cards for quizzes, track study statistics, and manage study schedules for exams. Below is the planned data model structure and documentation for the core features.
@@ -225,6 +224,160 @@ Root
 ```
 
 #### User
+
 - `preferences`: User settings
 - `cliques`: Array of clique IDs the user is a member of
 
+## UI Schematic Tree (Prototype)
+
+This section outlines the planned UI structure for the initial prototype, focusing on the User Dashboard and its main widgets/components.
+
+**Note:** On small mobile screens, some widgets may be hidden or collapsed by default (e.g., using an accordion or toggle) to improve usability. These are marked as [Hideable] below.
+
+```
+App
+│
+├── Navigation
+│   ├── Dashboard (Home)
+│   ├── Notebooks
+│   ├── Study Sessions
+│   ├── Cliques
+│   ├── Exams
+│   └── Settings
+│
+└── Dashboard Screen
+    ├── User Header
+    │   ├── Avatar
+    │   └── Greeting / Name
+    ├── Study Stats Widget [Hideable]
+    │   ├── Mastery Progress
+    │   ├── Review Streak
+    │   └── Time Studied
+    ├── Upcoming Exams Widget [Hideable]
+    │   ├── Exam Title
+    │   ├── Date/Countdown
+    │   └── Linked Topics
+    ├── Leaderboard Widget [Hideable]
+    │   ├── Top Users
+    │   └── User Rank
+    ├── Recent Activity Widget [Hideable]
+    │   ├── Recent Reviews
+    │   ├── New Highlights
+    │   └── Recent Occlusions
+    ├── Cliques Widget [Hideable]
+    │   ├── My Cliques
+    │   └── Join/Create
+    └── Notifications Widget [Hideable]
+        ├── Reminders
+        ├── Group Invites
+        └── Announcements
+```
+
+---
+
+## Architecture & Design Decisions
+
+This project is built with a focus on robust, user-centric study features and offline-first support, optimized for Android phones and tablets.
+
+### Tech Stack
+
+- **Ignite**: Used to scaffold the app, providing a modern React Native foundation.
+- **MobX-State-Tree (MST)**: Handles in-memory state management and UI logic.
+- **PouchDB**: Provides offline-first, document-based storage for all models (Notebook, Topic, User, Clique, etc.).
+- **react-native-pdf**: Used for PDF viewing and annotation.
+
+### Key Features
+
+- **PDF Annotation**: View and annotate PDFs, with highlights and notes linked to attachments.
+- **Occlusion Cards**: Create occlusion cards for quizzes, with user ratings (sad/neutral/happy) and spaced repetition.
+- **Statistics & Mastery**: All study statistics, mastery, and review streaks are tracked under `User.statistics`, referencing notebooks, topics, and sessions by ID.
+- **Study Scheduling & Notifications**: Schedule study sessions, set alarms/reminders for exams, and receive notifications (including group notifications for cliques).
+- **Group/Partner Study (Cliques)**: Study with others in cliques, track group statistics, and share notifications. Each user has a `cliques` array of clique IDs they belong to.
+- **Attachments**: Images, audio, video, and files can be attached to topics, occlusions, and highlights via `attachmentId`.
+- **Leaderboards**: Each notebook can have a leaderboard, tracking user scores, streaks, and mastery.
+
+### Model Structure Rationale
+
+- **User-Centric Statistics**: All mastery, review, and study stats are stored under the User model, not in Notebooks or Topics, for a unified user experience.
+- **References by ID**: Relationships between models (e.g., topics, cliques, exams) are managed by referencing IDs, making syncing and querying efficient.
+- **Nested Notifications**: All notifications for cliques are nested under `cliques.notifications` for clarity and group management.
+- **Exams & Cliques**: Exams can be linked to cliques for group notifications and collaborative study.
+
+### MST & PouchDB Integration
+
+- **MST** is used for UI and in-memory state logic.
+- **PouchDB** is used for persistence. All CRUD operations are performed on PouchDB, and MST actions keep the in-memory state in sync with the database.
+- **Best Practice**: Use MST for fast UI updates and logic, and PouchDB for reliable, offline-first storage.
+
+---
+
+## Using PouchDB for Model Storage
+
+This project uses [PouchDB](https://pouchdb.com/) for offline-first, document-based storage. Each model (Notebook, Topic, User, Clique, etc.) is stored as a document in the database. Below are example CRUD operations for a typical model (e.g., Notebook):
+
+### 1. Setup
+
+```js
+import PouchDB from "pouchdb"
+const db = new PouchDB("myappdb")
+```
+
+### 2. Create a Document
+
+```js
+const notebook = {
+  _id: "notebook_123", // unique id
+  type: "notebook",
+  title: "My Notebook",
+  ownerId: "user_1",
+  // ...other fields
+}
+
+db.put(notebook)
+  .then((response) => console.log("Created:", response))
+  .catch((err) => console.error(err))
+```
+
+### 3. Read (Get) a Document
+
+```js
+db.get("notebook_123")
+  .then((doc) => console.log("Fetched:", doc))
+  .catch((err) => console.error(err))
+```
+
+### 4. Update a Document
+
+```js
+db.get("notebook_123")
+  .then((doc) => {
+    doc.title = "Updated Title"
+    return db.put(doc)
+  })
+  .then((response) => console.log("Updated:", response))
+  .catch((err) => console.error(err))
+```
+
+### 5. Delete a Document
+
+```js
+db.get("notebook_123")
+  .then((doc) => {
+    return db.remove(doc)
+  })
+  .then((response) => console.log("Deleted:", response))
+  .catch((err) => console.error(err))
+```
+
+### 6. Query Documents by Type
+
+```js
+db.allDocs({ include_docs: true }).then((result) => {
+  const notebooks = result.rows.map((row) => row.doc).filter((doc) => doc.type === "notebook")
+  console.log("All notebooks:", notebooks)
+})
+```
+
+> You can repeat this pattern for other models (Topic, User, Clique, etc.) by changing the `type` field and document structure.
+
+For more advanced queries, consider using the [pouchdb-find](https://pouchdb.com/guides/mango-queries.html) plugin.
