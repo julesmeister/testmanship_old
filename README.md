@@ -71,13 +71,6 @@ Follow our [Maestro Setup](https://ignitecookbook.com/docs/recipes/MaestroSetup)
 
 Read our [Upgrade Guide](https://ignitecookbook.com/docs/recipes/UpdatingIgnite) to learn how to upgrade your Ignite project.
 
-## Community
-
-⭐️ Help us out by [starring on GitHub](https://github.com/infinitered/ignite), filing bug reports in [issues](https://github.com/infinitered/ignite/issues) or [ask questions](https://github.com/infinitered/ignite/discussions).
-
-💬 Join us on [Slack](https://join.slack.com/t/infiniteredcommunity/shared_invite/zt-1f137np4h-zPTq_CbaRFUOR_glUFs2UA) to discuss.
-
-📰 Make our Editor-in-chief happy by [reading the React Native Newsletter](https://reactnativenewsletter.com/).
 
 ## Project Model Tree & Data Structure
 
@@ -100,12 +93,8 @@ Root
 │       │       └── description
 │       ├── ownerId
 │       ├── isPublic (boolean)
-│       ├── spacedRepetitionSettings
-│       │   ├── intervalBase (number, e.g., days)
-│       │   ├── difficultyModifier (number)
-│       │   └── snoozedUntil (date, optional)
 │       ├── exportId
-│       ├── lastSynced
+│       ├── lastUpdated
 │       ├── syncProvider (e.g., Google Drive, Dropbox)
 │       ├── leaderboards (array)
 │       │   └── LeaderboardEntry
@@ -122,9 +111,10 @@ Root
 │       │       ├── occlusions (array)
 │       │       │   └── Occlusion
 │       │       │       ├── id
+│       │       │       ├── attachmentId
 │       │       │       ├── pageNumber
 │       │       │       ├── coordinates (x, y, width, height)
-│       │       │       ├── scale (zoom level)
+│       │       │       ├── scale (zoom level of attachment: pdf, image)
 │       │       │       ├── type (text, image)
 │       │       │       ├── annotation (highlight, note, etc.)
 │       │       │       ├── lastReviewed
@@ -132,9 +122,10 @@ Root
 │       │       ├── highlights (array)
 │       │       │   └── Highlight
 │       │       │       ├── id
+│       │       │       ├── attachmentId
 │       │       │       ├── pageNumber
 │       │       │       ├── coordinates (x, y, width, height)
-│       │       │       ├── scale (zoom level)
+│       │       │       ├── scale (zoom level of pdf)
 │       │       │       ├── annotation (highlight, note, etc.)
 │       │       │       ├── color
 │       │       │       └── note
@@ -156,23 +147,36 @@ Root
 │       │       │       ├── rating (sad, neutral, happy)
 │       │       │       ├── wasCorrect (optional, boolean)
 │       │       │       └── date
-│       │       ├── mastery
-│       │       │   ├── currentRating (sad, neutral, happy)
-│       │       │   ├── lastRatingDate
-│       │       │   ├── reviewStreak (number of consecutive days reviewed)
-│       │       │   ├── longestStreak (longest consecutive review streak)
-│       │       │   ├── averageRating (average of all ratings)
-│       │       │   └── reviewHistory (array of {date, rating})
-│       │
-│       └── statistics
-│           ├── totalReviewSessions
-│           ├── lastReviewed
-│           ├── masteryLevel (numeric, e.g., 0-100, representing computed mastery score)
-│           ├── reviewStreak (number of consecutive days reviewed)
-│           ├── longestStreak (longest consecutive review streak)
-│           ├── lastPerformance (last emoji rating given)
-│           ├── averagePerformance (average of all ratings)
-│           └── reviewHistory (array of {date, rating})
+├── studySessions (array)
+│   └── StudySession
+│       ├── id
+│       ├── cliqueId
+│       ├── participants (array of userIds)
+│       ├── startTime
+│       ├── endTime
+│       ├── topicsCovered (array of topicIds)
+│
+├── cliques (array)
+│   └── Clique
+│       ├── cliqueId
+│       ├── name
+│       ├── description
+│       ├── type (clique | partner)
+│       ├── members (array of userIds)
+│       ├── createdBy (userId)
+│       ├── createdAt
+│       ├── updatedAt
+│       ├── sessions (array of Study Session Ids)
+│       ├── exams (array of examIds)
+│       ├── notifications (array of Notification)
+│       │   └── Notification
+│       │       ├── id
+│       │       ├── type (e.g., 'exam', 'reminder', 'message')
+│       │       ├── examId (if type is 'exam')
+│       │       ├── message
+│       │       ├── createdAt
+│       │       └── readBy (array of userIds)
+│       └── invitations (array of {userId, status, invitedAt, respondedAt})
 │
 ├── Exams (array)
 │   └── Exam
@@ -180,159 +184,47 @@ Root
 │       ├── title
 │       ├── date
 │       ├── topics (array of topic ids)
+│       ├── cliques (array of cliqueIds)
 │       └── reminders (array of {date, message})
 │
 └── User
     ├── preferences
+    ├── cliques (array of cliqueIds)
     ├── accessibleNotebooks (array of notebook IDs the user can access)
-    └── studyAlarms (array of {date, topicId, message})
+    ├── studyAlarms (array of {date, topicId, message})
+    ├── sessions
+    │   ├── studySessions (array)
+    │   │   └── StudySession
+    │   │       ├── sessionId
+    │   │       ├── topicsCovered (array of topicIds)
+    │   │       ├── userScore
+    │   │       ├── totalQuestionsAnswered
+    │   │       ├── correctAnswers
+    │   │       ├── incorrectAnswers
+    │   │       ├── averageScore
+    │   │       ├── timeSpentPerTopic (array of {topicId, duration})
+    │   └── ... (other session types if needed)
+    └── statistics
+        ├── notebooks (array)
+        │   └── NotebookStats
+        │       ├── notebookId
+        │       ├── mastery
+        │       ├── reviewStreak
+        │       ├── longestStreak
+        │       ├── averageRating
+        │       └── lastReviewed
+        ├── topics (array)
+        │   └── TopicStats
+        │       ├── topicId
+        │       ├── mastery
+        │       ├── reviewStreak
+        │       ├── longestStreak
+        │       ├── averageRating
+        │       └── lastReviewed
+        └── otherStats (object)
 ```
-
-### Model Documentation
-
-#### Notebook
-- `id`: Unique identifier
-- `title`: Name of the notebook
-- `pdfUri`: File path or URL to the PDF
-- `topics`: Array of Topic objects
-- `statistics`: Aggregated stats for the notebook
-  - `totalReviews`: Total number of reviews for this notebook
-  - `lastReviewed`: Date of the last review
-  - `masteryLevel`: Computed mastery level for the notebook (numeric, e.g., 0-100, representing a percentage or score)
-  - `reviewStreak`: Number of consecutive days reviewed
-  - `longestStreak`: Longest consecutive review streak
-  - `lastRating`: Last emoji rating given
-  - `averageRating`: Average of all ratings
-  - `reviewHistory`: Array of `{date, rating}` for spaced repetition and progress tracking
-- `attachments`: Array of Attachment objects (media/files associated with the notebook)
-- `ownerId`: User ID of the notebook owner
-- `isPublic`: Boolean indicating if the notebook is public
-- `spacedRepetitionSettings`: Settings for spaced repetition for the entire notebook
-  - `intervalBase`: Base interval for reviews (in days)
-  - `difficultyModifier`: Multiplier for adjusting review frequency
-  - `snoozedUntil`: Date until which the notebook is snoozed
-- `exportId`: Unique export/import identifier for the notebook
-- `lastSynced`: Last sync date for the notebook
-- `syncProvider`: Cloud provider used for notebook sync
-- `leaderboards`: Array of LeaderboardEntry objects for this notebook
-  - `userId`: Unique identifier for the user
-  - `username`: Display name
-  - `score`: Numeric score (XP, streak, or mastery)
-  - `rank`: Leaderboard rank
-  - `lastActive`: Last activity date
-
-#### Topic
-- `id`: Unique identifier
-- `title`: Name of the topic/section
-- `pageNumber`: Page in the PDF
-- `occlusions`: Array of Occlusion objects (for quiz/occlusion cards)
-- `highlights`: Array of Highlight objects
-- `questions`: Array of Question objects
-  - `id`: Unique identifier
-  - `text`: The question text
-  - `options`: Array of Option objects
-    - `id`: Unique identifier
-    - `text`: Option text
-  - `correctOptionId`: The id of the correct option
-  - `userAnswers`: Array of `{ optionId, date, isCorrect }` for tracking user responses
-- `ratings`: Array of immutable RatingRecord objects, each representing a user's mastery rating for an occlusion at a specific time
-  - `occlusionId`: Reference to the occlusion being rated
-  - `questionId`: Optional reference to the question being rated
-  - `rating`: User's familiarity rating (`sad`, `neutral`, `happy`)
-  - `wasCorrect`: Optional boolean indicating whether the answer was correct
-  - `date`: Date the rating was given
-  - `durationSinceLast`: Time in milliseconds since the previous rating for this occlusion
-- `mastery`: Aggregated mastery stats for the topic
-  - `currentRating`: The most recent rating for the topic (`sad`, `neutral`, `happy`)
-  - `lastRatingDate`: Date of the most recent rating
-  - `reviewStreak`: Number of consecutive days reviewed
-  - `longestStreak`: Longest consecutive review streak
-  - `averageRating`: Average of all ratings
-  - `reviewHistory`: Array of `{date, rating}` for spaced repetition and progress tracking
-
-#### Occlusion
-- `id`: Unique identifier
-- `pageNumber`: Page in the PDF where the occlusion is located
-- `coordinates`: `{x, y, width, height}` (relative to page)
-- `scale`: Zoom level when created
-- `type`: `"text"` or `"image"`
-- `annotation`: Optional text or type of annotation
-- `lastReviewed`: Date last reviewed
-- `reviewHistory`: Array of `{date, rating}` for spaced repetition (for historical reference, but ratings are now tracked at the Topic level)
-
-#### Highlight
-- `id`: Unique identifier
-- `pageNumber`: Page in the PDF where the highlight is located
-- `coordinates`: `{x, y, width, height}` (relative to page)
-- `scale`: Zoom level when created
-- `type`: `"text"` or `"image"`
-- `annotation`: Optional text or type of annotation
-- `color`: Highlight color
-- `note`: Optional note
-- `lastReviewed`: Date last reviewed
-- `reviewHistory`: Array of `{date, color, note}` for tracking highlight changes and reviews
-
-#### Question
-- `id`: Unique identifier
-- `text`: The question text
-- `options`: Array of Option objects
-  - `id`: Unique identifier
-  - `text`: Option text
-- `correctOptionId`: The id of the correct option
-- `userAnswers`: Array of `{ optionId, date, isCorrect }` for tracking user responses
-
-#### Exam
-- `id`: Unique identifier
-- `title`: Name of the exam
-- `date`: Exam date
-- `topics`: Array of topic IDs to study
-- `reminders`: Array of `{date, message}`
 
 #### User
 - `preferences`: User settings
-- `accessibleNotebooks`: Array of notebook IDs the user has access to
-- `studyAlarms`: Array of `{date, topicId, message}`
+- `cliques`: Array of clique IDs the user is a member of
 
-#### Attachment
-- `id`: Unique identifier
-- `type`: Type of attachment (`image`, `audio`, `video`, `file`)
-- `uri`: File path or URL
-- `description`: Optional description
-
-#### Sharing & Collaboration
-- `sharedWith`: Array of user IDs or emails the item is shared with
-- `ownerId`: User ID of the owner
-- `isPublic`: Boolean indicating if the item is public
-
-#### Spaced Repetition Settings
-- `intervalBase`: Base interval for reviews (in days)
-- `difficultyModifier`: Multiplier for adjusting review frequency
-- `snoozedUntil`: Date until which the item is snoozed
-
-#### Leaderboard Entry
-- `userId`: Unique identifier for the user
-- `username`: Display name
-- `score`: Numeric score (XP, streak, or mastery)
-- `rank`: Leaderboard rank
-- `lastActive`: Last activity date
-
-#### Sync/Export
-- `exportId`: Unique export/import identifier
-- `lastSynced`: Last sync date
-- `syncProvider`: Cloud provider used for sync
-
----
-
-### Storage
-- All data will be stored locally using [PouchDB](https://pouchdb.com/), allowing for offline-first usage and future sync capabilities.
-
-### PDF Annotation & Occlusion
-- PDF viewing is powered by `react-native-pdf`.
-- Occlusion cards and highlights are implemented as overlays, with their dimensions, page, and zoom scale saved in the model.
-- User can rate their recall for each occlusion (sad, neutral, happy), and the app will use spaced repetition to schedule reviews.
-
-### Study Scheduling
-- Users can create exams, associate topics, and set reminders/alarms for study sessions.
-- The app will prioritize review of items/topics based on user ratings and upcoming exam dates.
-
----
