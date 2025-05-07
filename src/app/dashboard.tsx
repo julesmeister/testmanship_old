@@ -1,8 +1,7 @@
 import { StyleSheet, ScrollView } from "react-native"
 import { Screen } from "@/components"
 import {
-  UserHeader,
-  StudyStatsWidget,
+  UserSummaryCard,
   UpcomingExamsWidget,
   LeaderboardWidget,
   RecentActivityWidget,
@@ -14,8 +13,7 @@ export default function DashboardScreen() {
   return (
     <Screen preset="scroll" safeAreaEdges={["top"]}>
       <ScrollView contentContainerStyle={styles.container}>
-        <UserHeader />
-        <StudyStatsWidget />
+        <UserSummaryCard />
         <UpcomingExamsWidget />
         <LeaderboardWidget />
         <RecentActivityWidget />

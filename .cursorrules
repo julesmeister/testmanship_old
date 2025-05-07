@@ -1,0 +1,26 @@
+# .cursorrules - Project Intelligence & Learning Journal
+
+# This file captures important patterns, preferences, and project-specific intelligence.
+# It helps in working more effectively by remembering:
+# - Critical implementation paths
+# - User preferences and workflow
+# - Project-specific patterns (e.g., coding styles, architectural choices)
+# - Known challenges and their solutions/workarounds
+# - Evolution of project decisions
+# - Tool usage patterns and configurations
+
+# Add your project-specific rules and observations below.
+# Example:
+# ## Frontend Development
+# - Always use functional components with hooks for React.
+# - Prefer TailwindCSS for styling.
+
+# ## Backend API
+# - Follow RESTful principles for all new endpoints.
+# - Ensure all database queries are optimized.
+
+## Component Usage Patterns
+
+### Card Component (`src/components/Card.tsx`)
+- To render main content within the `Card`'s structured layout (body area, distinct from explicit header/footer sections provided by the Card itself), use the `ContentComponent` prop.
+- Passing children directly to `<Card>{children}</Card>` may result in the children not being rendered within the Card's intended content area, as the component primarily uses props like `heading`, `content`, `footer`, `HeadingComponent`, `ContentComponent`, and `FooterComponent` to structure its display. 

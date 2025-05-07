@@ -1,7 +1,147 @@
-import { Card, Text } from "@/components"
+import { FC, Fragment } from "react"
+import { View, Text, StyleSheet, FlatList } from "react-native"
+import { Card, Icon, IconTypes } from "@/components" // Assuming Icon is available in @/components
 
-export const RecentActivityWidget = () => (
-  <Card>
-    <Text preset="heading" text="Recent Activity [Hideable]" />
-  </Card>
-)
+// Color Constants
+const COLORS = {
+  darkGray: "#333333",
+  mediumGray: "#666666",
+  lightGray: "#F0F0F0",
+  accentBlue: "#007AFF",
+  accentGreen: "#34C759",
+  accentOrange: "#FF9500",
+}
+
+interface ActivityItem {
+  id: string
+  type: "review" | "highlight" | "occlusion"
+  description: string
+  timestamp: string // e.g., "5m ago", "1h ago", "Yesterday"
+  icon: IconTypes
+}
+
+interface RecentActivityWidgetProps {
+  activities?: ActivityItem[]
+}
+
+const MOCK_ACTIVITIES: ActivityItem[] = [
+  {
+    id: "1",
+    type: "review",
+    description: "Reviewed 'Photosynthesis Basics'",
+    timestamp: "15m ago",
+    icon: "check", // Changed from "refresh"
+  },
+  {
+    id: "2",
+    type: "highlight",
+    description: "Highlighted section in 'Newtonian Physics'",
+    timestamp: "1h ago",
+    icon: "pin", // Changed from "bookmark"
+  },
+  {
+    id: "3",
+    type: "occlusion",
+    description: "Created 3 new occlusions for 'Anatomy - Skeletal System'",
+    timestamp: "Yesterday",
+    icon: "view", // Changed from "image"
+  },
+  {
+    id: "4",
+    type: "review",
+    description: "Completed quiz on 'Organic Chemistry Nomenclature'",
+    timestamp: "2 days ago",
+    icon: "check", // Changed from "refresh"
+  },
+]
+
+export const RecentActivityWidget: FC<RecentActivityWidgetProps> = ({
+  activities = MOCK_ACTIVITIES,
+}) => {
+  const getActivityIconColor = (type: ActivityItem["type"]) => {
+    switch (type) {
+      case "review":
+        return COLORS.accentGreen
+      case "highlight":
+        return COLORS.accentOrange
+      case "occlusion":
+        return COLORS.accentBlue
+      default:
+        return COLORS.mediumGray
+    }
+  }
+
+  const renderActivity = ({ item }: { item: ActivityItem }) => (
+    <View style={styles.activityRow}>
+      <Icon
+        icon={item.icon}
+        size={20}
+        color={getActivityIconColor(item.type)}
+        style={styles.activityIcon}
+      />
+      <View style={styles.activityTextContainer}>
+        <Text style={styles.activityDescription}>{item.description}</Text>
+        <Text style={styles.activityTimestamp}>{item.timestamp}</Text>
+      </View>
+    </View>
+  )
+
+  const WidgetContent = () => (
+    <View style={styles.contentContainer}>
+      {activities.length === 0 ? (
+        <Text style={styles.noActivityText}>No recent activity.</Text>
+      ) : (
+        <FlatList
+          data={activities.slice(0, 3)} // Show top 3 or adjust
+          renderItem={renderActivity}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+        />
+      )}
+    </View>
+  )
+
+  return (
+    <Card style={styles.cardStyle} ContentComponent={<WidgetContent />} heading="Recent Activity" />
+  )
+}
+
+const styles = StyleSheet.create({
+  cardStyle: {
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  contentContainer: {
+    paddingVertical: 5, // Reduce padding if list items have their own
+  },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  activityIcon: {
+    marginRight: 12,
+  },
+  activityTextContainer: {
+    flex: 1,
+  },
+  activityDescription: {
+    fontSize: 15,
+    color: COLORS.darkGray,
+    marginBottom: 2,
+  },
+  activityTimestamp: {
+    fontSize: 12,
+    color: COLORS.mediumGray,
+  },
+  noActivityText: {
+    fontSize: 16,
+    color: COLORS.mediumGray,
+    textAlign: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+  },
+})
