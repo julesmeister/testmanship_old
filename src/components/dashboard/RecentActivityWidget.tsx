@@ -1,5 +1,5 @@
 import { FC, Fragment } from "react"
-import { View, Text, StyleSheet, FlatList } from "react-native"
+import { View, Text, StyleSheet, FlatList, ViewStyle } from "react-native"
 import { Card, Icon, IconTypes } from "@/components" // Assuming Icon is available in @/components
 
 // Color Constants
@@ -102,8 +102,16 @@ export const RecentActivityWidget: FC<RecentActivityWidgetProps> = ({
   )
 
   return (
-    <Card style={styles.cardStyle} ContentComponent={<WidgetContent />} heading="Recent Activity" />
+    <Card style={[styles.cardStyle, $noCardStyle]} ContentComponent={<WidgetContent />} heading="Recent Activity" />
   )
+}
+
+const $noCardStyle: ViewStyle = {
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderBottomWidth: 0,
+  shadowOpacity: 0,
+  elevation: 0,
 }
 
 const styles = StyleSheet.create({

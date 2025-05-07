@@ -1,5 +1,5 @@
 import { FC, Fragment } from "react"
-import { View, Text, StyleSheet, FlatList } from "react-native"
+import { View, Text, StyleSheet, FlatList, ViewStyle } from "react-native"
 import { Card } from "@/components"
 
 // Color Constants
@@ -80,8 +80,16 @@ export const LeaderboardWidget: FC<LeaderboardWidgetProps> = ({
   )
 
   return (
-    <Card style={styles.cardStyle} ContentComponent={<WidgetContent />} heading="Leaderboard" />
+    <Card style={[styles.cardStyle, $noCardStyle]} ContentComponent={<WidgetContent />} heading="Leaderboard" />
   )
+}
+
+const $noCardStyle: ViewStyle = {
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderBottomWidth: 0,
+  shadowOpacity: 0,
+  elevation: 0,
 }
 
 const styles = StyleSheet.create({

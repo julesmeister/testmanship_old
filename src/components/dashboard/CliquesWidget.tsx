@@ -1,5 +1,5 @@
 import { FC, Fragment } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ViewStyle } from 'react-native';
 import { Card, Icon, IconTypes } from "@/components"; // Assuming Icon is available
 
 // Color Constants
@@ -28,8 +28,8 @@ const MOCK_CLIQUES: CliqueItem[] = [
   { id: "3", name: "History Buffs United", memberCount: 12 },
 ];
 
-export const CliquesWidget: FC<CliquesWidgetProps> = ({ 
-  cliques = MOCK_CLIQUES 
+export const CliquesWidget: FC<CliquesWidgetProps> = ({
+  cliques = MOCK_CLIQUES
 }) => {
 
   const renderClique = ({ item }: { item: CliqueItem }) => (
@@ -49,7 +49,7 @@ export const CliquesWidget: FC<CliquesWidgetProps> = ({
         <Text style={styles.noCliquesText}>You are not part of any cliques yet.</Text>
       ) : (
         <FlatList
-          data={cliques.slice(0,3)} // Show top 3 or adjust
+          data={cliques.slice(0, 3)} // Show top 3 or adjust
           renderItem={renderClique}
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
@@ -57,11 +57,11 @@ export const CliquesWidget: FC<CliquesWidgetProps> = ({
       )}
       <View style={styles.actionsContainer}>
         <TouchableOpacity style={[styles.actionButton, styles.joinButton]} onPress={() => alert("Open Join Clique UI")}>
-          <Icon icon="menu" size={18} color={COLORS.primaryAction} style={styles.actionIcon}/>
+          <Icon icon="menu" size={18} color={COLORS.primaryAction} style={styles.actionIcon} />
           <Text style={styles.actionButtonText}>Join Clique</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.createButton]} onPress={() => alert("Open Create Clique UI")}>
-          <Icon icon="components" size={18} color={COLORS.secondaryAction} style={styles.actionIcon}/> {/* Using 'components' as a placeholder for 'add' or 'plus' if not available */}
+          <Icon icon="components" size={18} color={COLORS.secondaryAction} style={styles.actionIcon} /> {/* Using 'components' as a placeholder for 'add' or 'plus' if not available */}
           <Text style={styles.actionButtonText}>Create New</Text>
         </TouchableOpacity>
       </View>
@@ -70,12 +70,20 @@ export const CliquesWidget: FC<CliquesWidgetProps> = ({
 
   return (
     <Card
-      style={styles.cardStyle}
+      style={[styles.cardStyle, $noCardStyle]}
       ContentComponent={<WidgetContent />}
       heading="My Cliques"
     />
   );
 };
+
+const $noCardStyle: ViewStyle = {
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderBottomWidth: 0,
+  shadowOpacity: 0,
+  elevation: 0,
+}
 
 const styles = StyleSheet.create({
   cardStyle: {

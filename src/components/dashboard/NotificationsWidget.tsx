@@ -1,5 +1,5 @@
 import { FC, Fragment } from "react"
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native"
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ViewStyle } from "react-native"
 import { Card, Icon, IconTypes } from "@/components" // Assuming Icon is available
 
 // Color Constants
@@ -136,8 +136,16 @@ export const NotificationsWidget: FC<NotificationsWidgetProps> = ({
   )
 
   return (
-    <Card style={styles.cardStyle} ContentComponent={<WidgetContent />} heading="Notifications" />
+    <Card style={[styles.cardStyle, $noCardStyle]} ContentComponent={<WidgetContent />} heading="Notifications" />
   )
+}
+
+const $noCardStyle: ViewStyle = {
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderBottomWidth: 0,
+  shadowOpacity: 0,
+  elevation: 0,
 }
 
 const styles = StyleSheet.create({

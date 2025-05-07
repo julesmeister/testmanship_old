@@ -1,6 +1,5 @@
 import { FC } from "react"
 import { View, Text, StyleSheet } from "react-native"
-import { Card } from "@/components"
 
 // Color Constants
 const COLORS = {
@@ -8,6 +7,8 @@ const COLORS = {
   mediumGray: "#666666",
   lightBlue: "#E0F2F7", // Example color for topic tags
   darkBlue: "#007AFF",
+  lightGray: "#E0E0E0", // For border
+  transparent: "transparent",
 }
 
 interface ExamItem {
@@ -40,70 +41,75 @@ const MOCK_EXAMS: ExamItem[] = [
 ]
 
 export const UpcomingExamsWidget: FC<UpcomingExamsWidgetProps> = ({ exams = MOCK_EXAMS }) => {
-  const WidgetContent = () => (
-    <View style={styles.contentContainer}>
-      {exams.length === 0 ? (
-        <Text style={styles.noExamsText}>No upcoming exams. Well done!</Text>
-      ) : (
-        exams.map((exam) => (
-          <View key={exam.id} style={styles.examItemContainer}>
-            <Text style={styles.examTitle}>{exam.title}</Text>
-            <View style={styles.dateCountdownContainer}>
-              <Text style={styles.examDate}>{exam.date}</Text>
-              <Text style={styles.examCountdown}>({exam.countdown})</Text>
-            </View>
-            <View style={styles.topicsContainer}>
-              {exam.topics.map((topic, index) => (
-                <View key={index} style={styles.topicTag}>
-                  <Text style={styles.topicText}>{topic}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ))
-      )}
-    </View>
-  )
-
   return (
-    <Card style={styles.cardStyle} ContentComponent={<WidgetContent />} heading="Upcoming Exams" />
+    <View style={styles.widgetContainer}>
+      <Text style={styles.widgetTitle}>Upcoming Exams</Text>
+      <View style={styles.contentContainer}>
+        {exams.length === 0 ? (
+          <Text style={styles.noExamsText}>No upcoming exams. Well done!</Text>
+        ) : (
+          exams.map((exam) => (
+            <View key={exam.id} style={styles.examItemContainer}>
+              <Text style={styles.examTitle}>{exam.title}</Text>
+              <View style={styles.dateCountdownContainer}>
+                <Text style={styles.examDate}>{exam.date}</Text>
+                <Text style={styles.examCountdown}>({exam.countdown})</Text>
+              </View>
+              <View style={styles.topicsContainer}>
+                {exam.topics.map((topic, index) => (
+                  <View key={index} style={styles.topicTag}>
+                    <Text style={styles.topicText}>{topic}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))
+        )}
+      </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  cardStyle: {
-    marginHorizontal: 10,
-    marginVertical: 10,
+  widgetContainer: {
+    backgroundColor: COLORS.transparent, // Assuming screen background is white
+    paddingVertical: 15,
+    paddingHorizontal: 15, // Add horizontal padding here for the content within this widget
+  },
+  widgetTitle: {
+    color: COLORS.darkGray,
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
   },
   contentContainer: {
-    paddingHorizontal: 15,
-    paddingVertical: 10, // Less vertical padding if list items have their own
+    // Removed padding from here, handled by widgetContainer or specific items
   },
   examItemContainer: {
+    borderBottomColor: COLORS.lightBlue,
+    borderBottomWidth: 1,
     marginBottom: 15,
     paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightBlue,
   },
   examTitle: {
+    color: COLORS.darkGray,
     fontSize: 18,
     fontWeight: "bold",
-    color: COLORS.darkGray,
     marginBottom: 5,
   },
   dateCountdownContainer: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     marginBottom: 8,
   },
   examDate: {
-    fontSize: 14,
     color: COLORS.mediumGray,
+    fontSize: 14,
     marginRight: 8,
   },
   examCountdown: {
-    fontSize: 14,
     color: COLORS.darkBlue,
+    fontSize: 14,
     fontWeight: "500",
   },
   topicsContainer: {
@@ -113,19 +119,19 @@ const styles = StyleSheet.create({
   topicTag: {
     backgroundColor: COLORS.lightBlue,
     borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginRight: 5,
     marginBottom: 5,
+    marginRight: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   topicText: {
-    fontSize: 12,
     color: COLORS.darkBlue,
+    fontSize: 12,
   },
   noExamsText: {
-    fontSize: 16,
     color: COLORS.mediumGray,
-    textAlign: "center",
+    fontSize: 16,
     paddingVertical: 20,
+    textAlign: "center",
   },
 })

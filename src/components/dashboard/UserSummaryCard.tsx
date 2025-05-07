@@ -12,7 +12,6 @@ import {
   TouchableWithoutFeedback,
   Dimensions,
 } from "react-native"
-import { Card } from "@/components"
 
 // Placeholder avatar URI
 const PLACEHOLDER_AVATAR_URI =
@@ -27,8 +26,10 @@ const COLORS = {
   popoverBackground: "#FFFFFF",
   primaryText: "#111827",
   secondaryText: "#4B5563",
+  shadow: "#000",
   transparent: "transparent",
   transparentOverlay: "rgba(0,0,0,0.1)",
+  hoverBackground: 'rgba(0,122,255,0.1)',
 }
 
 // List of available avatars - Adjust paths as per your project structure
@@ -124,38 +125,6 @@ export const UserSummaryCard: FC<UserSummaryCardProps> = ({
     setIsAvatarPopoverVisible(false)
   }
 
-  const SummaryContent = () => (
-    <View style={styles.outerContentContainer}>
-      <View style={styles.userInfoSection}>
-        <TouchableOpacity onPress={handleAvatarPress}>
-          <View ref={avatarRef} collapsable={false}>
-            <Image source={selectedAvatar} style={styles.avatar} />
-          </View>
-        </TouchableOpacity>
-        <View style={styles.greetingTextContainer}>
-          <Text style={styles.greeting}>{greeting}</Text>
-        </View>
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.statsSection}>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Mastery Progress</Text>
-          <Text style={styles.statValue}>{masteryProgress}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Review Streak</Text>
-          <Text style={styles.statValue}>{reviewStreak} days</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Time Studied</Text>
-          <Text style={styles.statValue}>{timeStudied}</Text>
-        </View>
-      </View>
-    </View>
-  )
-
   let popoverLeftCalculated = 0;
   let popoverTopCalculated = 0;
   let popoverWidthCalculated = Math.max(MIN_POPOVER_WIDTH, screenWidth - (SCREEN_EDGE_MARGIN * 2));
@@ -182,8 +151,33 @@ export const UserSummaryCard: FC<UserSummaryCardProps> = ({
   }
 
   return (
-    <View>
-      <Card style={styles.cardStyle} ContentComponent={<SummaryContent />} />
+    <View style={styles.widgetContainer}>
+      <View style={styles.userInfoSection}>
+        <TouchableOpacity onPress={handleAvatarPress}>
+          <View ref={avatarRef} collapsable={false}>
+            <Image source={selectedAvatar} style={styles.avatar} />
+          </View>
+        </TouchableOpacity>
+        <View style={styles.greetingTextContainer}>
+          <Text style={styles.greeting}>{greeting}</Text>
+        </View>
+      </View>
+
+      <View style={styles.statsSection}>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Mastery Progress</Text>
+          <Text style={styles.statValue}>{masteryProgress}</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Review Streak</Text>
+          <Text style={styles.statValue}>{reviewStreak} days</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Time Studied</Text>
+          <Text style={styles.statValue}>{timeStudied}</Text>
+        </View>
+      </View>
+
       {isAvatarPopoverVisible && avatarLayout && (
         <Modal
           animationType="fade"
@@ -235,58 +229,54 @@ export const UserSummaryCard: FC<UserSummaryCardProps> = ({
 }
 
 const styles = StyleSheet.create({
-  cardStyle: {
-    marginHorizontal: 10,
-    marginVertical: 10,
-  },
-  outerContentContainer: {
-    padding: 15,
+  widgetContainer: {
+    backgroundColor: COLORS.transparent,
+    paddingVertical: 15,
   },
   userInfoSection: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     marginBottom: 15,
   },
   avatar: {
     backgroundColor: COLORS.lightGray,
     borderRadius: 30,
     height: 60,
-    width: 60,
     marginRight: 15,
+    width: 60,
   },
   greetingTextContainer: {
     flex: 1,
     justifyContent: "center",
   },
   greeting: {
+    color: COLORS.primaryText,
     fontSize: 20,
     fontWeight: "bold",
-    color: COLORS.primaryText,
     marginBottom: 2,
   },
   divider: {
-    height: 1,
     backgroundColor: COLORS.lightGray,
-    marginVertical: 0,
+    height: 1,
     marginBottom: 15,
+    marginVertical: 0,
   },
   statsSection: {},
   statItem: {
+    alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
     paddingVertical: 8,
   },
   statLabel: {
-    fontSize: 16,
     color: COLORS.secondaryText,
+    fontSize: 16,
   },
   statValue: {
+    color: COLORS.primaryText,
     fontSize: 16,
     fontWeight: "600",
-    color: COLORS.primaryText,
   },
-  // Popover Styles
   popoverOverlay: {
     position: "absolute",
     top: 0,
@@ -300,7 +290,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.popoverBackground,
     borderRadius: 8,
     padding: 15,
-    shadowColor: "#000",
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -340,7 +330,7 @@ const styles = StyleSheet.create({
   },
   avatarOptionHovered: { // Style for hover effect
     borderColor: COLORS.highlight,
-    backgroundColor: 'rgba(0,122,255,0.1)',
+    backgroundColor: COLORS.hoverBackground,
   },
   avatarOptionImage: {
     width: 50, // Smaller for list display
