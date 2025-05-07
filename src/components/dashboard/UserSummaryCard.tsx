@@ -229,94 +229,12 @@ export const UserSummaryCard: FC<UserSummaryCardProps> = ({
 }
 
 const styles = StyleSheet.create({
-  widgetContainer: {
-    backgroundColor: COLORS.transparent,
-    paddingVertical: 15,
-  },
-  userInfoSection: {
-    alignItems: "center",
-    flexDirection: "row",
-    marginBottom: 15,
-  },
   avatar: {
     backgroundColor: COLORS.lightGray,
     borderRadius: 30,
     height: 60,
     marginRight: 15,
     width: 60,
-  },
-  greetingTextContainer: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  greeting: {
-    color: COLORS.primaryText,
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 2,
-  },
-  divider: {
-    backgroundColor: COLORS.lightGray,
-    height: 1,
-    marginBottom: 15,
-    marginVertical: 0,
-  },
-  statsSection: {},
-  statItem: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-  },
-  statLabel: {
-    color: COLORS.secondaryText,
-    fontSize: 16,
-  },
-  statValue: {
-    color: COLORS.primaryText,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  popoverOverlay: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.transparentOverlay, // Slight dimming
-  },
-  popoverContainer: {
-    position: "absolute",
-    backgroundColor: COLORS.popoverBackground,
-    borderRadius: 8,
-    padding: 15,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 10, // Ensure it's above the overlay
-  },
-  caret: {
-    position: "absolute",
-    top: -10, // Position it above the bubble content
-    width: 0,
-    height: 0,
-    borderLeftWidth: 10, // base/2
-    borderRightWidth: 10, // base/2
-    borderBottomWidth: 10, // height of caret
-    borderStyle: "solid",
-    backgroundColor: "transparent",
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderBottomColor: COLORS.popoverBackground, // Must match popover background
-  },
-  popoverTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-    color: COLORS.primaryText,
   },
   avatarListContainer: {
     alignItems: "center", // Center columns if they don't fill width
@@ -336,5 +254,87 @@ const styles = StyleSheet.create({
     width: 50, // Smaller for list display
     height: 50,
     borderRadius: 25,
+  },
+  caret: {
+    position: "absolute",
+    top: -10, // Position it above the bubble content
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10, // base/2
+    borderRightWidth: 10, // base/2
+    borderBottomWidth: 10, // height of caret
+    borderStyle: "solid",
+    backgroundColor: "transparent",
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: COLORS.popoverBackground, // Must match popover background
+  },
+  divider: {
+    backgroundColor: COLORS.lightGray,
+    height: 1,
+    marginBottom: 15,
+    marginVertical: 0,
+  },
+  greeting: {
+    color: COLORS.primaryText,
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 2,
+  },
+  greetingTextContainer: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  popoverContainer: {
+    backgroundColor: COLORS.popoverBackground,
+    borderRadius: 8,
+    elevation: 5,
+    padding: 15,
+    position: "absolute",
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    zIndex: 10, // Ensure it's above the overlay
+  },
+  popoverOverlay: {
+    backgroundColor: COLORS.transparentOverlay,
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0, // Slight dimming
+  },
+  popoverTitle: {
+    color: COLORS.primaryText,
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  statItem: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+  },
+  statLabel: {
+    color: COLORS.secondaryText,
+    fontSize: 16,
+  },
+  statValue: {
+    color: COLORS.primaryText,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  statsSection: {},
+  userInfoSection: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: 15,
+  },
+  widgetContainer: {
+    backgroundColor: COLORS.transparent,
+    paddingVertical: 15,
   },
 })

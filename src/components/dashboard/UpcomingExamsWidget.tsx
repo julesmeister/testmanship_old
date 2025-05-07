@@ -1,5 +1,6 @@
 import { FC } from "react"
 import { View, Text, StyleSheet } from "react-native"
+import { useAppTheme } from "@/utils/useAppTheme"
 
 // Color Constants
 const COLORS = {
@@ -41,24 +42,26 @@ const MOCK_EXAMS: ExamItem[] = [
 ]
 
 export const UpcomingExamsWidget: FC<UpcomingExamsWidgetProps> = ({ exams = MOCK_EXAMS }) => {
+  const { colors } = useAppTheme().theme
+
   return (
     <View style={styles.widgetContainer}>
-      <Text style={styles.widgetTitle}>Upcoming Exams</Text>
+      <Text style={[styles.widgetTitle, { color: colors.text }]}>Upcoming Exams</Text>
       <View style={styles.contentContainer}>
         {exams.length === 0 ? (
-          <Text style={styles.noExamsText}>No upcoming exams. Well done!</Text>
+          <Text style={[styles.noExamsText, { color: colors.textDim }]}>No upcoming exams. Well done!</Text>
         ) : (
           exams.map((exam) => (
-            <View key={exam.id} style={styles.examItemContainer}>
-              <Text style={styles.examTitle}>{exam.title}</Text>
+            <View key={exam.id} style={[styles.examItemContainer, { borderBottomColor: colors.separator }]}>
+              <Text style={[styles.examTitle, { color: colors.text }]}>{exam.title}</Text>
               <View style={styles.dateCountdownContainer}>
-                <Text style={styles.examDate}>{exam.date}</Text>
-                <Text style={styles.examCountdown}>({exam.countdown})</Text>
+                <Text style={[styles.examDate, { color: colors.textDim }]}>{exam.date}</Text>
+                <Text style={[styles.examCountdown, { color: colors.tint }]}>({exam.countdown})</Text>
               </View>
               <View style={styles.topicsContainer}>
                 {exam.topics.map((topic, index) => (
-                  <View key={index} style={styles.topicTag}>
-                    <Text style={styles.topicText}>{topic}</Text>
+                  <View key={index} style={[styles.topicTag, { backgroundColor: colors.tint + '15' }]}>
+                    <Text style={[styles.topicText, { color: colors.tint }]}>{topic}</Text>
                   </View>
                 ))}
               </View>
@@ -72,66 +75,55 @@ export const UpcomingExamsWidget: FC<UpcomingExamsWidgetProps> = ({ exams = MOCK
 
 const styles = StyleSheet.create({
   widgetContainer: {
-    backgroundColor: COLORS.transparent, // Assuming screen background is white
     paddingVertical: 15,
-    paddingHorizontal: 15, // Add horizontal padding here for the content within this widget
   },
   widgetTitle: {
-    color: COLORS.darkGray,
     fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 15,
+    fontWeight: "600",
+    marginBottom: 16,
   },
   contentContainer: {
-    // Removed padding from here, handled by widgetContainer or specific items
   },
   examItemContainer: {
-    borderBottomColor: COLORS.lightBlue,
     borderBottomWidth: 1,
-    marginBottom: 15,
-    paddingBottom: 10,
+    marginBottom: 16,
+    paddingBottom: 16,
   },
   examTitle: {
-    color: COLORS.darkGray,
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
+    fontSize: 17,
+    fontWeight: "600",
+    marginBottom: 6,
   },
   dateCountdownContainer: {
-    alignItems: "center",
     flexDirection: "row",
-    marginBottom: 8,
+    alignItems: "center",
+    marginBottom: 10,
   },
   examDate: {
-    color: COLORS.mediumGray,
     fontSize: 14,
     marginRight: 8,
   },
   examCountdown: {
-    color: COLORS.darkBlue,
     fontSize: 14,
     fontWeight: "500",
   },
   topicsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: 6,
   },
   topicTag: {
-    backgroundColor: COLORS.lightBlue,
-    borderRadius: 12,
-    marginBottom: 5,
-    marginRight: 5,
+    borderRadius: 16,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   topicText: {
-    color: COLORS.darkBlue,
     fontSize: 12,
+    fontWeight: "500",
   },
   noExamsText: {
-    color: COLORS.mediumGray,
-    fontSize: 16,
-    paddingVertical: 20,
     textAlign: "center",
+    paddingVertical: 20,
+    fontSize: 16,
   },
 })

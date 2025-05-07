@@ -80,7 +80,11 @@ export const LeaderboardWidget: FC<LeaderboardWidgetProps> = ({
   )
 
   return (
-    <Card style={[styles.cardStyle, $noCardStyle]} ContentComponent={<WidgetContent />} heading="Leaderboard" />
+    <Card
+      style={[styles.cardStyle, $noCardStyle]}
+      ContentComponent={<WidgetContent />}
+      heading="Leaderboard"
+    />
   )
 }
 
@@ -101,20 +105,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  subheading: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: COLORS.darkGray,
-    marginBottom: 10,
-    marginTop: 5,
-  },
-  userRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-  },
   currentUserRow: {
     backgroundColor: "#E8F5E9", // A light highlight for the current user
     marginHorizontal: -15, // Extend highlight to container edges
@@ -126,19 +116,33 @@ const styles = StyleSheet.create({
     marginRight: 10,
     width: 30, // For alignment
   },
-  userName: {
-    flex: 1,
-    fontSize: 16,
-    color: COLORS.darkGray,
-  },
   score: {
-    fontSize: 16,
     color: COLORS.mediumGray,
+    fontSize: 16,
     fontWeight: "500",
   },
   separator: {
-    height: 1,
     backgroundColor: COLORS.lightGray,
+    height: 1,
     marginVertical: 15,
+  },
+  subheading: {
+    color: COLORS.darkGray,
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 10,
+    marginTop: 5,
+  },
+  userName: {
+    color: COLORS.darkGray,
+    flex: 1,
+    fontSize: 16,
+  },
+  userRow: {
+    alignItems: "center",
+    borderBottomColor: COLORS.lightGray,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    paddingVertical: 8,
   },
 })

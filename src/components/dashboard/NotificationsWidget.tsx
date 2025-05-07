@@ -136,7 +136,11 @@ export const NotificationsWidget: FC<NotificationsWidgetProps> = ({
   )
 
   return (
-    <Card style={[styles.cardStyle, $noCardStyle]} ContentComponent={<WidgetContent />} heading="Notifications" />
+    <Card
+      style={[styles.cardStyle, $noCardStyle]}
+      ContentComponent={<WidgetContent />}
+      heading="Notifications"
+    />
   )
 }
 
@@ -156,47 +160,47 @@ const styles = StyleSheet.create({
   contentContainer: {
     // paddingVertical: 5, // List items handle their own padding
   },
-  notificationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-  },
-  readNotificationRow: {
-    // backgroundColor: COLORS.lightGray, // Optional: slightly different background for read items
+  noNotificationsText: {
+    color: COLORS.mediumGray,
+    fontSize: 16,
+    padding: 20,
+    textAlign: "center",
   },
   notificationIcon: {
     marginRight: 12,
   },
+  notificationMessage: {
+    color: COLORS.darkGray,
+    fontSize: 15,
+    marginBottom: 3,
+  },
+  notificationRow: {
+    alignItems: "center",
+    borderBottomColor: COLORS.lightGray,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
   notificationTextContainer: {
     flex: 1,
   },
-  notificationMessage: {
-    fontSize: 15,
-    color: COLORS.darkGray,
-    marginBottom: 3,
-  },
   notificationTimestamp: {
-    fontSize: 12,
     color: COLORS.mediumGray,
+    fontSize: 12,
+  },
+  readNotificationRow: {
+    // backgroundColor: COLORS.lightGray, // Optional: slightly different background for read items
   },
   readText: {
     color: COLORS.readNotification, // Make text lighter for read notifications
   },
-  noNotificationsText: {
-    fontSize: 16,
-    color: COLORS.mediumGray,
-    textAlign: "center",
-    padding: 20,
-  },
   viewAllButton: {
-    paddingVertical: 12,
     alignItems: "center",
-    borderTopWidth: 1,
     borderTopColor: COLORS.lightGray,
+    borderTopWidth: 1,
     marginTop: 5,
+    paddingVertical: 12,
   },
   viewAllText: {
     fontSize: 15,

@@ -1,37 +1,34 @@
-import { FC, Fragment } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ViewStyle } from 'react-native';
-import { Card, Icon, IconTypes } from "@/components"; // Assuming Icon is available
+import { FC, Fragment } from "react"
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ViewStyle } from "react-native"
+import { Card, Icon, IconTypes } from "@/components" // Assuming Icon is available
 
 // Color Constants
 const COLORS = {
-  darkGray: '#333333',
-  mediumGray: '#666666',
-  lightGray: '#F0F0F0',
-  primaryAction: '#007AFF',
-  secondaryAction: '#5856D6',
-};
+  darkGray: "#333333",
+  mediumGray: "#666666",
+  lightGray: "#F0F0F0",
+  primaryAction: "#007AFF",
+  secondaryAction: "#5856D6",
+}
 
 interface CliqueItem {
-  id: string;
-  name: string;
-  memberCount: number;
+  id: string
+  name: string
+  memberCount: number
   // lastActivity: string; // Optional: could add later
 }
 
 interface CliquesWidgetProps {
-  cliques?: CliqueItem[];
+  cliques?: CliqueItem[]
 }
 
 const MOCK_CLIQUES: CliqueItem[] = [
   { id: "1", name: "Biology Study Group", memberCount: 5 },
   { id: "2", name: "Physics Partners", memberCount: 2 },
   { id: "3", name: "History Buffs United", memberCount: 12 },
-];
+]
 
-export const CliquesWidget: FC<CliquesWidgetProps> = ({
-  cliques = MOCK_CLIQUES
-}) => {
-
+export const CliquesWidget: FC<CliquesWidgetProps> = ({ cliques = MOCK_CLIQUES }) => {
   const renderClique = ({ item }: { item: CliqueItem }) => (
     <TouchableOpacity style={styles.cliqueRow} onPress={() => alert(`Navigate to ${item.name}`)}>
       <Icon icon="community" size={22} color={COLORS.mediumGray} style={styles.cliqueIcon} />
@@ -41,7 +38,7 @@ export const CliquesWidget: FC<CliquesWidgetProps> = ({
       </View>
       <Icon icon="caretRight" size={18} color={COLORS.mediumGray} />
     </TouchableOpacity>
-  );
+  )
 
   const WidgetContent = () => (
     <View style={styles.contentContainer}>
@@ -56,17 +53,29 @@ export const CliquesWidget: FC<CliquesWidgetProps> = ({
         />
       )}
       <View style={styles.actionsContainer}>
-        <TouchableOpacity style={[styles.actionButton, styles.joinButton]} onPress={() => alert("Open Join Clique UI")}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.joinButton]}
+          onPress={() => alert("Open Join Clique UI")}
+        >
           <Icon icon="menu" size={18} color={COLORS.primaryAction} style={styles.actionIcon} />
           <Text style={styles.actionButtonText}>Join Clique</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.createButton]} onPress={() => alert("Open Create Clique UI")}>
-          <Icon icon="components" size={18} color={COLORS.secondaryAction} style={styles.actionIcon} /> {/* Using 'components' as a placeholder for 'add' or 'plus' if not available */}
+        <TouchableOpacity
+          style={[styles.actionButton, styles.createButton]}
+          onPress={() => alert("Open Create Clique UI")}
+        >
+          <Icon
+            icon="components"
+            size={18}
+            color={COLORS.secondaryAction}
+            style={styles.actionIcon}
+          />{" "}
+          {/* Using 'components' as a placeholder for 'add' or 'plus' if not available */}
           <Text style={styles.actionButtonText}>Create New</Text>
         </TouchableOpacity>
       </View>
     </View>
-  );
+  )
 
   return (
     <Card
@@ -74,8 +83,8 @@ export const CliquesWidget: FC<CliquesWidgetProps> = ({
       ContentComponent={<WidgetContent />}
       heading="My Cliques"
     />
-  );
-};
+  )
+}
 
 const $noCardStyle: ViewStyle = {
   backgroundColor: "transparent",
@@ -86,41 +95,20 @@ const $noCardStyle: ViewStyle = {
 }
 
 const styles = StyleSheet.create({
-  cardStyle: {
-    marginHorizontal: 10,
-    marginVertical: 10,
-  },
-  contentContainer: {
-    // paddingVertical: 5, // Removed as items and buttons will manage their padding
-  },
-  cliqueRow: {
-    flexDirection: "row",
+  actionButton: {
     alignItems: "center",
-    paddingVertical: 15,
+    borderRadius: 20,
+    flexDirection: "row",
     paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
+    paddingVertical: 10, // Make buttons rounded
   },
-  cliqueIcon: {
-    marginRight: 12,
+  actionButtonText: {
+    color: COLORS.primaryAction,
+    fontSize: 14,
+    fontWeight: "600", // Default color, can be overridden by specific button styles
   },
-  cliqueInfo: {
-    flex: 1,
-  },
-  cliqueName: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.darkGray,
-  },
-  cliqueMembers: {
-    fontSize: 13,
-    color: COLORS.mediumGray,
-  },
-  noCliquesText: {
-    fontSize: 16,
-    color: COLORS.mediumGray,
-    textAlign: "center",
-    padding: 20,
+  actionIcon: {
+    marginRight: 8,
   },
   actionsContainer: {
     flexDirection: "row",
@@ -132,27 +120,48 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
     marginTop: 5, // Margin if there are list items above
   },
-  actionButton: {
-    flexDirection: "row",
+  cardStyle: {
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  cliqueIcon: {
+    marginRight: 12,
+  },
+  cliqueInfo: {
+    flex: 1,
+  },
+  cliqueMembers: {
+    color: COLORS.mediumGray,
+    fontSize: 13,
+  },
+  cliqueName: {
+    color: COLORS.darkGray,
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  cliqueRow: {
     alignItems: "center",
-    paddingVertical: 10,
+    borderBottomColor: COLORS.lightGray,
+    borderBottomWidth: 1,
+    flexDirection: "row",
     paddingHorizontal: 15,
-    borderRadius: 20, // Make buttons rounded
+    paddingVertical: 15,
   },
-  actionIcon: {
-    marginRight: 8,
-  },
-  joinButton: {
-    backgroundColor: '#E0F2FF', // Light blue background
+  contentContainer: {
+    // paddingVertical: 5, // Removed as items and buttons will manage their padding
   },
   createButton: {
-    backgroundColor: '#EDE7F6', // Light purple background
+    backgroundColor: "#EDE7F6", // Light purple background
   },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.primaryAction, // Default color, can be overridden by specific button styles
+  joinButton: {
+    backgroundColor: "#E0F2FF", // Light blue background
   },
-});
+  noCliquesText: {
+    color: COLORS.mediumGray,
+    fontSize: 16,
+    padding: 20,
+    textAlign: "center",
+  },
+})
 
 // In createButton, consider changing color for text to COLORS.secondaryAction if desired.

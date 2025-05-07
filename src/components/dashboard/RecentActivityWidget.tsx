@@ -102,7 +102,11 @@ export const RecentActivityWidget: FC<RecentActivityWidgetProps> = ({
   )
 
   return (
-    <Card style={[styles.cardStyle, $noCardStyle]} ContentComponent={<WidgetContent />} heading="Recent Activity" />
+    <Card
+      style={[styles.cardStyle, $noCardStyle]}
+      ContentComponent={<WidgetContent />}
+      heading="Recent Activity"
+    />
   )
 }
 
@@ -115,6 +119,29 @@ const $noCardStyle: ViewStyle = {
 }
 
 const styles = StyleSheet.create({
+  activityDescription: {
+    color: COLORS.darkGray,
+    fontSize: 15,
+    marginBottom: 2,
+  },
+  activityIcon: {
+    marginRight: 12,
+  },
+  activityRow: {
+    alignItems: "center",
+    borderBottomColor: COLORS.lightGray,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
+  activityTextContainer: {
+    flex: 1,
+  },
+  activityTimestamp: {
+    color: COLORS.mediumGray,
+    fontSize: 12,
+  },
   cardStyle: {
     marginHorizontal: 10,
     marginVertical: 10,
@@ -122,34 +149,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingVertical: 5, // Reduce padding if list items have their own
   },
-  activityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-  },
-  activityIcon: {
-    marginRight: 12,
-  },
-  activityTextContainer: {
-    flex: 1,
-  },
-  activityDescription: {
-    fontSize: 15,
-    color: COLORS.darkGray,
-    marginBottom: 2,
-  },
-  activityTimestamp: {
-    fontSize: 12,
-    color: COLORS.mediumGray,
-  },
   noActivityText: {
-    fontSize: 16,
     color: COLORS.mediumGray,
-    textAlign: "center",
-    paddingVertical: 20,
+    fontSize: 16,
     paddingHorizontal: 15,
+    paddingVertical: 20,
+    textAlign: "center",
   },
 })
