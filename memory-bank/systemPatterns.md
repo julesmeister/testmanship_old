@@ -71,10 +71,37 @@ graph LR
 
 ## UI Component Patterns & Key Components
 
+### Navigation Structure
+
+- **Tab-based Navigation**: The application uses Expo Router's Tabs component configured in `src/app/(tabs)/_layout.tsx` to implement the main navigation structure.
+  - **Home Tab** (`index.tsx`): Displays the `UserSummaryCard` and a notebooks list.
+  - **Activity Tab** (`activity.tsx`): Hosts the `RecentActivityWidget` as its main content.
+  - **Leaderboard Tab** (`leaderboard.tsx`): Hosts the `LeaderboardWidget` as its main content.
+  - **Cliques Tab** (`cliques.tsx`): Hosts the `CliquesWidget` and a dedicated Upcoming Exams section with the ability to create new exams.
+  - **Notifications Tab** (`notifications.tsx`): Hosts the `NotificationsWidget` as its main content.
+
+### Icon Components
+
+- **Original Icon Component** (`src/components/Icon.tsx`): 
+  - Provides access to locally stored PNG icons.
+  - Uses an `iconRegistry` object that maps icon names to image assets.
+  - Used for app-specific icons and legacy components.
+
+- **MaterialIcon Component** (`src/components/MaterialIcon.tsx`):
+  - Uses Material Design icons from the `@expo/vector-icons` package.
+  - Provides access to the full suite of Material Design icons.
+  - Used for common UI elements like add buttons, navigation icons, and action buttons.
+  - Should be the preferred choice for new icons when a suitable Material icon exists.
+
 ### `UserSummaryCard.tsx` (Dashboard Component)
 - **Purpose**: Combines user greeting/avatar with key study statistics (mastery, streak, time studied).
 - **Structure**: Uses the `Card` component. The user's greeting (e.g., "Hello, Valued User!") is passed to the `Card`'s `heading` prop. The avatar and the list of study statistics are rendered within a custom component passed to the `Card`'s `ContentComponent` prop.
-- **Hideable**: This entire card is considered `[Hideable]` on the dashboard as per the UI schematic.
+- **Usage**: Displayed at the top of the Home screen.
+
+### `NotebookItem` Component (Home Screen)
+- **Purpose**: Renders a single notebook item in the notebooks list.
+- **Structure**: Includes the notebook title, last modified date, an icon, and a more options button.
+- **Options Menu**: When the more options button is clicked, a modal is displayed with options to rename, share, or delete the notebook.
 
 ### Card Component (`src/components/Card.tsx`)
 - **Content Injection**: The `Card` component is designed to receive its main body content primarily through the `ContentComponent` prop. Other specific props like `HeadingComponent` and `FooterComponent` (or their text-based counterparts like `heading`, `content`, `footer`) are used for those respective sections.

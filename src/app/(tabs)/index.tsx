@@ -1,6 +1,6 @@
-import { FC, useState } from "react"
+import React, { FC, useState } from "react"
 import { View, StyleSheet, Text, FlatList, TouchableOpacity, Modal } from "react-native"
-import { Screen, Icon, IconTypes } from "@/components"
+import { Screen, Icon, IconTypes, MaterialIcon } from "@/components"
 import {
     UserSummaryCard,
     // UpcomingExamsWidget, // Temporarily remove for notebook focus
@@ -126,8 +126,8 @@ export default function HomeScreen() {
                         style={styles.addButton}
                         onPress={() => alert('Create new notebook')}
                     >
-                        <Icon
-                            icon="components"
+                        <MaterialIcon
+                            name="add"
                             size={24}
                             color="#007AFF"
                         />

@@ -4,32 +4,40 @@ This document captures the current state of work. It includes the immediate focu
 
 ## Current Focus
 
-- Refining UI components for the Dashboard.
-- Consolidating `UserHeader` and `StudyStatsWidget` into a single `UserSummaryCard` component.
+- Implementing the tab-based navigation structure with dedicated screens for each major feature.
+- Developing the notebook list UI for the Home tab.
 
 ## Recent Changes
 
-- **Merged `UserHeader` and `StudyStatsWidget` into `UserSummaryCard.tsx`.**
-  - Created `src/components/dashboard/UserSummaryCard.tsx`.
-  - Updated `src/components/dashboard/index.ts` to export the new component.
-  - Updated `src/app/dashboard.tsx` to use the new component.
-  - Deleted `src/components/dashboard/UserHeader.tsx` and `src/components/dashboard/StudyStatsWidget.tsx`.
-- Prototyped all initial dashboard widgets (`UpcomingExamsWidget`, `LeaderboardWidget`, `RecentActivityWidget`, `CliquesWidget`, `NotificationsWidget`) using the `Card` component and `ContentComponent` prop for their main content area, with mock data and basic styling.
-- Addressed various linter errors in dashboard components (React imports, color definitions, style property order, icon names, Fragment usage).
-- Updated platform target priorities in `projectbrief.md` and `activeContext.md` (Android > Web > iOS).
-- Populated initial Memory Bank files based on `README.md`.
-- Documented `Card` component usage pattern in `.cursorrules` and `systemPatterns.md`.
+- **Migrated from dashboard-based to tab-based structure**
+  - Created `src/app/(tabs)` directory with dedicated screens for each tab: `index.tsx` (Home), `activity.tsx`, `leaderboard.tsx`, `cliques.tsx`, and `notifications.tsx`.
+  - Implemented tab layout configuration in `src/app/(tabs)/_layout.tsx` using Expo Router's Tabs component.
+  - Each tab now hosts its corresponding widget as a full-screen component.
+- **Implemented notebook list in Home tab**
+  - Added `NotebookItem` component with options menu.
+  - Created mock data for notebooks and implemented basic list UI.
+  - Added actions for rename, share, and delete options.
+  - Fixed React fragment import error.
+- **Developed more detailed Cliques tab**
+  - Added Upcoming Exams section with mock data.
+  - Implemented exam creation modal with form.
+- **Enhanced icon system with Material Design icons**
+  - Added `@expo/vector-icons` package for access to icon libraries.
+  - Created new `MaterialIcon` component to use standard Material Design icons.
+  - Replaced placeholder "components" icon with proper "add" icon for add buttons.
 
 ## Next Steps
 
-- Verify the new `UserSummaryCard` renders correctly and meets requirements for being hideable.
-- Continue developing and refining other dashboard widgets as outlined in `progress.md` and the UI schematic.
-- Begin detailed planning for the features outlined in `progress.md` and `projectbrief.md`.
+- Implement notebook creation functionality.
+- Develop notebook detail screen with topics list.
+- Complete remaining tab screens with proper content and functionality.
+- Begin implementing PDF annotation features.
 
 ## Active Decisions & Considerations
 
-- The `UserSummaryCard` now combines user greeting/avatar and key study statistics. This entire card is considered `[Hideable]` as per the UI schematic.
-- The `Card` component in `@/components` is designed to receive its primary content via specific props like `ContentComponent`, `HeadingComponent`, etc., rather than `props.children` for its main structured areas. This pattern should be followed for consistent rendering.
-- The project is in its initial phase; all features described in the README are considered for implementation.
-- The primary platform target is Android (phones and tablets), with Web as a secondary target, and iOS as tertiary.
-- Offline-first is a critical architectural consideration. 
+- The application now uses a tab-based navigation structure with dedicated screens for Home, Activity, Leaderboard, Cliques, and Notifications.
+- The `UserSummaryCard` is displayed only on the Home screen along with the notebooks list.
+- Each tab screen directly uses its corresponding widget component as the main content.
+- The primary platform target remains Android (phones and tablets), with Web as a secondary target, and iOS as tertiary.
+- Offline-first is still a critical architectural consideration.
+- The app now uses both the original icon system (through the `Icon` component) and Material Design icons (through the new `MaterialIcon` component) to provide a richer set of icons. 

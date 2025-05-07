@@ -23,4 +23,12 @@
 
 ### Card Component (`src/components/Card.tsx`)
 - To render main content within the `Card`'s structured layout (body area, distinct from explicit header/footer sections provided by the Card itself), use the `ContentComponent` prop.
-- Passing children directly to `<Card>{children}</Card>` may result in the children not being rendered within the Card's intended content area, as the component primarily uses props like `heading`, `content`, `footer`, `HeadingComponent`, `ContentComponent`, and `FooterComponent` to structure its display. 
+- Passing children directly to `<Card>{children}</Card>` may result in the children not being rendered within the Card's intended content area, as the component primarily uses props like `heading`, `content`, `footer`, `HeadingComponent`, `ContentComponent`, and `FooterComponent` to structure its display.
+
+### Icon System
+- The app uses two icon systems:
+  1. Original `Icon` component (`src/components/Icon.tsx`) - Uses locally stored PNG icons defined in the `iconRegistry` object.
+  2. `MaterialIcon` component (`src/components/MaterialIcon.tsx`) - Uses Material Design icons from the `@expo/vector-icons` package.
+- For add buttons and other common actions, prefer using `MaterialIcon` with standard names like "add", "delete", "edit", etc.
+- For app-specific or custom icons, use the original `Icon` component.
+- When using `MaterialIcon`, refer to the Material Icons library for valid icon names (https://fonts.google.com/icons?icon.set=Material+Icons). 

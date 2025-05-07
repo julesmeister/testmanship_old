@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { StyleSheet, View, Text, TouchableOpacity, Modal, TextInput, ScrollView } from "react-native"
-import { Screen, Icon } from "@/components"
+import { Screen, Icon, MaterialIcon } from "@/components"
 import { CliquesWidget } from "@/components/dashboard"
 import { useAppTheme } from "@/utils/useAppTheme"
 
@@ -52,8 +52,8 @@ export default function CliquesScreen() {
             style={styles.addButton}
             onPress={() => setShowExamForm(true)}
           >
-            <Icon
-              icon="components"
+            <MaterialIcon
+              name="add"
               size={22}
               color={colors.tint}
             />
